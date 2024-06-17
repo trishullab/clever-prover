@@ -2,6 +2,7 @@
 requires = [
     "hatchling",
     "torch==2.1.1",
+    "numpy==1.26.4",
     "accelerate==0.29.1",
     "bitsandbytes==0.42.0",
     "transformers==4.39.3",
