@@ -6,6 +6,7 @@ requires = [
     "accelerate==0.29.1",
     "bitsandbytes==0.42.0",
     "transformers==4.39.3",
+    "sympy==1.12",
     "ray==2.4.0",
     "tqdm>=4.27",
     "hydra-core>=1.0.0",
