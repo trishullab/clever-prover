@@ -1,0 +1,9 @@
+max_tokens: 1024
+temperature: 0.7
+top_p: 0.9
+top_k: 50
+do_sample: true
+num_return_sequences: 1
+max_length: 1024
+stop_tokens:
+  - '[END]'
