@@ -40,7 +40,7 @@ def evaluate(data, solver_cls = TestSolver):
         total += 1
         correct += solver_is_correct
 
-        if solver_is_correct:
+        if category:
             category_statistics.setdefault(category, {'correct': 0, 'total': 0})['total'] += 1
             category_statistics[category]['correct'] += solver_is_correct
 
