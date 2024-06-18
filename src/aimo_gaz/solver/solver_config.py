@@ -1,11 +1,13 @@
 import omegaconf
 import os
-from aimo_gaz.models.prompt import Prompt, ConcatPrompt
+from aimo_gaz.prompts.prompt import Prompt, ConcatPrompt
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
 from enum import Enum
 from aimo_gaz.solver.test_solver import TestSolver
 from aimo_gaz.solver.abs_solver import Solver
+from aimo_gaz.solver.vanilla_few_shot_solver import FewShotSolver as VanilaFewShotSolver
+from aimo_gaz.models.model import Model
 
 class PromptType(Enum):
     Concat = "Concat"
@@ -15,6 +17,7 @@ class PromptType(Enum):
 
 class SolverType(Enum):
     TestSolver = "TestSolver"
+    VanillaFewShotSolver = "VanillaFewShotSolver"
 
     def __str__(self):
         return self.value
@@ -27,7 +30,7 @@ class PromptConfig:
     example_prompt_path: str
     
     def get_prompt(self) -> Prompt:
-        if self.prompt_type == PromptType.CONCAT:
+        if self.prompt_type == PromptType.Concat:
             return ConcatPrompt(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
         else:
             raise NotImplementedError(f"Prompt type {self.prompt_type} is not implemented.")
@@ -64,6 +67,11 @@ class SolverConfig:
     def get_solver(self) -> Solver:
         if self.solver_type == SolverType.TestSolver:
             return TestSolver()
+        elif self.solver_type == SolverType.VanillaFewShotSolver:
+            model = Model(self.model_settings.name_or_path, self.model_settings.logging_dir, **self.model_settings.model_args)
+            prompt = self.prompt_config.get_prompt()
+            inference_settings_dict = self.inference_settings.to_dict()
+            return VanilaFewShotSolver(model, prompt, **inference_settings_dict)
         else:
             raise NotImplementedError(f"Solver type {self.solver_type} is not implemented.")
 
@@ -103,6 +111,7 @@ def parse_solver_config(cfg) -> SolverConfig:
     inference_settings = InferenceSettings(**cfg["inference_settings"])
     model_settings = ModelSettings(**cfg["model_settings"])
     prompt_config = PromptConfig(**cfg["prompt_config"])
+    prompt_config.prompt_type = PromptType(cfg["prompt_config"]["prompt_type"])
     solver_config = SolverConfig(
         model_settings=model_settings, 
         inference_settings=inference_settings, 

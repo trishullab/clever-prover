@@ -1,0 +1,8 @@
+defaults:
+  - model_settings: codet5_small_2048 # Name of model settings file
+  - inference_settings: 1024_1.yaml # Name of training data settings file
+  - prompt_config: test_prompt_config # Name of training settings file
+  - override hydra/job_logging: 'disabled'
+
+solver_type: VanillaFewShotSolver
+solver_args:
