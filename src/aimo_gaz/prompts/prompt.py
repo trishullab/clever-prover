@@ -44,5 +44,5 @@ class ConcatPrompt(Prompt):
         full_prompt = self.system_prompt + "\n" + self.example_prompt
         for msg in messages:
             for k, v in msg.items():
-                full_prompt += f"\n{k}: \n{v}"
+                full_prompt += f"\n{k}\n{v}"
         return full_prompt + "\n"
