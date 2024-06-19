@@ -20,6 +20,7 @@ from transformers import (
     StoppingCriteriaList,
     TrainingArguments,
     TrainerCallback,
+    GenerationConfig
 )
 from aimo_gaz.tools.log_utils import setup_logger
 from transformers.trainer_callback import TrainerControl, TrainerState
@@ -180,7 +181,7 @@ class Model(object):
 
     def _get_model_args(self):
         return {k: v for k, v in self._kwargs.items() if k in
-                ["token", "quantization_config"]
+                ["token", "quantization_config", "device_map"]
         }
 
     def _model_init(self) -> typing.Union[AutoModelForSeq2SeqLM, AutoModelForCausalLM]:
@@ -245,6 +246,11 @@ class Model(object):
                 tokenizer_args["sep_token"] = tokenizer_args["pad_token"]
             if "mask_token" not in tokenizer_args:
                 tokenizer_args["mask_token"] = tokenizer_args["pad_token"]
+        if "deepseek" in self.name.lower():
+            if "pad_token" not in tokenizer_args:
+                tokenizer_args["pad_token"] = self._tokenizer.eos_token
+            if "padding_side" not in tokenizer_args:
+                tokenizer_args["padding_side"] = "left" # This is very import for the stop token logic
         if "pad_token" in tokenizer_args:
             self._tokenizer.pad_token = tokenizer_args["pad_token"]
         if "eos_token" in tokenizer_args:
@@ -265,19 +271,27 @@ class Model(object):
             self._tokenizer.padding_side = tokenizer_args["padding_side"]
         if self._should_load_model:
             if quantization_config is None:
-                self._model : typing.Union[AutoModelForSeq2SeqLM, AutoModelForCausalLM] = self.cuda_context.try_get_gpu(self._model_init())
+                temp_model = self._model_init()
+                model_args = self._get_model_args()
+                if "device_map" not in model_args:
+                    self._model : typing.Union[AutoModelForSeq2SeqLM, AutoModelForCausalLM] = self.cuda_context.try_get_gpu(self._model_init())
+                else:
+                    self._model = temp_model
             else:
                 self._model = self._model_init()
             if hasattr(self._model, "config"):
-                if hasattr(self._model.config, "use_cache"):
+                if hasattr(self._model.config, "use_cache") and "llama-2" in self.name.lower():
                     self._model.config.use_cache = False
-                if hasattr(self._model.config, "pretraining_tp"):
+                if hasattr(self._model.config, "pretraining_tp") and "llama-2" in self.name.lower():
                     self._model.config.pretraining_tp = 1
         else:
             self._model = None
         self._is_loaded = True
         self._model_args = self._get_model_args()
         self._tokenizer_args = tokenizer_args
+        if "deepseek" in self.name.lower() and hasattr(self._model, "generation_config"):
+            self._model.generation_config = GenerationConfig.from_pretrained(self.name)
+            self._model.generation_config.pad_token_id = self._model.generation_config.eos_token_id
 
 
     def __enter__(self):
@@ -331,7 +345,7 @@ class Model(object):
         if "num_return_sequences" not in generate_args:
             generate_args["num_return_sequences"] = 1
         num_return_sequences = generate_args["num_return_sequences"]
-        if "llama-2" in self.name.lower():
+        if "llama-2" in self.name.lower() or "deepseek" in self.name.lower():
             generated_output = self._model.generate(
                 input_ids=input_ids, 
                 attention_mask=attention_mask,
@@ -348,7 +362,7 @@ class Model(object):
                 **generate_args)
         target = generated_output["sequences"]
         return_full_text = kwargs.get("return_full_text", False)
-        if not self.is_sequence_2_sequence() and not return_full_text and "llama-2" in self.name.lower():
+        if not self.is_sequence_2_sequence() and not return_full_text and ("llama-2" in self.name.lower() or "deepseek" in self.name.lower()):
             # Replace the target with padding tokens after the input_ids
             target[:, :max_input_length] = self._tokenizer.pad_token_id # This helps in removing the input text from the generated text
         skip_special_tokens = kwargs.get("skip_special_tokens", True)
@@ -365,6 +379,18 @@ class Model(object):
                     attention_i = attention_mask[i, :].unsqueeze(0)
                     for j in range(num_return_sequences):
                         target_j = target[i*num_return_sequences+j].unsqueeze(0)
+                        if "deepseek" in self.name.lower() or "llama-2" in self.name.lower():
+                            # pad the input_ids to match the target length
+                            remaining_length = target_j.shape[-1] - inp_i.shape[-1]
+                            if remaining_length > 0:
+                                # Pad the input_ids and make sure that they are on the same device
+                                inp_i = torch.cat([inp_i, torch.full((1, remaining_length), self._tokenizer.pad_token_id, dtype=torch.long, device=inp_i.device)], dim=-1)
+                                attention_i = torch.cat([attention_i, torch.full((1, remaining_length), 0, dtype=torch.long, device=attention_i.device)], dim=-1)
+                            elif remaining_length < 0:
+                                # Trim the input_ids
+                                inp_i = inp_i[:, :target_j.shape[-1]]
+                                attention_i = attention_i[:, :target_j.shape[-1]]
+
                         out_j = self._model(input_ids=inp_i, attention_mask=attention_i, labels=target_j)
                         neg_log_likelihoods.append(float(out_j.loss.detach().cpu().numpy()))
         for text in inputs:
@@ -648,12 +674,50 @@ if __name__ == '__main__':
     # assert os.path.exists(".secrets/huggingface_token.json"), "Please create a .secrets file with your HF token"
     # model_name = "meta-llama/Llama-2-7b-hf"
     # model_name = "meta-llama/Llama-2-7b-chat-hf"
-    model_name = "Salesforce/codet5-small"
-    is_seq2seq = "llama-2" not in model_name.lower()
+    # model_name = "Salesforce/codet5-small"
+    # device_map = None
+    model_name = "deepseek-ai/deepseek-math-7b-base"
+    device_map = [('model.embed_tokens', 0),
+                 ('model.layers.0', 0),
+                 ('model.layers.1', 0),
+                 ('model.layers.2', 0),
+                 ('model.layers.3', 1),
+                 ('model.layers.4', 1),
+                 ('model.layers.5', 1),
+                 ('model.layers.6', 1),
+                 ('model.layers.7', 1),
+                 ('model.layers.8', 1),
+                 ('model.layers.9', 1),
+                 ('model.layers.10', 1),
+                 ('model.layers.11', 1),
+                 ('model.layers.12', 1),
+                 ('model.layers.13', 1),
+                 ('model.layers.14', 2),
+                 ('model.layers.15', 2),
+                 ('model.layers.16', 2),
+                 ('model.layers.17', 2),
+                 ('model.layers.18', 2),
+                 ('model.layers.19', 2),
+                 ('model.layers.20', 2),
+                 ('model.layers.21', 2),
+                 ('model.layers.22', 3),
+                 ('model.layers.23', 3),
+                 ('model.layers.24', 3),
+                 ('model.layers.25', 3),
+                 ('model.layers.26', 3),
+                 ('model.layers.27', 3),
+                 ('model.layers.28', 3),
+                 ('model.layers.29', 3),
+                 ('model.norm', 3),
+                 ('lm_head', 3)]
+    base_device = 3
+    device_map = {x[0]: x[1] + base_device for x in device_map}
+    is_seq2seq = "t5" in model_name.lower()
     token = None
-    # with open(".secrets/huggingface_token.json", "r") as f:
-    #     token = json.load(f)["token"]
-    model = Model(model_name, token=token, use_lora=False, is_seq2seq=is_seq2seq)
+    if device_map is not None:
+        model = Model(model_name, token=token, use_lora=False, is_seq2seq=is_seq2seq, device_map=device_map)
+    else:
+        model = Model(model_name, token=token, use_lora=False, is_seq2seq=is_seq2seq)
     main_prompt = "Do simple math problems (Answer only the number and use '[END]' to finish the response):\nQuestion: 2 + 2\nAnswer: 4\n[END]"
     with model:
         for response in model.generate(
