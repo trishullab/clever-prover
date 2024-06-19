@@ -1,6 +1,7 @@
 import omegaconf
 import os
 from aimo_gaz.prompts.prompt import Prompt, ConcatPrompt
+from aimo_gaz.prompts.cot_prompt import CoTPrompt
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
 from enum import Enum
@@ -11,6 +12,7 @@ from aimo_gaz.models.model import Model
 
 class PromptType(Enum):
     Concat = "Concat"
+    CoTPrompt = "CoTPrompt"
 
     def __str__(self):
         return self.value
@@ -32,6 +34,8 @@ class PromptConfig:
     def get_prompt(self) -> Prompt:
         if self.prompt_type == PromptType.Concat:
             return ConcatPrompt(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
+        elif self.prompt_type == PromptType.CoTPrompt:
+            return CoTPrompt(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
         else:
             raise NotImplementedError(f"Prompt type {self.prompt_type} is not implemented.")
 
@@ -53,6 +57,7 @@ class InferenceSettings:
     do_sample: bool
     num_return_sequences: int
     max_length: int
+    return_full_text: bool
     stop_tokens: list = field(default_factory=list)
 
 @dataclass_json

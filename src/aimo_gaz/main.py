@@ -4,8 +4,11 @@ from aimo_gaz.solver.solver_config import parse_solver_config, Solver
 
 
 def test_solver(solver: Solver):
-    ans = solver.solve("Find the value of x in the equation x + 100 = 200.[END]")
-    print(ans)  # Should print 100
+    problem = "Find the value of x in the equation x + 100 = 200."
+    while problem != "exit":
+        ans = solver.solve(problem)
+        print(ans)
+        problem = input("Enter a math problem to solve: ")
     pass
 
 @hydra.main(config_path="configs", config_name="vanilla_few_shot_solver_config")
