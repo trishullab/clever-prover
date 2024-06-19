@@ -7,10 +7,10 @@ num_return_sequences: 3
 max_length: 2048
 return_full_text: false
 stop_tokens:
-  - "```output"
-  - "```python"
-  - "```\nOutput"
-  - ")\n```"
-  - "``````output"
+  # - "```output"
+  # - "```python"
+  # - "```\nOutput"
+  # - ")\n```"
+  # - "``````output"
   - '[END]'
 # ["```output", "```python", "```\nOutput" , ")\n```" , "``````output"]
