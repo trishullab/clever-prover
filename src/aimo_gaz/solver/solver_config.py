@@ -46,7 +46,7 @@ class ModelSettings(object):
 @dataclass_json
 @dataclass
 class InferenceSettings:
-    max_tokens: int
+    max_new_tokens: int
     temperature: float
     top_p: float
     top_k: int
