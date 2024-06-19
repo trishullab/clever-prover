@@ -11,3 +11,38 @@ model_args:
   is_seq2seq: False # Deepseek is Causal LM
   token:
   comet_experiment:
+  base_device: 3
+  device_map:
+    model.embed_tokens : 0
+    model.layers.0 : 0
+    model.layers.1 : 0
+    model.layers.2 : 1
+    model.layers.3 : 1
+    model.layers.4 : 1
+    model.layers.5 : 1
+    model.layers.6 : 1
+    model.layers.7 : 1
+    model.layers.8 : 1
+    model.layers.9 : 1
+    model.layers.10 : 1
+    model.layers.11 : 1
+    model.layers.12 : 1
+    model.layers.13 : 2
+    model.layers.14 : 2
+    model.layers.15 : 2
+    model.layers.16 : 2
+    model.layers.17 : 2
+    model.layers.18 : 2
+    model.layers.19 : 2
+    model.layers.20 : 2
+    model.layers.21 : 2
+    model.layers.22 : 3
+    model.layers.23 : 3
+    model.layers.24 : 3
+    model.layers.25 : 3
+    model.layers.26 : 3
+    model.layers.27 : 3
+    model.layers.28 : 3
+    model.layers.29 : 3
+    model.norm : 3
+    lm_head : 3
