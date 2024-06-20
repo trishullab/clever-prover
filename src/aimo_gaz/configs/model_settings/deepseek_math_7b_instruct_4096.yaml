@@ -1,11 +1,11 @@
-name_or_path: deepseek-ai/deepseek-math-7b-rl
+name_or_path: deepseek-ai/deepseek-math-7b-instruct
 logging_dir: <AIMO_GAZ_ROOT>/.logs/model
 model_args:
   no_init_eval: True
   padding: True
   truncation: True
-  max_seq_length: 2048
-  max_length: 2048
+  max_seq_length: 4096
+  max_length: 4096
   load_model: True
   use_lora: False
   is_seq2seq: False # Deepseek is Causal LM

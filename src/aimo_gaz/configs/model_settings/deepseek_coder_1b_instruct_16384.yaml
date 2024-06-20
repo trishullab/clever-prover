@@ -1,0 +1,48 @@
+name_or_path: deepseek-ai/deepseek-coder-1.3b-instruct
+logging_dir: <AIMO_GAZ_ROOT>/.logs/model
+model_args:
+  no_init_eval: True
+  padding: True
+  truncation: True
+  max_seq_length: 16384
+  max_length: 16384
+  load_model: True
+  use_lora: False
+  is_seq2seq: False # Deepseek is Causal LM
+  token:
+  comet_experiment:
+  base_device: 3
+  # device_map:
+  #   model.embed_tokens : 0
+  #   model.layers.0 : 0
+  #   model.layers.1 : 0
+  #   model.layers.2 : 0
+  #   model.layers.3 : 1
+  #   model.layers.4 : 1
+  #   model.layers.5 : 1
+  #   model.layers.6 : 1
+  #   model.layers.7 : 1
+  #   model.layers.8 : 1
+  #   model.layers.9 : 1
+  #   model.layers.10 : 2
+  #   model.layers.11 : 2
+  #   model.layers.12 : 2
+  #   model.layers.13 : 2
+  #   model.layers.14 : 2
+  #   model.layers.15 : 2
+  #   model.layers.16 : 2
+  #   model.layers.17 : 3
+  #   model.layers.18 : 3
+  #   model.layers.19 : 3
+  #   model.layers.20 : 3
+  #   model.layers.21 : 3
+  #   model.layers.22 : 3
+  #   model.layers.23 : 3
+  #   model.layers.24 : 3
+  #   model.layers.25 : 4
+  #   model.layers.26 : 4
+  #   model.layers.27 : 4
+  #   model.layers.28 : 4
+  #   model.layers.29 : 4
+  #   model.norm : 4
+  #   lm_head : 4
