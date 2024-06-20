@@ -2,14 +2,16 @@ from aimo_gaz.solver.abs_solver import Solver
 from aimo_gaz.models.model import Model
 from aimo_gaz.prompts.prompt import Prompt
 from collections import Counter
+import logging
 
 class FewShotSolver(Solver):
-    def __init__(self, model: Model, prompt: Prompt, **inference_kwargs):
+    def __init__(self, model: Model, prompt: Prompt, logger: logging.Logger = None, **inference_kwargs):
         assert model is not None, "model must be provided."
         assert prompt is not None, "prompt must be provided."
         self.model = model
         self.prompt = prompt
         self.inference_kwargs = inference_kwargs
+        self.logger = logger
         if "problem_description_message" not in self.inference_kwargs:
             self.inference_kwargs["problem_description_message"] = "Below is a math problem you are to solve (positive numerical answer!):"
 
@@ -38,9 +40,12 @@ class FewShotSolver(Solver):
         assert len(response.results) > 0, "No response from the model."
         responses = response.results
         answers = []
+        self.logger.info(f"Prompt:\n{prompt}")
         for resp in responses:
             for gen_text in resp.generated_text:
                 try:
+                    self.logger.info(f"Generated text:\n{gen_text}")
+                    self.logger.info(f"="*50)
                     answer = self.prompt.parse_response(gen_text)
                     try:
                         answer = float(answer)

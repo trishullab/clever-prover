@@ -1,5 +1,6 @@
 import omegaconf
 import os
+import logging
 from aimo_gaz.prompts.prompt import Prompt, ConcatPrompt
 from aimo_gaz.prompts.cot_prompt import CoTPrompt
 from dataclasses import dataclass, field
@@ -69,14 +70,14 @@ class SolverConfig:
     solver_type: SolverType
     solver_args: dict = field(default_factory=dict)
 
-    def get_solver(self) -> Solver:
+    def get_solver(self, logger: logging.Logger) -> Solver:
         if self.solver_type == SolverType.TestSolver:
             return TestSolver()
         elif self.solver_type == SolverType.VanillaFewShotSolver:
             model = Model(self.model_settings.name_or_path, self.model_settings.logging_dir, **self.model_settings.model_args)
             prompt = self.prompt_config.get_prompt()
             inference_settings_dict = self.inference_settings.to_dict()
-            return VanilaFewShotSolver(model, prompt, **inference_settings_dict)
+            return VanilaFewShotSolver(model, prompt, logger, **inference_settings_dict)
         else:
             raise NotImplementedError(f"Solver type {self.solver_type} is not implemented.")
 
