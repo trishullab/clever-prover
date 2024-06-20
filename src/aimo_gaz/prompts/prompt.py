@@ -23,6 +23,10 @@ class Prompt(ABC):
     def get_prompt(self, messages: typing.List[typing.Dict[str, str]]) -> str:
         pass
 
+    @abstractmethod
+    def parse_response(self, response: str) -> str:
+        pass
+
     def reset_example_prompt(self, example_prompt: str = None, example_prompt_path: str = None):
         assert not all([_ is None for _ in [example_prompt_path, example_prompt]]), "Either example_prompt_path or example_prompt must be provided."
         self.example_prompt_path = example_prompt_path
@@ -46,3 +50,6 @@ class ConcatPrompt(Prompt):
             for k, v in msg.items():
                 full_prompt += f"\n{k}\n{v}"
         return full_prompt + "\n"
+    
+    def parse_response(self, response: str) -> str:
+        return response

@@ -177,6 +177,13 @@ class Model(object):
         if self._random_init:
             assert "config_class_name" in self._kwargs, "Please provide the config class name for random initialization"
         self._config_class_name = self._kwargs.get("config_class_name", None)
+        if "base_device" in self._kwargs and "device_map" in self._kwargs:
+            device_map = dict(self._kwargs["device_map"])
+            self._kwargs["device_map"] = device_map
+            assert isinstance(self._kwargs["device_map"], dict), "Please provide a dictionary for device_map"
+            assert isinstance(self._kwargs["base_device"], int), "Please provide a valid base_device"
+            for k, v in self._kwargs["device_map"].items():
+                self._kwargs["device_map"][k] = self._kwargs["base_device"] + v
         pass
 
     def _get_model_args(self):

@@ -1,4 +1,4 @@
-name_or_path: deepseek-ai/deepseek-math-7b-base
+name_or_path: deepseek-ai/deepseek-math-7b-rl
 logging_dir: <AIMO_GAZ_ROOT>/.logs/model
 model_args:
   no_init_eval: True

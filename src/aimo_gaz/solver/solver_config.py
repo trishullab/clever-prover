@@ -1,6 +1,8 @@
 import omegaconf
 import os
+import logging
 from aimo_gaz.prompts.prompt import Prompt, ConcatPrompt
+from aimo_gaz.prompts.cot_prompt import CoTPrompt
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
 from enum import Enum
@@ -11,6 +13,7 @@ from aimo_gaz.models.model import Model
 
 class PromptType(Enum):
     Concat = "Concat"
+    CoTPrompt = "CoTPrompt"
 
     def __str__(self):
         return self.value
@@ -32,6 +35,8 @@ class PromptConfig:
     def get_prompt(self) -> Prompt:
         if self.prompt_type == PromptType.Concat:
             return ConcatPrompt(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
+        elif self.prompt_type == PromptType.CoTPrompt:
+            return CoTPrompt(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
         else:
             raise NotImplementedError(f"Prompt type {self.prompt_type} is not implemented.")
 
@@ -46,13 +51,14 @@ class ModelSettings(object):
 @dataclass_json
 @dataclass
 class InferenceSettings:
-    max_tokens: int
+    max_new_tokens: int
     temperature: float
     top_p: float
     top_k: int
     do_sample: bool
     num_return_sequences: int
     max_length: int
+    return_full_text: bool
     stop_tokens: list = field(default_factory=list)
 
 @dataclass_json
@@ -64,14 +70,14 @@ class SolverConfig:
     solver_type: SolverType
     solver_args: dict = field(default_factory=dict)
 
-    def get_solver(self) -> Solver:
+    def get_solver(self, logger: logging.Logger) -> Solver:
         if self.solver_type == SolverType.TestSolver:
             return TestSolver()
         elif self.solver_type == SolverType.VanillaFewShotSolver:
             model = Model(self.model_settings.name_or_path, self.model_settings.logging_dir, **self.model_settings.model_args)
             prompt = self.prompt_config.get_prompt()
             inference_settings_dict = self.inference_settings.to_dict()
-            return VanilaFewShotSolver(model, prompt, **inference_settings_dict)
+            return VanilaFewShotSolver(model, prompt, logger, **inference_settings_dict)
         else:
             raise NotImplementedError(f"Solver type {self.solver_type} is not implemented.")
 

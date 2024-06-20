@@ -1,0 +1,1 @@
+You should solve math problem and think step by step to come to a solution. Use [STEPS] keyword to list down the steps used for getting to the answer. Output the final numerical answer should be a number printed after [ANSWER] keyword and the output should always stop with [END] keyword. The output must end with [END] token.

@@ -1,4 +1,6 @@
 import csv
+import logging
+import time
 import matplotlib.pyplot as plt
 
 from aimo_gaz.solver.abs_solver import Solver
@@ -12,8 +14,9 @@ def get_csv_data(path: str):
         return [x for x in reader]
 
 
-def evaluate(data, solver_cls = TestSolver):
-    solver = solver_cls()
+def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger : logging.Logger = None):
+    logger = logger if logger is not None else logging.getLogger(__name__)
+    solver = solver_cls() if solver is None else solver
 
     category_statistics = {}
     total = 0
@@ -29,7 +32,7 @@ def evaluate(data, solver_cls = TestSolver):
         try:
             answer = int(answer)
         except ValueError:
-            print("ERROR: Answer is not an integer for row {}".format(exidx))
+            logger.error("ERROR: Answer is not an integer for row {}".format(exidx))
             continue
 
         category = ex.get('Tag')
@@ -40,6 +43,11 @@ def evaluate(data, solver_cls = TestSolver):
 
         total += 1
         correct += solver_is_correct
+        logger.info(f'Example {exidx}:')
+        logger.info(f'Problem: {problem}')
+        logger.info(f'Answer: {answer}')
+        logger.info(f'Solver answer: {solver_ans}')
+        logger.info(f'Correct: {solver_is_correct}')
 
         if category:
             category_statistics.setdefault(category, {'correct': 0, 'total': 0})['total'] += 1
@@ -52,7 +60,7 @@ def evaluate(data, solver_cls = TestSolver):
     }
 
 
-def plot_category_statistics(category_statistics):
+def plot_category_statistics(category_statistics, time_str, benchmark):
 
     categories = list(category_statistics.keys())
     accuracies = [category_statistics[cat]['correct'] / category_statistics[cat]['total'] for cat in categories]
@@ -70,9 +78,25 @@ def plot_category_statistics(category_statistics):
 
     # Set y-limits to 0 to 1
     plt.ylim(0, 1)
+    plt.savefig(f'.logs/{time_str}/{benchmark}/category_statistics.png')
+    plt.close()
+    # plt.show()
 
-    plt.show()
+def evaluate_on_benchmarks(benchmark, valid_path, solver, time_str = None, logger : logging.Logger = None):
+    logger = logger if logger is not None else logging.getLogger(__name__)
+    data = get_csv_data(valid_path)
 
+    # TODO - you can change the solver class when more are made.
+    stats = evaluate(data, solver=solver, logger=logger)
+
+    logger.info(f'Benchmark: {benchmark}')
+    logger.info(f'Accuracy: {stats["correct"] / stats["total"]:.2f}')
+    for category, category_stats in stats['category_statistics'].items():
+        logger.info(f'Category: {category} ({category_stats["correct"] / category_stats["total"]:.2f})')
+    logger.info('\n\n')
+    time_str = time.strftime("%Y%m%d-%H%M%S") if time_str is None else time_str
+    if len(stats['category_statistics']) != 0:
+        plot_category_statistics(stats['category_statistics'], time_str, benchmark)
 
 if __name__ == "__main__":
     from argparse import ArgumentParser
