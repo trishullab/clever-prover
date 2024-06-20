@@ -3,6 +3,7 @@ from aimo_gaz.prompts.prompt import ConcatPrompt
 
 class CoTPrompt(ConcatPrompt):
     int_regex = re.compile(r"[-+]?\d+")
+    box_regex = re.compile(r"\\boxed{([-+]?\d+)}")
     def __init__(self, system_prompt_path: str = None, example_prompt_path: str = None, system_prompt: str = None, example_prompt: str = None):
         super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt)
         self.system_prompt = """
@@ -31,16 +32,16 @@ Once you found the answer write [END] and stop the response.\n\n
     #     return answer
 
     def parse_response(self, response: str) -> str:
-        # Find the last occurrence of '{' and '}'
-        start_idx = response.rfind('{')
-        end_idx = response.rfind('}')
-        if start_idx == -1 or end_idx == -1:
+        boxed_matches = self.box_regex.findall(response)
+        last_match = boxed_matches[-1] if boxed_matches else None
+        answer = last_match
+        if last_match is None:
             # Return the last integer in the response
             match = self.int_regex.findall(response)
             if match:
-                return match[-1]
-            return "No answer found."
+                answer = match[-1]
+            else:
+                answer = "No answer found."
         # Extract the answer
-        answer = response[start_idx + 1:end_idx]
         answer = answer.strip()
         return answer
