@@ -15,7 +15,7 @@ class FewShotSolver(Solver):
         if "problem_description_message" not in self.inference_kwargs:
             self.inference_kwargs["problem_description_message"] = "Below is a math problem you are to solve (positive numerical answer!):"
 
-    def solve(self, problem_description: str):
+    def solve(self, problem_description: str) -> int:
         if not self.model._is_loaded:
             self.model.__enter__()
         # Prompt the model with the problem description
@@ -68,3 +68,6 @@ class FewShotSolver(Solver):
     
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.model.__exit__(exc_type, exc_val, exc_tb)
+
+    def solve_intermediate(self, problem_description: str):
+        raise NotImplementedError("solve_intermediate is not implemented for FewShotSolver.")
