@@ -94,7 +94,7 @@ if __name__ == "__main__":
             # dump the code in a file
             with open(f".logs/{time_str}/temp/code.py", "w") as f:
                 f.write(actual_code)
-            print("Run the command python .logs/temp/code.py.")
+            print(f"Run the command python .logs/{time_str}/temp/code.py.")
             input("Run the code manually and press enter.")
             is_solved = input("Is the problem solved? (y/n): ").lower() == "y"
     pass
