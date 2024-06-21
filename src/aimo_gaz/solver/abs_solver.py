@@ -11,5 +11,9 @@ class Solver(ABC):
         pass
 
     @abstractmethod
-    def solve(self, problem_description: str):
+    def solve(self, problem_description: str) -> int:
+        pass
+
+    @abstractmethod
+    def solve_intermediate(self, problem_description: str) -> str:
         pass

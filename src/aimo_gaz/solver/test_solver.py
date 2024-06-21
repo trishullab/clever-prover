@@ -9,3 +9,6 @@ class TestSolver(Solver):
     
     def solve(self, problem_description: str):
         return 1
+    
+    def solve_intermediate(self, problem_description: str):
+        return "1"
