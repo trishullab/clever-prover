@@ -2,6 +2,7 @@ from aimo_gaz.solver.abs_solver import Solver
 from aimo_gaz.models.model import Model
 from aimo_gaz.prompts.prompt import Prompt
 import logging
+import typing
 
 class CodeSolver(Solver):
     def __init__(self, model: Model, prompt: Prompt, logger: logging.Logger = None, **inference_kwargs):
@@ -11,13 +12,13 @@ class CodeSolver(Solver):
         self.prompt = prompt
         self.inference_kwargs = inference_kwargs
         self.logger = logger
-        self.inference_kwargs["num_return_sequences"] = 1 # Currently, only one response is needed from the code solver
         self.history = []
+        self.inference_kwargs["return_full_text"] = False # We only need the generated text coz we have the history
    
     def solve(self, problem_escription: str) -> int:
         raise NotImplementedError("This method is not implemented.")
 
-    def solve_intermediate(self, problem_description: str) -> str:
+    def solve_intermediate(self, problem_description: str) -> typing.Union[str, typing.List[str]]:
         if not self.model._is_loaded:
             self.model.__enter__()
         # Prompt the model for the plan
@@ -33,10 +34,23 @@ class CodeSolver(Solver):
             self.logger.exception("Encountered exception.")        
         if response is None:
             generated_text = "Could not generate a response from the model."
-        else:
+            return generated_text
+        elif len(response.results) == 1 and len(response.results[0].generated_text) == 1:
             generated_text = response.results[0].generated_text[0]
+            self.history.append({"role": "assistant", "content": generated_text})
+            return generated_text
+        else:
+            generated_texts = []
+            for result in response.results:
+                for gen_text in result.generated_text:
+                    generated_texts.append(gen_text)
+            return generated_texts
+    
+    def add_response_to_history(self, generated_text: str):
         self.history.append({"role": "assistant", "content": generated_text})
-        return generated_text # We only need one response
+    
+    def reset(self):
+        self.history = []
 
     def __enter__(self):
         self.model.__enter__()

@@ -12,6 +12,7 @@ class PlannerSolver(Solver):
         self.inference_kwargs = inference_kwargs
         self.logger = logger
         self.inference_kwargs["num_return_sequences"] = 1 # Only one response is needed from planner agent
+        self.inference_kwargs["return_full_text"] = False # We only need the generated text coz we have the history
         self.history = []
    
     def solve(self, problem_escription: str) -> int:
@@ -40,6 +41,9 @@ class PlannerSolver(Solver):
         if not generated_text.strip().endswith("[END PROCEDURE]"):
             return generated_text.rstrip('\n') + "\n[END PROCEDURE]"
         return generated_text # We only need one response
+
+    def reset(self):
+        self.history = []
 
     def __enter__(self):
         self.model.__enter__()
