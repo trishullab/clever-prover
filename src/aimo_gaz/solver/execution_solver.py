@@ -145,6 +145,7 @@ print("[OUTPUT END]")"""
     
     def extract_last_output(self, output: str) -> str:
         # Find the last occurence of "[OUTPUT END]"
+        output = output.strip()
         assert output.endswith("[OUTPUT END]"), "Output does not end with [OUTPUT END]"
         stripped_output = output[:-len("[OUTPUT END]")].strip()
         if stripped_output.endswith("[CODE RAN SUCCESSFULLY]"):

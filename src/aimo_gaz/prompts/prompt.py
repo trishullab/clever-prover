@@ -23,12 +23,16 @@ class Prompt(ABC):
                 self.example_prompt = f.read()
 
 
-    def translate_for_deepseek(self, messages):
+    def translate_for_deepseek(self, messages, no_newline_after_assistant=False):
         last_role = None
         seen_user_role_before = False
 
         prompt = ''
+        is_last_message = False
+        msg_count = 0
         for message in messages:
+            msg_count += 1
+            is_last_message = msg_count == len(messages)
             if message['role'] == 'user':
 
                 if last_role == 'assistant':
@@ -42,7 +46,10 @@ class Prompt(ABC):
                 last_role = 'user'
                 seen_user_role_before = True
             elif message['role'] == 'assistant':
-                prompt += f'Assistant: {message["content"].strip()}\n'
+                if no_newline_after_assistant and is_last_message:
+                    prompt += f'Assistant: {message["content"].strip()}'
+                else:
+                    prompt += f'Assistant: {message["content"].strip()}\n'
                 last_role = 'assistant'
         if last_role == 'user':
             prompt += 'Assistant:'

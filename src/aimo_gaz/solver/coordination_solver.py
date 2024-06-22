@@ -1,6 +1,7 @@
 import logging
 import typing
 import time
+import copy
 from aimo_gaz.solver.abs_solver import Solver
 from aimo_gaz.solver.planner_solver import PlannerSolver
 from aimo_gaz.solver.code_solver import CodeSolver
@@ -64,13 +65,13 @@ class CoordinationSolver(Solver):
         # Plan
         plan = planner.solve_intermediate(problem_description)
         # Code
-        coder.history = planner.history.copy() # Coder should know the plan with full context
+        coder.history = copy.deepcopy(planner.history) # Coder should know the plan with full context
         coder.inference_kwargs["num_return_sequences"] = self.num_code_gens
         codes = coder.solve_intermediate(plan)
         if isinstance(codes, str):
             codes = [codes]
         # Execute
-        executor.history = coder.history.copy()
+        executor.history = copy.deepcopy(coder.history)
         outputs = executor.solve_intermediate_parallel(codes)
         # Extract the last output
         last_outputs = [executor.extract_last_output(output) for output in outputs]

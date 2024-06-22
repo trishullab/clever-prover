@@ -19,6 +19,8 @@ from aimo_gaz.models.model import Model
 from aimo_gaz.prompts.code_prompt import CodePrompt
 from aimo_gaz.prompts.planner_prompt import PlannerPrompt
 
+GLOBAL_MODEL_CACHE = {}
+
 class PromptType(Enum):
     Concat = "Concat"
     CoTPrompt = "CoTPrompt"
@@ -92,16 +94,28 @@ class SolverConfig:
         if self.solver_type == SolverType.TestSolver:
             return TestSolver()
         elif self.solver_type == SolverType.VanillaFewShotSolver:
-            model = Model(self.model_settings.name_or_path, self.model_settings.logging_dir, **self.model_settings.model_args)
+            if self.model_settings.name_or_path not in GLOBAL_MODEL_CACHE:
+                model = Model(self.model_settings.name_or_path, self.model_settings.logging_dir, **self.model_settings.model_args)
+                GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
+            else:
+                model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
             prompt = self.prompt_config.get_prompt()
             inference_settings_dict = self.inference_settings.to_dict()
             return VanilaFewShotSolver(model, prompt, logger, **inference_settings_dict)
         elif self.solver_type == SolverType.CodeSolver:
-            model = Model(self.model_settings.name_or_path, self.model_settings.logging_dir, **self.model_settings.model_args)
+            if self.model_settings.name_or_path not in GLOBAL_MODEL_CACHE:
+                model = Model(self.model_settings.name_or_path, self.model_settings.logging_dir, **self.model_settings.model_args)
+                GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
+            else:
+                model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
             prompt = self.prompt_config.get_prompt()
             return CodeSolver(model, prompt, logger, **self.inference_settings.to_dict())
         elif self.solver_type == SolverType.PlannerSolver:
-            model = Model(self.model_settings.name_or_path, self.model_settings.logging_dir, **self.model_settings.model_args)
+            if self.model_settings.name_or_path not in GLOBAL_MODEL_CACHE:
+                model = Model(self.model_settings.name_or_path, self.model_settings.logging_dir, **self.model_settings.model_args)
+                GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
+            else:
+                model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
             prompt = self.prompt_config.get_prompt()
             return PlannerSolver(model, prompt, logger, **self.inference_settings.to_dict())
         elif self.solver_type == SolverType.ExecutionSolver:

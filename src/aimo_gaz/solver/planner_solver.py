@@ -13,6 +13,7 @@ class PlannerSolver(Solver):
         self.logger = logger
         self.inference_kwargs["num_return_sequences"] = 1 # Only one response is needed from planner agent
         self.inference_kwargs["return_full_text"] = False # We only need the generated text coz we have the history
+        self.inference_kwargs["stop_tokens"] = ["[END PROCEDURE]", "\n\n", "<｜end▁of▁sentence｜>"]
         self.history = []
    
     def solve(self, problem_escription: str) -> int:
@@ -37,7 +38,10 @@ class PlannerSolver(Solver):
             generated_text = "Could not generate a response from the model."
         else:
             generated_text = response.results[0].generated_text[0]
-        self.history.append({"role": "assistant", "content": generated_text})
+        if self.history[-1]['role'] == "assistant":
+            self.history[-1]['content'] += generated_text
+        else:
+            self.history.append({"role": "assistant", "content": generated_text})
         assert len(response.results) == 1, "No response (or too many responses) from the model."
         if not generated_text.strip().endswith("[END PROCEDURE]"):
             generated_text = generated_text.rstrip('\n') + "\n[END PROCEDURE]"

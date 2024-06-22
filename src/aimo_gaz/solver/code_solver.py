@@ -14,6 +14,7 @@ class CodeSolver(Solver):
         self.logger = logger
         self.history = []
         self.inference_kwargs["return_full_text"] = False # We only need the generated text coz we have the history
+        self.inference_kwargs["stop_tokens"] = ["[END CODE]", "<｜end▁of▁sentence｜>"]
    
     def solve(self, problem_escription: str) -> int:
         raise NotImplementedError("This method is not implemented.")
@@ -38,7 +39,10 @@ class CodeSolver(Solver):
             return generated_text
         elif len(response.results) == 1 and len(response.results[0].generated_text) == 1:
             generated_text = response.results[0].generated_text[0]
-            self.history.append({"role": "assistant", "content": generated_text})
+            if self.history[-1]['role'] == "assistant":
+                self.history[-1]['content'] += generated_text
+            else:
+                self.history.append({"role": "assistant", "content": generated_text})
             self.logger.info(f"[CODE SOLVER] Generated text:\n{generated_text}")
             return generated_text
         else:
@@ -50,7 +54,10 @@ class CodeSolver(Solver):
             return generated_texts
     
     def add_response_to_history(self, generated_text: str):
-        self.history.append({"role": "assistant", "content": generated_text})
+        if self.history[-1]['role'] == "assistant":
+            self.history[-1]['content'] += generated_text
+        else:
+            self.history.append({"role": "assistant", "content": generated_text})
     
     def reset(self):
         self.history = []

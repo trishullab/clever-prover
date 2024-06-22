@@ -1,29 +1,24 @@
 from aimo_gaz.prompts.prompt import ConcatPrompt
+import copy
 
 class PlannerPrompt(ConcatPrompt):
     def __init__(self, system_prompt_path: str = None, example_prompt_path: str = None, system_prompt: str = None, example_prompt: str = None,  append_system_prompt_after_every_message: bool = False):
         super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt, append_system_prompt_after_every_message)
         self.system_prompt = None
         self.user_messages = [
-"""
-Give a BRIEF high-level procedure, in the form of a SHORT list, that lists the intermediate subgoals that should be performed using sympy, NOT YOU, to solve this problem. Do NOT try to solve the problem, do NOT include any computations or choices. Write [END PROCEDURE] when you have finished the list. An example is shown below.
+"""Give a BRIEF high-level procedure, in the form of a SHORT list, that lists the intermediate subgoals that should be performed using sympy, NOT YOU, to solve this problem. Do NOT try to solve the problem, do NOT include any computations or choices. Write [END PROCEDURE] when you have finished the list. An example is shown below.
 Problem: For how many positive integers $m$ does the equation $||x-1|-2|=m/100$ have $4$ distinct solutions?""",
-"""
-User:
-Below is the math problem you are to solve. Please describe a high-level procedure to solve the problem.
+"""Below is the math problem you are to solve. Please describe a high-level procedure to solve the problem.
 Problem: {}
 """
         ]
         self.assistant_message_starts = [
-"""
-[START PROCEDURE]
+"""[SHORT PROCEDURE]
 Procedure:
 1. Solve for the solution set of $||x-1|-2|=m/100$ where $m$ is a positive integer.
 2. Count the number of choices of $m$ where the solution set has 4 elements.
-[END PROCEDURE]
-""",
-"""
-[START PROCEDURE]
+[END PROCEDURE]""",
+"""[SHORT PROCEDURE]
 Procedure:
 1."""
         ]
@@ -36,13 +31,14 @@ Procedure:
                     main_message_added = True
                     break
             if not main_message_added:
-                messages = [
-                {'role': 'user', 'content': self.user_messages[0]}, 
-                {'role': 'assistant', 'content': self.assistant_message_starts[0]}
-                ] + messages
+                messages_copy = copy.deepcopy(messages)
+                messages.clear()
+                messages.append({'role': 'user', 'content': self.user_messages[0]})
+                messages.append({'role': 'assistant', 'content': self.assistant_message_starts[0]})
+                messages += messages_copy # This is to ensure that the user message is not lost
             messages[-1]['content'] = self.user_messages[1].format(messages[-1]['content'])
             messages.append({'role': 'assistant', 'content': self.assistant_message_starts[1]})
-        return self.translate_for_deepseek(messages)
+        return self.translate_for_deepseek(messages, no_newline_after_assistant=True)
     
     def parse_response(self, response: str) -> str:
         return response
