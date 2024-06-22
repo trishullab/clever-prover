@@ -1,10 +1,12 @@
 from aimo_gaz.solver.abs_solver import Solver
 from aimo_gaz.models.model import Model
+from typing import Union
+from aimo_gaz.solver.solver_config import vLLMHarness
 from aimo_gaz.prompts.prompt import Prompt
 import logging
 
 class CodeSolver(Solver):
-    def __init__(self, model: Model, prompt: Prompt, logger: logging.Logger = None, **inference_kwargs):
+    def __init__(self, model: Union[vLLMHarness, Model], prompt: Prompt, logger: logging.Logger = None, **inference_kwargs):
         assert model is not None, "model must be provided."
         assert prompt is not None, "prompt must be provided."
         self.model = model
@@ -27,13 +29,14 @@ class CodeSolver(Solver):
             response = None
         if response is None:
             return "Could not generate a response from the model."
-        assert len(response.results) == 1, "No response (or too many responses) from the model."
-        return response.results[0].generated_text[0] # We only need one response
+        outs = self.model.parse_out(response)
+        assert len(outs) == 1, "No response (or too many responses) from the model."
+        return outs[0][0]
 
     def __enter__(self):
         self.model.__enter__()
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.model.__exit__(exc_type, exc_val, exc_tb)
 

@@ -1,11 +1,13 @@
 from aimo_gaz.solver.abs_solver import Solver
 from aimo_gaz.models.model import Model
+from aimo_gaz.solver.solver_config import vLLMHarness
+from typing import Union
 from aimo_gaz.prompts.prompt import Prompt
 from collections import Counter
 import logging
 
 class FewShotSolver(Solver):
-    def __init__(self, model: Model, prompt: Prompt, logger: logging.Logger = None, **inference_kwargs):
+    def __init__(self, model: Union[vLLMHarness, Model], prompt: Prompt, logger: logging.Logger = None, **inference_kwargs):
         assert model is not None, "model must be provided."
         assert prompt is not None, "prompt must be provided."
         self.model = model
@@ -38,12 +40,14 @@ class FewShotSolver(Solver):
             retry_count += 1
         if response is None:
             return -1 # Maybe return the most common answer from the training data
-        assert len(response.results) > 0, "No response from the model."
-        responses = response.results
+        response = self.model.parse_out(response)
+
+        assert len(response) > 0, "No response from the model."
+        responses = response
         answers = []
         self.logger.info(f"Prompt:\n{prompt}")
         for resp in responses:
-            for gen_text in resp.generated_text:
+            for gen_text in resp:
                 try:
                     self.logger.info(f"Generated text:\n{gen_text}")
                     self.logger.info(f"="*50)

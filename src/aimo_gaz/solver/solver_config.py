@@ -6,10 +6,44 @@ from aimo_gaz.prompts.cot_prompt import CoTPrompt
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
 from enum import Enum
+from aimo_gaz.models.model import Model
+from vllm import LLM, SamplingParams
+
+
+class vLLMHarness:
+    def __init__(self, model, sampling_params):
+        self.model = model
+        self.sampling_params = sampling_params
+        self._is_loaded = True
+
+    def generate(self, prompt, **kwargs):
+        # TODO - yucky, not sure if they have a standard way of doing this.
+        for key, value in kwargs.items():
+            setattr(self.sampling_params, key, value)
+        out = self.model.generate(prompt, self.sampling_params)
+        return out
+
+    def parse_out(self, out):
+        generated_text = [[y.text for y in x.outputs] for x in out]
+        return generated_text
+
+
+    @classmethod
+    def load_from_config(cls, model_name, vllm_params, sampling_params):
+        model = LLM(model_name, **vllm_params)
+        sampling_params = SamplingParams(**sampling_params)
+        return cls(model, sampling_params)
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+
 from aimo_gaz.solver.test_solver import TestSolver
 from aimo_gaz.solver.abs_solver import Solver
 from aimo_gaz.solver.vanilla_few_shot_solver import FewShotSolver as VanilaFewShotSolver
-from aimo_gaz.models.model import Model
 
 class PromptType(Enum):
     Concat = "Concat"
@@ -45,8 +79,10 @@ class PromptConfig:
 class ModelSettings(object):
     name_or_path: str
     logging_dir: str
+    use_vllm: bool
     model_args: dict = field(default_factory=dict)
-
+    vllm_model_args: dict = field(default_factory=dict)
+    vllm_sample_args: dict = field(default_factory=dict)
 
 @dataclass_json
 @dataclass
@@ -74,7 +110,14 @@ class SolverConfig:
         if self.solver_type == SolverType.TestSolver:
             return TestSolver()
         elif self.solver_type == SolverType.VanillaFewShotSolver:
-            model = Model(self.model_settings.name_or_path, self.model_settings.logging_dir, **self.model_settings.model_args)
+            if self.model_settings.use_vllm:
+                vllm_model = LLM(self.model_settings.name_or_path, **self.model_settings.vllm_model_args)
+                sampling_params = SamplingParams(**self.model_settings.vllm_sample_args)
+                model = vLLMHarness(vllm_model, sampling_params)
+            else:
+                model = Model(self.model_settings.name_or_path, self.model_settings.logging_dir, **self.model_settings.model_args)
+
+
             prompt = self.prompt_config.get_prompt()
             inference_settings_dict = self.inference_settings.to_dict()
             return VanilaFewShotSolver(model, prompt, logger, **inference_settings_dict)

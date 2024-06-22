@@ -1,10 +1,12 @@
 from aimo_gaz.solver.abs_solver import Solver
 from aimo_gaz.models.model import Model
+from aimo_gaz.solver.solver_config import vLLMHarness
 from aimo_gaz.prompts.prompt import Prompt
+from typing import Union
 import logging
 
 class PlannerSolver(Solver):
-    def __init__(self, model: Model, prompt: Prompt, logger: logging.Logger = None, **inference_kwargs):
+    def __init__(self, model: Union[vLLMHarness, Model], prompt: Prompt, logger: logging.Logger = None, **inference_kwargs):
         assert model is not None, "model must be provided."
         assert prompt is not None, "prompt must be provided."
         self.model = model
@@ -28,8 +30,10 @@ class PlannerSolver(Solver):
             response = None
         if response is None:
             return "Could not generate a response from the model."
-        assert len(response.results) == 1, "No response (or too many responses) from the model."
-        return response.results[0].generated_text[0] # We only need one response
+        outs = self.model.parse_out(response)
+        assert len(outs) == 1, "No response (or too many responses) from the model."
+        # return response.results[0].generated_text[0] # We only need one response
+        return outs[0][0]
 
     def __enter__(self):
         self.model.__enter__()
@@ -57,17 +61,17 @@ if __name__ == "__main__":
         "base_device": 3
     }
     inference_args = {
-        "max_new_tokens": 1024,
+        "max_tokens": 1024,
         "temperature": 0.9,
         "top_p": 1.0,
-        "top_k": None,
-        "do_sample": True,
-        "num_return_sequences": 1,
-        "max_length": 2048,
-        "return_full_text": True, # We want the problem description to be returned as well
-        "stop_tokens": ["[END]"] # TODO: Decide the stop token and probably mention it in the prompt class
+        # "top_k": None,
+        # "do_sample": True,
+        "n": 1,
+        # "max_length": 2048,
+        # "return_full_text": True, # We want the problem description to be returned as well
+        "stop_token_ids": ["[END]"] # TODO: Decide the stop token and probably mention it in the prompt class
     }
-    model = Model(model_name_or_path, model_logging_dir, **model_args)
+    model = vLLMHarness.load_from_config(model_name_or_path, {"dtype": "half", "gpu_memory_utilization": 0.95, "tensor_parallel_size": 2}, inference_args)
     prompt = PlannerPrompt(system_prompt="", example_prompt="") # These are hard-coded in the class anyway
     solver = PlannerSolver(model, prompt)
     problem_description = "Find the value of x in the equation 2x + 3 = 7."

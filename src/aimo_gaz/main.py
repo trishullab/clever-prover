@@ -26,16 +26,16 @@ def main(cfg):
     solver_config = parse_solver_config(cfg)
     solver = solver_config.get_solver(logger)
     with solver:
-        # test_solver(solver)
+        test_solver(solver)
         # Run benchmarking here
-        root = os.environ.get("AIMO_GAZ_ROOT")
-        data_dir = os.path.dirname(root)
-        data_dir = os.path.dirname(data_dir)
-        data_dir = os.path.join(data_dir, "data")
-        benchmark = "kaggle_train_10"
-        logger.info(f"Running on {benchmark}")
-        os.makedirs(f".logs/{time_str}/{benchmark}", exist_ok=True)
-        evaluate_on_benchmarks(benchmark, os.path.join(data_dir, "kaggle_train_10.csv"), solver, time_str, logger)
+        # root = os.environ.get("AIMO_GAZ_ROOT")
+        # data_dir = os.path.dirname(root)
+        # data_dir = os.path.dirname(data_dir)
+        # data_dir = os.path.join(data_dir, "data")
+        # benchmark = "kaggle_train_10"
+        # logger.info(f"Running on {benchmark}")
+        # os.makedirs(f".logs/{time_str}/{benchmark}", exist_ok=True)
+        # evaluate_on_benchmarks(benchmark, os.path.join(data_dir, "kaggle_train_10.csv"), solver, time_str, logger)
 
 if __name__ == "__main__":
     main()
