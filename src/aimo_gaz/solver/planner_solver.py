@@ -20,7 +20,7 @@ class PlannerSolver(Solver):
         if not self.model._is_loaded:
             self.model.__enter__()
         # Prompt the model for the plan
-        prompt = self.prompt.get_prompt([{"" : problem_description}])
+        prompt = self.prompt.get_prompt([{"role": "user", "content": problem_description}])
         # Get the moel response
         try:
             response = self.model.generate(prompt, **self.inference_kwargs)

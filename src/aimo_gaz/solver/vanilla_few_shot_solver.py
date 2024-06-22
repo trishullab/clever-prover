@@ -20,7 +20,8 @@ class FewShotSolver(Solver):
             self.model.__enter__()
         # Prompt the model with the problem description
         problem_description_message = str(self.inference_kwargs["problem_description_message"])
-        prompt = self.prompt.get_prompt([{problem_description_message: problem_description}])
+
+        prompt = self.prompt.get_prompt([{'role': 'user', 'content': problem_description}])
         # Get the model's response
         response = None
         retry_count = 0
