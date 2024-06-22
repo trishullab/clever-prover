@@ -33,11 +33,12 @@ class Prompt(ABC):
 
                 if last_role == 'assistant':
                     prompt += '<｜end▁of▁sentence｜>'
-                if self.system_prompt is not None and (self.append_system_prompt_after_every_message or not seen_user_role_before):
-                    # prompt += f'User: {self.system_prompt}{message["content"]}\n'
-                    prompt += f"User: {self.system_prompt.format(message['content'], '{}').strip()}\n"
-                else:
-                    prompt += f'User: {message["content"].strip()}\n'
+                # if self.system_prompt is not None and (self.append_system_prompt_after_every_message or not seen_user_role_before):
+                #     # prompt += f'User: {self.system_prompt}{message["content"]}\n'
+                #     prompt += f"User: {self.system_prompt.format(message['content']).strip()}\n"
+                # else:
+                #     prompt += f'User: {message["content"].strip()}\n'
+                prompt += f'User: {message["content"].strip()}\n'
                 last_role = 'user'
                 seen_user_role_before = True
             elif message['role'] == 'assistant':

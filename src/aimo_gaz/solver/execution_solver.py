@@ -6,10 +6,9 @@ import typing
 from subprocess import Popen, PIPE, STDOUT
 
 class ExecutionSolver(Solver):
-    def __init__(self, timeout_in_secs: int, logger: logging.Logger = None, **inference_kwargs):
+    def __init__(self, logger: logging.Logger = None, timeout_in_secs: float = 120.0):
         assert logger is not None, "logger must be provided."
         self.logger = logger
-        self.inference_kwargs = inference_kwargs
         self.history = []
         self.timeout_in_secs = timeout_in_secs
     
@@ -70,6 +69,13 @@ class ExecutionSolver(Solver):
 [OUTPUT START]
 Execution timed out after {self.timeout_in_secs} seconds.
 [TIMEOUT]
+[OUTPUT END]"""
+        elif process.returncode != 0 and not output.endswith("[OUTPUT END]"):
+            return f"""
+[OUTPUT START]
+Execution failed with return code {process.returncode}.
+{output}
+[CODE RAISED EXCEPTION]
 [OUTPUT END]"""
         else:
             return output
@@ -180,7 +186,7 @@ print(f\"Solving equation: {eq}\")
 sol = solve(eq, x)
 print(sol)
 """
-    solver = ExecutionSolver(timeout_in_secs=10, logger=logger)
+    solver = ExecutionSolver(logger=logger, timeout_in_secs=5)
     with solver:
         output = solver.solve_intermediate(code)
         print(output)

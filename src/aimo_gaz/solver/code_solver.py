@@ -25,6 +25,7 @@ class CodeSolver(Solver):
         message = {"role": "user", "content": problem_description}
         self.history.append(message)
         prompt = self.prompt.get_prompt(self.history)
+        self.logger.info(f"[CODE SOLVER] Raw prompt used:\n{prompt}")
         # Get the moel response
         response = None
         try:
@@ -38,12 +39,14 @@ class CodeSolver(Solver):
         elif len(response.results) == 1 and len(response.results[0].generated_text) == 1:
             generated_text = response.results[0].generated_text[0]
             self.history.append({"role": "assistant", "content": generated_text})
+            self.logger.info(f"[CODE SOLVER] Generated text:\n{generated_text}")
             return generated_text
         else:
             generated_texts = []
             for result in response.results:
                 for gen_text in result.generated_text:
                     generated_texts.append(gen_text)
+                    self.logger.info(f"[CODE SOLVER] Generated text:\n{gen_text}")
             return generated_texts
     
     def add_response_to_history(self, generated_text: str):

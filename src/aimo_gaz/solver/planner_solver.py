@@ -25,6 +25,7 @@ class PlannerSolver(Solver):
         message = {"role": "user", "content": problem_description}
         self.history.append(message)
         prompt = self.prompt.get_prompt(self.history)
+        self.logger.info(f"[PLANNER] Raw prompt used:\n{prompt}")
         # Get the moel response
         response = None
         try:
@@ -39,7 +40,8 @@ class PlannerSolver(Solver):
         self.history.append({"role": "assistant", "content": generated_text})
         assert len(response.results) == 1, "No response (or too many responses) from the model."
         if not generated_text.strip().endswith("[END PROCEDURE]"):
-            return generated_text.rstrip('\n') + "\n[END PROCEDURE]"
+            generated_text = generated_text.rstrip('\n') + "\n[END PROCEDURE]"
+        self.logger.info(f"[PLANNER] Plan generated:\n{generated_text}")
         return generated_text # We only need one response
 
     def reset(self):
