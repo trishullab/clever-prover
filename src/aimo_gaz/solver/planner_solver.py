@@ -26,14 +26,16 @@ class PlannerSolver(Solver):
         # Get the moel response
         try:
             response = self.model.generate(prompt, **self.inference_kwargs)
-        except:
+        except Exception as e:
             response = None
+            print(f"Encountered exception: {e}")
         if response is None:
             return "Could not generate a response from the model."
         outs = self.model.parse_out(response)
         assert len(outs) == 1, "No response (or too many responses) from the model."
-        # return response.results[0].generated_text[0] # We only need one response
-        return outs[0][0]
+        if not outs[0][0].strip().endswith("[END PROCEDURE]"):
+            return outs[0][0].rstrip('\n') + "\n[END PROCEDURE]"
+        return outs[0][0] # We only need one response
 
     def __enter__(self):
         self.model.__enter__()
@@ -47,17 +49,17 @@ if __name__ == "__main__":
     from aimo_gaz.prompts.planner_prompt import PlannerPrompt
     import time
 
-    model_name_or_path = "deepseek-ai/deepseek-coder-1.3b-instruct"
+    model_name_or_path = "deepseek-ai/deepseek-math-7b-rl" # "deepseek-ai/deepseek-math-7b-rl" #"deepseek-ai/deepseek-coder-1.3b-instruct"
     model_logging_dir = ".logs/model"
 
     model_args = {
         "no_init_eval": True,
         "padding": True,
         "truncation": True,
-        "max_seq_length": 16384,
-        "max_length": 16384,
+        "max_seq_length": 4096, # 16384
+        "max_length": 4096, # 16384
         "load_model": True,
-        "use_lora": False,
+        "use_lora": True,
         "is_seq2seq": False,
         "token": None,
         "comet_experiment": None,
@@ -65,14 +67,14 @@ if __name__ == "__main__":
     }
     inference_args = {
         "max_new_tokens": 1024,
-        "temperature": 0.9,
+        "temperature": 0.7,
         "top_p": 1.0,
         "top_k": None,
         "do_sample": True,
         "num_return_sequences": 1,
         "max_length": 2048,
         "return_full_text": True, # We want the problem description to be returned as well
-        "stop_tokens": ["[END]"] # TODO: Decide the stop token and probably mention it in the prompt class
+        "stop_tokens": ["[END PROCEDURE]", "\n\n"] # TODO: Decide the stop token and probably mention it in the prompt class
     }
     vllm_inference_args = {
         "max_tokens": 512,
@@ -87,21 +89,22 @@ if __name__ == "__main__":
     }
     use_vllm = True
     if use_vllm:
-        model = vLLMHarness.load_from_config(model_name_or_path, {"dtype": "float32", "gpu_memory_utilization": 0.95, "tensor_parallel_size": 1, 'max_model_len':1024}, vllm_inference_args)
+        model = vLLMHarness.load_from_config(model_name_or_path, {"dtype": "float16", "gpu_memory_utilization": 0.95, "tensor_parallel_size": 2, 'max_model_len':1024}, vllm_inference_args)
         prompt = PlannerPrompt(system_prompt="", example_prompt="")  # These are hard-coded in the class anyway
-        problem_description = "Find the value of x in the equation 2x + 3 = 7."
+        problem_description = "There exists a unique increasing geometric sequence of five 2-digit positive integers. What is their sum?"
         solver = PlannerSolver(model, prompt)
     else:
         model = Model(model_name_or_path, model_logging_dir, **model_args)
         prompt = PlannerPrompt(system_prompt="", example_prompt="")  # These are hard-coded in the class anyway
-        problem_description = "Find the value of x in the equation 2x + 3 = 7."
+        problem_description = "There exists a unique increasing geometric sequence of five 2-digit positive integers. What is their sum?"
         solver = PlannerSolver(model, prompt, **inference_args)
-
 
     with solver:
         is_solved = False
-        while not is_solved:
-            # Time the call
+        max_tries = 5
+        current_tries = 0
+        while not is_solved and current_tries < max_tries:
+            current_tries += 1
             start = time.time()
             plan = solver.solve_intermediate(problem_description)
             end = time.time()
