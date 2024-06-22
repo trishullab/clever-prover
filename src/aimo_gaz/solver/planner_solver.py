@@ -12,6 +12,9 @@ class PlannerSolver(Solver):
         self.inference_kwargs = inference_kwargs
         self.logger = logger
         self.inference_kwargs["num_return_sequences"] = 1 # Only one response is needed from planner agent
+        self.inference_kwargs["return_full_text"] = False # We only need the generated text coz we have the history
+        self.inference_kwargs["stop_tokens"] = ["[END PROCEDURE]", "\n\n", "<｜end▁of▁sentence｜>"]
+        self.history = []
    
     def solve(self, problem_escription: str) -> int:
         raise NotImplementedError("This method is not implemented.")
@@ -20,19 +23,33 @@ class PlannerSolver(Solver):
         if not self.model._is_loaded:
             self.model.__enter__()
         # Prompt the model for the plan
-        prompt = self.prompt.get_prompt([{"role": "user", "content": problem_description}])
+        message = {"role": "user", "content": problem_description}
+        self.history.append(message)
+        prompt = self.prompt.get_prompt(self.history)
+        self.logger.info(f"[PLANNER] Raw prompt used:\n{prompt}")
         # Get the moel response
+        response = None
         try:
             response = self.model.generate(prompt, **self.inference_kwargs)
-        except Exception as e:
+        except Exception:
             response = None
-            print(f"Encountered exception: {e}")
+            self.logger.exception("Encountered exception.")
         if response is None:
-            return "Could not generate a response from the model."
+            generated_text = "Could not generate a response from the model."
+        else:
+            generated_text = response.results[0].generated_text[0]
+        if self.history[-1]['role'] == "assistant":
+            self.history[-1]['content'] += generated_text
+        else:
+            self.history.append({"role": "assistant", "content": generated_text})
         assert len(response.results) == 1, "No response (or too many responses) from the model."
-        if not response.results[0].generated_text[0].strip().endswith("[END PROCEDURE]"):
-            return response.results[0].generated_text[0].rstrip('\n') + "\n[END PROCEDURE]"
-        return response.results[0].generated_text[0] # We only need one response
+        if not generated_text.strip().endswith("[END PROCEDURE]"):
+            generated_text = generated_text.rstrip('\n') + "\n[END PROCEDURE]"
+        self.logger.info(f"[PLANNER] Plan generated:\n{generated_text}")
+        return generated_text # We only need one response
+
+    def reset(self):
+        self.history = []
 
     def __enter__(self):
         self.model.__enter__()

@@ -12,3 +12,6 @@ class TestSolver(Solver):
     
     def solve_intermediate(self, problem_description: str):
         return "1"
+    
+    def reset(self):
+        pass

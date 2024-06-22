@@ -12,6 +12,7 @@ class FewShotSolver(Solver):
         self.prompt = prompt
         self.inference_kwargs = inference_kwargs
         self.logger = logger
+        self.history = []
         if "problem_description_message" not in self.inference_kwargs:
             self.inference_kwargs["problem_description_message"] = "Below is a math problem you are to solve (positive numerical answer!):"
 
@@ -19,9 +20,9 @@ class FewShotSolver(Solver):
         if not self.model._is_loaded:
             self.model.__enter__()
         # Prompt the model with the problem description
-        problem_description_message = str(self.inference_kwargs["problem_description_message"])
-
-        prompt = self.prompt.get_prompt([{'role': 'user', 'content': problem_description}])
+        message = {"role": "user", "content": problem_description}
+        self.history.append(message)
+        prompt = self.prompt.get_prompt(self.history)
         # Get the model's response
         response = None
         retry_count = 0
