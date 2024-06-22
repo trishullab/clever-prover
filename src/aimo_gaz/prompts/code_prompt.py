@@ -5,9 +5,9 @@ class CodePrompt(ConcatPrompt):
         super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt, append_system_prompt_after_every_message)
         self.system_prompt = None
         self.user_message = """Based on the procedure above, now let us write python code to solve the problem.
-Make sure to print the final answer on a new line and end the code with the token [END CODE]."""
+Make sure to print the final answer on a new line using print command. Only generate code for printing answer don't try to run the code. End the code with the token [END CODE]."""
         self.assistant_message_start = """```python code:
-# [START CODE] Write your code here
+# [START CODE] Below is the code.
 """
     def get_prompt(self, messages: list[dict[str, str]]) -> str:
         if messages[-1]['role'] == 'assistant':
