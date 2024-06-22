@@ -7,11 +7,11 @@ model_args:
   max_seq_length: 4096
   max_length: 4096
   load_model: True
-  use_lora: False
+  use_lora: True
   is_seq2seq: False # Deepseek is Causal LM
   token:
   comet_experiment:
-  base_device: 3
+  base_device: 0
   device_map:
     model.embed_tokens : 0
     model.layers.0 : 0

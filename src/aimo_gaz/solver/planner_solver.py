@@ -16,7 +16,7 @@ class PlannerSolver(Solver):
         self.inference_kwargs["stop_tokens"] = ["[END PROCEDURE]", "\n\n", "<｜end▁of▁sentence｜>"]
         self.history = []
    
-    def solve(self, problem_escription: str) -> int:
+    def solve(self, problem_description: str) -> int:
         raise NotImplementedError("This method is not implemented.")
 
     def solve_intermediate(self, problem_description: str) -> str:
@@ -46,8 +46,8 @@ class PlannerSolver(Solver):
         if not generated_text.strip().endswith("[END PROCEDURE]"):
             generated_text = generated_text.rstrip('\n') + "\n[END PROCEDURE]"
         self.logger.info(f"[PLANNER] Plan generated:\n{generated_text}")
-        return generated_text # We only need one response
-
+        return f"1. {generated_text.replace('[END PROCEDURE]', '')}"
+        # generated_text
     def reset(self):
         self.history = []
 

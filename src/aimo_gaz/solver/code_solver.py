@@ -14,21 +14,24 @@ class CodeSolver(Solver):
         self.logger = logger
         self.history = []
         self.inference_kwargs["return_full_text"] = False # We only need the generated text coz we have the history
-        self.inference_kwargs["stop_tokens"] = ["[END CODE]", "<｜end▁of▁sentence｜>"]
+        self.inference_kwargs["stop_tokens"] = ["[END CODE]", "```", "<｜end▁of▁sentence｜>"]
    
-    def solve(self, problem_escription: str) -> int:
+    def solve(self, problem_description: str) -> int:
         raise NotImplementedError("This method is not implemented.")
 
-    def solve_intermediate(self, problem_description: str) -> typing.Union[str, typing.List[str]]:
+    def solve_intermediate(self, problem_description: str, plan: str = None) -> typing.Union[str, typing.List[str]]:
         if not self.model._is_loaded:
             self.model.__enter__()
         # Prompt the model for the plan
-        if problem_description is not None:
-            message = {"role": "user", "content": problem_description}
-            self.history.append(message)
+        if problem_description is not None and plan is not None:
+            assert self.history == [], "History not empty (Code Solver)"
+            message_problem = {"role": "user", "content": problem_description}
+            message_plan = {"role": "user", "content": plan}
+            self.history.append(message_problem)
+            self.history.append(message_plan)
         prompt = self.prompt.get_prompt(self.history)
         self.logger.info(f"[CODE SOLVER] Raw prompt used:\n{prompt}")
-        # Get the moel response
+        # Get the model response
         response = None
         try:
             response = self.model.generate(prompt, **self.inference_kwargs)
@@ -38,7 +41,7 @@ class CodeSolver(Solver):
         if response is None:
             generated_text = "Could not generate a response from the model."
             return generated_text
-        elif len(response.results) == 1 and len(response.results[0].generated_text) == 1:
+        elif False and len(response.results) == 1 and len(response.results[0].generated_text) == 1:
             generated_text = response.results[0].generated_text[0]
             if self.history[-1]['role'] == "assistant":
                 self.history[-1]['content'] += generated_text
@@ -50,7 +53,14 @@ class CodeSolver(Solver):
             generated_texts = []
             for result in response.results:
                 for gen_text in result.generated_text:
-                    generated_texts.append(gen_text)
+                    if gen_text.endswith('[END CODE]'):
+                        generated_texts.append(gen_text.replace('[END CODE]', ''))
+                    elif gen_text.endswith('```'):
+                        generated_texts.append(gen_text.replace('```', ''))
+                    elif gen_text.endwiths('<｜end▁of▁sentence｜>'):
+                        generated_texts.append(gen_text.replace('<｜end▁of▁sentence｜>', ''))
+                    else:
+                        generated_texts.append(f"{gen_text}")
                     self.logger.info(f"[CODE SOLVER] Generated text:\n{gen_text}")
             return generated_texts
     
