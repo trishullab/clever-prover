@@ -8,8 +8,7 @@ class PlannerPrompt(ConcatPrompt):
         self.user_messages = [
 """Give a BRIEF high-level procedure, in the form of a SHORT list of at most 5 steps, that lists the intermediate subgoals that should be performed using sympy, NOT YOU, to solve this problem. Do NOT try to solve the problem, do NOT include any computations or choices. Write [END PROCEDURE] when you have finished the list. An example is shown below.
 Problem: For how many positive integers $m$ does the equation $||x-1|-2|=m/100$ have $4$ distinct solutions?""",
-"""Below is the math problem you are to solve. Please describe a high-level procedure to solve the problem.
-Problem: {}
+"""Problem: {}
 """
         ]
         self.assistant_message_starts = [
