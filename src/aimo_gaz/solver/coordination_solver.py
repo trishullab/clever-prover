@@ -67,7 +67,7 @@ class CoordinationSolver(Solver):
         # Code
         coder.history = copy.deepcopy(planner.history) # Coder should know the plan with full context
         coder.inference_kwargs["num_return_sequences"] = self.num_code_gens
-        codes = coder.solve_intermediate(plan)
+        codes = coder.solve_intermediate(None) # Since history is already set, we don't need to provide the problem description
         if isinstance(codes, str):
             codes = [codes]
         # Execute

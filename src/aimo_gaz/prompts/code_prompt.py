@@ -10,8 +10,8 @@ Make sure to print the final answer on a new line and end the code with the toke
 # [START CODE] Write your code here
 """
     def get_prompt(self, messages: list[dict[str, str]]) -> str:
-        if messages[-1]['role'] == 'user':
-            messages[-1]['content'] += self.user_message
+        if messages[-1]['role'] == 'assistant':
+            messages.append({'role': 'user', 'content': self.user_message})
             messages.append({'role': 'assistant', 'content': self.assistant_message_start})
         return self.translate_for_deepseek(messages, no_newline_after_assistant=True)
 

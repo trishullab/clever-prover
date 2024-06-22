@@ -3,7 +3,7 @@ import logging
 import os
 import tempfile
 import typing
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen, PIPE, STDOUT, TimeoutExpired
 
 class ExecutionSolver(Solver):
     def __init__(self, logger: logging.Logger = None, timeout_in_secs: float = 120.0):
@@ -22,8 +22,11 @@ class ExecutionSolver(Solver):
             bufsize = 1, 
             universal_newlines = True)
         # Start the process, and wait for it to finish
-        process.wait(timeout=timeout_in_secs)
-        is_timeout = process.poll() is None
+        try:
+            process.wait(timeout=timeout_in_secs)
+            is_timeout = False
+        except TimeoutExpired:
+            is_timeout = True
         # Get the output
         output = process.stdout.read()
         # Kill the process if it is still running
@@ -48,8 +51,11 @@ class ExecutionSolver(Solver):
         for process in processes:
             # Start the process, and wait for it to finish
             # This won't really be sequential because other processes are running in background
-            process.wait(timeout=timeout_in_secs)
-            is_timeout = process.poll() is None
+            try:
+                process.wait(timeout=timeout_in_secs)
+                is_timeout = False
+            except TimeoutExpired:
+                is_timeout = True
             if is_timeout:
                 # One worst case when every process times out, this will block sequentially waiting for each process
                 # So if one process timeout, probably other either finished or are about to finish or timed out

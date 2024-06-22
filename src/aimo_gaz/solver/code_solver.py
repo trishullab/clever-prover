@@ -23,8 +23,9 @@ class CodeSolver(Solver):
         if not self.model._is_loaded:
             self.model.__enter__()
         # Prompt the model for the plan
-        message = {"role": "user", "content": problem_description}
-        self.history.append(message)
+        if problem_description is not None:
+            message = {"role": "user", "content": problem_description}
+            self.history.append(message)
         prompt = self.prompt.get_prompt(self.history)
         self.logger.info(f"[CODE SOLVER] Raw prompt used:\n{prompt}")
         # Get the moel response
