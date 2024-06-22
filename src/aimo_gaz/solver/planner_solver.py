@@ -24,10 +24,10 @@ class PlannerSolver(Solver):
         # Prompt the model for the plan
         prompt = self.prompt.get_prompt([{"role": "user", "content": problem_description}])
         # Get the moel response
-        # try:
-        response = self.model.generate(prompt, **self.inference_kwargs)
-        # except:
-        #     response = None
+        try:
+            response = self.model.generate(prompt, **self.inference_kwargs)
+        except:
+            response = None
         if response is None:
             return "Could not generate a response from the model."
         outs = self.model.parse_out(response)
