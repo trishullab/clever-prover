@@ -33,6 +33,7 @@ class CoordinationSolver(Solver):
         self.num_plans = self.coordination_kwargs.get("num_plans", 1)
         self.code_timeout_in_secs = self.coordination_kwargs.get("code_timeout_in_secs", 2*60) # 2 minutes default
         self.problem_timeout_in_secs = self.coordination_kwargs.get("problem_timeout_in_secs", 20*60) # 20 minutes default
+        self.num_attempts = self.coordination_kwargs.get("num_attempts", 5)
         self.start_time = None
         self.end_time = None
 
@@ -62,14 +63,19 @@ class CoordinationSolver(Solver):
         planner: PlannerSolver = self.solvers["planner"]
         coder: CodeSolver = self.solvers["coder"]
         executor: ExecutionSolver = self.solvers["executor"]
-        # Plan
-        plan = planner.solve_intermediate(problem_description)
-        # Code
-        # coder.history = copy.deepcopy(planner.history) # Coder should know the plan with full context
-        coder.inference_kwargs["num_return_sequences"] = self.num_code_gens
-        codes = coder.solve_intermediate(problem_description=problem_description, plan=plan)
-        if isinstance(codes, str):
-            codes = [codes]
+        attempts = 0
+        codes = []
+        while attempts < self.num_attempts:
+            # Plan
+            plan = planner.solve_intermediate(problem_description)
+            # Code
+            # coder.history = copy.deepcopy(planner.history) # Coder should know the plan with full context
+            coder.inference_kwargs["num_return_sequences"] = self.num_code_gens
+            codes_gen = coder.solve_intermediate(problem_description=problem_description, plan=plan)
+            if isinstance(codes_gen, str):
+                codes_gen = [codes_gen]
+            codes.extend(codes_gen)
+            attempts += 1
         # Execute
         executor.history = copy.deepcopy(coder.history)
         outputs = executor.solve_intermediate_parallel(codes)
