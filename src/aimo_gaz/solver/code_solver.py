@@ -11,6 +11,8 @@ class CodeSolver(Solver):
         self.prompt = prompt
         self.inference_kwargs = inference_kwargs
         self.logger = logger
+        self.inference_kwargs["num_return_sequences"] = 1 # Currently, only one response is needed from the code solver
+        self.history = []
    
     def solve(self, problem_escription: str) -> int:
         raise NotImplementedError("This method is not implemented.")
@@ -19,16 +21,22 @@ class CodeSolver(Solver):
         if not self.model._is_loaded:
             self.model.__enter__()
         # Prompt the model for the plan
-        prompt = self.prompt.get_prompt([{"role": "user", "content" : problem_description}])
+        message = {"role": "user", "content": problem_description}
+        self.history.append(message)
+        prompt = self.prompt.get_prompt(self.history)
         # Get the moel response
+        response = None
         try:
             response = self.model.generate(prompt, **self.inference_kwargs)
         except:
             response = None
+            self.logger.exception("Encountered exception.")        
         if response is None:
-            return "Could not generate a response from the model."
-        assert len(response.results) == 1, "No response (or too many responses) from the model."
-        return response.results[0].generated_text[0] # We only need one response
+            generated_text = "Could not generate a response from the model."
+        else:
+            generated_text = response.results[0].generated_text[0]
+        self.history.append({"role": "assistant", "content": generated_text})
+        return generated_text # We only need one response
 
     def __enter__(self):
         self.model.__enter__()
