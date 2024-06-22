@@ -24,10 +24,10 @@ class PlannerSolver(Solver):
         # Prompt the model for the plan
         prompt = self.prompt.get_prompt([{"role": "user", "content": problem_description}])
         # Get the moel response
-        try:
-            response = self.model.generate(prompt, **self.inference_kwargs)
-        except:
-            response = None
+        # try:
+        response = self.model.generate(prompt, **self.inference_kwargs)
+        # except:
+        #     response = None
         if response is None:
             return "Could not generate a response from the model."
         outs = self.model.parse_out(response)
@@ -45,8 +45,11 @@ class PlannerSolver(Solver):
 if __name__ == "__main__":
     # Test the PlannerSolver class
     from aimo_gaz.prompts.planner_prompt import PlannerPrompt
+    import time
+
     model_name_or_path = "deepseek-ai/deepseek-coder-1.3b-instruct"
     model_logging_dir = ".logs/model"
+
     model_args = {
         "no_init_eval": True,
         "padding": True,
@@ -58,10 +61,21 @@ if __name__ == "__main__":
         "is_seq2seq": False,
         "token": None,
         "comet_experiment": None,
-        "base_device": 3
+        "base_device": 0
     }
     inference_args = {
-        "max_tokens": 1024,
+        "max_new_tokens": 1024,
+        "temperature": 0.9,
+        "top_p": 1.0,
+        "top_k": None,
+        "do_sample": True,
+        "num_return_sequences": 1,
+        "max_length": 2048,
+        "return_full_text": True, # We want the problem description to be returned as well
+        "stop_tokens": ["[END]"] # TODO: Decide the stop token and probably mention it in the prompt class
+    }
+    vllm_inference_args = {
+        "max_tokens": 512,
         "temperature": 0.9,
         "top_p": 1.0,
         # "top_k": None,
@@ -71,14 +85,27 @@ if __name__ == "__main__":
         # "return_full_text": True, # We want the problem description to be returned as well
         "stop_token_ids": ["[END]"] # TODO: Decide the stop token and probably mention it in the prompt class
     }
-    model = vLLMHarness.load_from_config(model_name_or_path, {"dtype": "half", "gpu_memory_utilization": 0.95, "tensor_parallel_size": 2}, inference_args)
-    prompt = PlannerPrompt(system_prompt="", example_prompt="") # These are hard-coded in the class anyway
-    solver = PlannerSolver(model, prompt)
-    problem_description = "Find the value of x in the equation 2x + 3 = 7."
+    use_vllm = True
+    if use_vllm:
+        model = vLLMHarness.load_from_config(model_name_or_path, {"dtype": "float32", "gpu_memory_utilization": 0.95, "tensor_parallel_size": 1, 'max_model_len':1024}, vllm_inference_args)
+        prompt = PlannerPrompt(system_prompt="", example_prompt="")  # These are hard-coded in the class anyway
+        problem_description = "Find the value of x in the equation 2x + 3 = 7."
+        solver = PlannerSolver(model, prompt)
+    else:
+        model = Model(model_name_or_path, model_logging_dir, **model_args)
+        prompt = PlannerPrompt(system_prompt="", example_prompt="")  # These are hard-coded in the class anyway
+        problem_description = "Find the value of x in the equation 2x + 3 = 7."
+        solver = PlannerSolver(model, prompt, **inference_args)
+
+
     with solver:
         is_solved = False
         while not is_solved:
+            # Time the call
+            start = time.time()
             plan = solver.solve_intermediate(problem_description)
+            end = time.time()
+            print(f"Time taken to generate the plan: {end - start} seconds.")
             print(plan)
             print("-"*50)
             # To do elaborate testing, after the plan with custom code
