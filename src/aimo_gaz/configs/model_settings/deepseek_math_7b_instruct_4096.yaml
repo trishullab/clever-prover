@@ -1,7 +1,9 @@
 name_or_path: deepseek-ai/deepseek-math-7b-instruct
 logging_dir: <AIMO_GAZ_ROOT>/.logs/model
+use_vllm: True
 vllm_model_args:
   dtype: half
+  tensor_parallel_size: 2
 vllm_sample_args:
   temperature: 0.8
   top_p: 0.95

@@ -33,11 +33,13 @@ class PlannerSolver(Solver):
         response = None
         try:
             response = self.model.generate(prompt, **self.inference_kwargs)
-        except Exception:
+        except Exception as e:
+            raise(e)
             response = None
             self.logger.exception("Encountered exception.")
         if response is None:
             generated_text = "Could not generate a response from the model."
+            outs = [[generated_text]]
         else:
             outs = self.model.parse_out(response)
             generated_text = outs[0][0]
@@ -45,7 +47,7 @@ class PlannerSolver(Solver):
             self.history[-1]['content'] += generated_text
         else:
             self.history.append({"role": "assistant", "content": generated_text})
-        assert len(response.results) == 1, "No response (or too many responses) from the model."
+        assert len(outs) == 1, "No response (or too many responses) from the model."
         if not generated_text.strip().endswith("[END PROCEDURE]"):
             generated_text = generated_text.rstrip('\n') + "\n[END PROCEDURE]"
         self.logger.info(f"[PLANNER] Plan generated:\n{generated_text}")

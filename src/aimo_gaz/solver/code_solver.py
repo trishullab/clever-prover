@@ -37,7 +37,8 @@ class CodeSolver(Solver):
         response = None
         try:
             response = self.model.generate(prompt, **self.inference_kwargs)
-        except:
+        except Exception as e:
+            raise(e)
             response = None
             self.logger.exception("Encountered exception.")
         if response is None:

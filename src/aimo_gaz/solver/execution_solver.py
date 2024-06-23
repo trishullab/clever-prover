@@ -41,7 +41,7 @@ class ExecutionSolver(Solver):
         for filepath in filepaths:
             assert os.path.isfile(filepath), f"filepath must be a valid file: {filepath}"
             process = Popen(
-                ['python', filepath], 
+                ['/home/zaynesprague/projects/venvs/aimo_venv/bin/python', filepath],
                 stdin = PIPE, 
                 stdout = PIPE, 
                 stderr = STDOUT,
@@ -132,14 +132,17 @@ print("[OUTPUT END]")"""
         codes = problem_descriptions
         tempfiles = []
         for i, code in enumerate(codes):
-            code = self.code_decorator(code)
-            with tempfile.NamedTemporaryFile(suffix='.py', mode='w', delete=False) as f:
-                self.logger.info(f"Writing code to file: {f.name}")
-                self.logger.info(f"Code {i}:\n{code}")
-                f.write(code)
-                f.flush()
-                fullpath = f.name
-                tempfiles.append(fullpath)
+            try:
+                code = self.code_decorator(code)
+                with tempfile.NamedTemporaryFile(suffix='.py', mode='w', delete=False) as f:
+                    self.logger.info(f"Writing code to file: {f.name}")
+                    self.logger.info(f"Code {i}:\n{code}")
+                    f.write(code)
+                    f.flush()
+                    fullpath = f.name
+                    tempfiles.append(fullpath)
+            except Exception as e:
+                self.logger.warn(f"Exception when writing code: {e}")
         # Run the code in parallel
         outputs = self.run_parallel(tempfiles, self.timeout_in_secs)
         for i, output in enumerate(outputs):
