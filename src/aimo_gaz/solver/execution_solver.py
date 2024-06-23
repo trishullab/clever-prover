@@ -41,7 +41,7 @@ class ExecutionSolver(Solver):
         for filepath in filepaths:
             assert os.path.isfile(filepath), f"filepath must be a valid file: {filepath}"
             process = Popen(
-                ['/home/zaynesprague/projects/venvs/aimo_venv/bin/python', filepath],
+                ['python', filepath],
                 stdin = PIPE, 
                 stdout = PIPE, 
                 stderr = STDOUT,
