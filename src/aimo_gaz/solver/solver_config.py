@@ -131,17 +131,17 @@ class SolverConfig:
         if self.solver_type == SolverType.TestSolver:
             return TestSolver()
         elif self.solver_type == SolverType.VanillaFewShotSolver:
-            if self.model_settings.use_vllm:
-                vllm_model = LLM(self.model_settings.name_or_path, **self.model_settings.vllm_model_args)
-                sampling_params = SamplingParams(**self.model_settings.vllm_sample_args)
-                model = vLLMHarness(vllm_model, sampling_params)
-            else:
-                if self.model_settings.name_or_path not in GLOBAL_MODEL_CACHE:
+            if self.model_settings.name_or_path not in GLOBAL_MODEL_CACHE:
+                if self.model_settings.use_vllm:
+                    vllm_model = LLM(self.model_settings.name_or_path, **self.model_settings.vllm_model_args)
+                    sampling_params = SamplingParams(**self.model_settings.vllm_sample_args)
+                    model = vLLMHarness(vllm_model, sampling_params)
+                else:
                     model = Model(self.model_settings.name_or_path, self.model_settings.logging_dir,
                                   **self.model_settings.model_args)
                     GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
-                else:
-                    model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
+            else:
+                model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
 
             prompt = self.prompt_config.get_prompt()
             inference_settings_dict = self.inference_settings.to_dict()
