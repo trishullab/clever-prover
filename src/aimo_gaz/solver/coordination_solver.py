@@ -76,6 +76,8 @@ class CoordinationSolver(Solver):
                 codes_gen = [codes_gen]
             codes.extend(codes_gen)
             attempts += 1
+            planner.reset()
+            coder.reset()
         # Execute
         executor.history = copy.deepcopy(coder.history)
         outputs = executor.solve_intermediate_parallel(codes)

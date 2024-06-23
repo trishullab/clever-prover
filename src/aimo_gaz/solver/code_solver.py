@@ -41,14 +41,15 @@ class CodeSolver(Solver):
         if response is None:
             generated_text = "Could not generate a response from the model."
             return generated_text
-        elif False and len(response.results) == 1 and len(response.results[0].generated_text) == 1:
-            generated_text = response.results[0].generated_text[0]
-            if self.history[-1]['role'] == "assistant":
-                self.history[-1]['content'] += generated_text
-            else:
-                self.history.append({"role": "assistant", "content": generated_text})
-            self.logger.info(f"[CODE SOLVER] Generated text:\n{generated_text}")
-            return generated_text
+        # UNUSED CODE
+        # elif False and len(response.results) == 1 and len(response.results[0].generated_text) == 1:
+        #     generated_text = response.results[0].generated_text[0]
+        #     if self.history[-1]['role'] == "assistant":
+        #         self.history[-1]['content'] += generated_text
+        #     else:
+        #         self.history.append({"role": "assistant", "content": generated_text})
+        #     self.logger.info(f"[CODE SOLVER] Generated text:\n{generated_text}")
+        #     return generated_text
         else:
             generated_texts = []
             for result in response.results:
@@ -57,7 +58,7 @@ class CodeSolver(Solver):
                         generated_texts.append(gen_text.replace('[END CODE]', ''))
                     elif gen_text.endswith('```'):
                         generated_texts.append(gen_text.replace('```', ''))
-                    elif gen_text.endwiths('<｜end▁of▁sentence｜>'):
+                    elif gen_text.endswith('<｜end▁of▁sentence｜>'):
                         generated_texts.append(gen_text.replace('<｜end▁of▁sentence｜>', ''))
                     else:
                         generated_texts.append(f"{gen_text}")

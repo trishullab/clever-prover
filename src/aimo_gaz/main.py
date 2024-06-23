@@ -32,10 +32,10 @@ def main(cfg):
         data_dir = os.path.dirname(root)
         data_dir = os.path.dirname(data_dir)
         data_dir = os.path.join(data_dir, "data")
-        benchmark = "kaggle_train_10"
+        benchmark = "valid"
         logger.info(f"Running on {benchmark}")
         os.makedirs(f".logs/{time_str}/{benchmark}", exist_ok=True)
-        evaluate_on_benchmarks(benchmark, os.path.join(data_dir, "kaggle_train_10.csv"), solver, time_str, logger)
+        evaluate_on_benchmarks(benchmark, os.path.join(data_dir, "valid.csv"), solver, time_str, logger)
 
 if __name__ == "__main__":
     main()

@@ -61,10 +61,10 @@ class ExecutionSolver(Solver):
                 # So if one process timeout, probably other either finished or are about to finish or timed out
                 # So we reduce the timeout to 1 second because other processes should have finished by now
                 timeout_in_secs = 1
-            # Get the output
-            output = process.stdout.read()
             # Kill the process if it is still running
             process.kill()
+            # Get the output
+            output = process.stdout.read()
             # Return the output
             outputs.append(self.parse_output(is_timeout, process, output))
         return outputs
