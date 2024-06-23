@@ -21,7 +21,7 @@ class vLLMHarness:
 
     def generate(self, prompt, **kwargs):
         # TODO - yucky, not sure if they have a standard way of doing this.
-        kwargs = self.make_safe_sampling_params(kwargs)
+        kwargs = self.make_safe_sampling_params(kwargs, self.model)
         for key, value in kwargs.items():
             setattr(self.sampling_params, key, value)
         out = self.model.generate(prompt, self.sampling_params)
@@ -33,7 +33,7 @@ class vLLMHarness:
 
 
     @classmethod
-    def make_safe_sampling_params(cls, sampling_params):
+    def make_safe_sampling_params(cls, sampling_params, model):
         safe_sampling_params = {}
         for k, v in sampling_params.items():
             if k == 'max_new_tokens':
@@ -44,7 +44,7 @@ class vLLMHarness:
             elif k == 'num_return_sequences':
                 safe_sampling_params['n'] = v
             elif k == 'stop_tokens':
-                safe_sampling_params['stop_token_ids'] = v
+                safe_sampling_params['stop'] = v#[model.get_tokenizer().convert_tokens_to_ids(x) for x in v if model.get_tokenizer().convert_tokens_to_ids(x) is not None]
             else:
                 continue
 
@@ -53,7 +53,7 @@ class vLLMHarness:
     @classmethod
     def load_from_config(cls, model_name, vllm_params, sampling_params):
         model = LLM(model_name, **vllm_params)
-        sampling_params = SamplingParams(**cls.make_safe_sampling_params(sampling_params))
+        sampling_params = SamplingParams(**cls.make_safe_sampling_params(sampling_params, model))
         return cls(model, sampling_params)
 
     def __enter__(self):

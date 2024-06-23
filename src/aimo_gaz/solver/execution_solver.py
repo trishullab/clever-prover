@@ -15,7 +15,7 @@ class ExecutionSolver(Solver):
     def run(self, filepath: str, timeout_in_secs: float = 10.0):
         assert os.path.isfile(filepath), f"filepath must be a valid file: {filepath}"
         process = Popen(
-            ['python', filepath], 
+            ['/home/zaynesprague/projects/venvs/aimo_venv/bin/python', filepath],
             stdin = PIPE, 
             stdout = PIPE, 
             stderr = STDOUT,

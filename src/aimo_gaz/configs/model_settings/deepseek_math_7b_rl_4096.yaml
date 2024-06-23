@@ -1,6 +1,6 @@
 name_or_path: deepseek-ai/deepseek-math-7b-rl
 logging_dir: <AIMO_GAZ_ROOT>/.logs/model
-use_vllm: False
+use_vllm: True
 vllm_model_args:
   dtype: half
   tensor_parallel_size: 2
