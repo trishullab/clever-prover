@@ -137,7 +137,8 @@ class SolverConfig:
                 model = vLLMHarness(vllm_model, sampling_params)
             else:
                 if self.model_settings.name_or_path not in GLOBAL_MODEL_CACHE:
-                    model = Model(self.model_settings.name_or_path, self.model_settings.logging_dir, **self.model_settings.model_args)
+                    model = Model(self.model_settings.name_or_path, self.model_settings.logging_dir,
+                                  **self.model_settings.model_args)
                     GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
                 else:
                     model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
