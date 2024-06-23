@@ -1,3 +1,4 @@
+import typing
 from abc import ABC, abstractmethod
 
 class Solver(ABC):
@@ -15,5 +16,9 @@ class Solver(ABC):
         pass
 
     @abstractmethod
-    def solve_intermediate(self, problem_description: str) -> str:
+    def solve_intermediate(self, problem_description: str) -> typing.Union[str, typing.List[str]]:
+        pass
+
+    @abstractmethod
+    def reset(self):
         pass

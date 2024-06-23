@@ -4,6 +4,7 @@ from typing import Union
 from aimo_gaz.solver.solver_config import vLLMHarness
 from aimo_gaz.prompts.prompt import Prompt
 import logging
+import typing
 
 class CodeSolver(Solver):
     def __init__(self, model: Union[vLLMHarness, Model], prompt: Prompt, logger: logging.Logger = None, **inference_kwargs):
@@ -13,25 +14,58 @@ class CodeSolver(Solver):
         self.prompt = prompt
         self.inference_kwargs = inference_kwargs
         self.logger = logger
-   
-    def solve(self, problem_escription: str) -> int:
+        self.history = []
+        self.inference_kwargs["return_full_text"] = False # We only need the generated text coz we have the history
+        self.inference_kwargs["stop_tokens"] = ["[END CODE]", "```", "<｜end▁of▁sentence｜>"]
+
+    def solve(self, problem_description: str) -> int:
         raise NotImplementedError("This method is not implemented.")
 
-    def solve_intermediate(self, problem_description: str) -> str:
+    def solve_intermediate(self, problem_description: str, plan: str = None) -> typing.Union[str, typing.List[str]]:
         if not self.model._is_loaded:
             self.model.__enter__()
         # Prompt the model for the plan
-        prompt = self.prompt.get_prompt([{"role": "user", "content" : problem_description}])
-        # Get the moel response
+        if problem_description is not None and plan is not None:
+            assert self.history == [], "History not empty (Code Solver)"
+            message_problem = {"role": "user", "content": problem_description}
+            message_plan = {"role": "user", "content": plan}
+            self.history.append(message_problem)
+            self.history.append(message_plan)
+        prompt = self.prompt.get_prompt(self.history)
+        self.logger.info(f"[CODE SOLVER] Raw prompt used:\n{prompt}")
+        # Get the model response
+        response = None
         try:
             response = self.model.generate(prompt, **self.inference_kwargs)
         except:
             response = None
+            self.logger.exception("Encountered exception.")
         if response is None:
-            return "Could not generate a response from the model."
+            generated_text = "Could not generate a response from the model."
+            return generated_text
         outs = self.model.parse_out(response)
-        assert len(outs) == 1, "No response (or too many responses) from the model."
-        return outs[0][0]
+        generated_texts = []
+        for result in outs:
+            for gen_text in result:
+                if gen_text.endswith('[END CODE]'):
+                    generated_texts.append(gen_text.replace('[END CODE]', ''))
+                elif gen_text.endswith('```'):
+                    generated_texts.append(gen_text.replace('```', ''))
+                elif gen_text.endswith('<｜end▁of▁sentence｜>'):
+                    generated_texts.append(gen_text.replace('<｜end▁of▁sentence｜>', ''))
+                else:
+                    generated_texts.append(f"{gen_text}")
+                self.logger.info(f"[CODE SOLVER] Generated text:\n{gen_text}")
+        return generated_texts
+
+    def add_response_to_history(self, generated_text: str):
+        if self.history[-1]['role'] == "assistant":
+            self.history[-1]['content'] += generated_text
+        else:
+            self.history.append({"role": "assistant", "content": generated_text})
+
+    def reset(self):
+        self.history = []
 
     def __enter__(self):
         self.model.__enter__()
