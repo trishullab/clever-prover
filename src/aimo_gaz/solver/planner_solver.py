@@ -51,6 +51,7 @@ class PlannerSolver(Solver):
         self.logger.info(f"[PLANNER] Plan generated:\n{generated_text}")
         return f"1. {generated_text.replace('[END PROCEDURE]', '')}"
         # generated_text
+
     def reset(self):
         self.history = []
 

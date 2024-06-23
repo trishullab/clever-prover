@@ -26,7 +26,7 @@ def main(cfg):
     solver_config = parse_solver_config(cfg)
     solver = solver_config.get_solver(logger)
     with solver:
-        test_solver(solver)
+        # test_solver(solver)
         # Run benchmarking here
         root = os.environ.get("AIMO_GAZ_ROOT")
         data_dir = os.path.dirname(root)
