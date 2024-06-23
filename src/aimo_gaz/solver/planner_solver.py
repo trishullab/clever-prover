@@ -89,7 +89,11 @@ if __name__ == "__main__":
     }
     use_vllm = True
     if use_vllm:
-        model = vLLMHarness.load_from_config(model_name_or_path, {"dtype": "float16", "gpu_memory_utilization": 0.95, "tensor_parallel_size": 2, 'max_model_len':1024}, vllm_inference_args)
+        vllm_model_args = {
+            "dtype": "float16", "gpu_memory_utilization": 0.95, "tensor_parallel_size": 2, 'max_model_len':1024, #"tokenizer": "deepseek-ai/deepseek-coder-1.3b-instruct",
+            "speculative_model": "deepseek-ai/deepseek-coder-1.3b-instruct", "num_speculative_tokens": 5, "use_v2_block_manager": True
+        }
+        model = vLLMHarness.load_from_config(model_name_or_path, vllm_model_args, vllm_inference_args)
         prompt = PlannerPrompt(system_prompt="", example_prompt="")  # These are hard-coded in the class anyway
         problem_description = "There exists a unique increasing geometric sequence of five 2-digit positive integers. What is their sum?"
         solver = PlannerSolver(model, prompt)
