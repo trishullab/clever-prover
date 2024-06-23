@@ -9,3 +9,4 @@ coordination_kwargs:
   num_plans: 1
   code_timeout_in_secs: 10.0
   problem_timeout_in_secs: 600.0
+  num_attempts: 3
