@@ -167,6 +167,10 @@ class Model(object):
                 self._kwargs["device_map"][k] = self._kwargs["base_device"] + v
         pass
 
+    def parse_out(self, response):
+        return [[y for y in x.generated_text] for x in response.results]
+
+
     def _get_model_args(self):
         return {k: v for k, v in self._kwargs.items() if k in
                 ["token", "quantization_config", "device_map"]

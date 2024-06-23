@@ -6,6 +6,7 @@ from aimo_gaz.solver.abs_solver import Solver
 from aimo_gaz.solver.planner_solver import PlannerSolver
 from aimo_gaz.solver.code_solver import CodeSolver
 from aimo_gaz.solver.execution_solver import ExecutionSolver
+from aimo_gaz.solver.ask_vote import AskVote
 from enum import Enum
 from collections import Counter
 
@@ -95,10 +96,38 @@ class CoordinationSolver(Solver):
         if len(answers) == 0:
             return -1
         else:
-            answer_counter = Counter(answers)
-            most_common_answer = answer_counter.most_common(1)[0][0]
-            int_answer = int(most_common_answer)
-            mod_answer = int_answer % 1000
+            try:
+                with self.solvers['coder']:
+                    model = self.solvers['coder'].model
+                    choices = '\n'.join([f'( {chr(65 + i)} ) {answer}' for i, answer in enumerate(answers)])
+                    prompt = f"""User: Below is a problem description. Which answer do you think is best?
+
+    Problem Description: 
+    {problem_description}
+
+    Choices:
+    {choices}
+
+    Assistant:
+    $\\boxed"""
+                    response = model.generate(prompt, **self.solvers['coder'].inference_kwargs)
+                    outs = model.parse_out(response)
+                    most_common_answer = outs[0][0][0:min(10, len(outs[0][0]))]
+
+                    # get which letter is in most_common_answer
+                    for i, answer in enumerate(answers):
+                        if chr(65 + i) in most_common_answer:
+                            most_common_answer = answer
+                            break
+
+                    int_answer = int(most_common_answer)
+                    mod_answer = int_answer % 1000
+            except Exception as e:
+                answer_counter = Counter(answers)
+                most_common_answer = answer_counter.most_common(1)[0][0]
+                int_answer = int(most_common_answer)
+                mod_answer = int_answer % 1000
+
             return mod_answer
 
     def solve(self, problem_description: str) -> int:

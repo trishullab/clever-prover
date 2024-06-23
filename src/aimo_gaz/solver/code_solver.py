@@ -1,11 +1,13 @@
 from aimo_gaz.solver.abs_solver import Solver
 from aimo_gaz.models.model import Model
+from typing import Union
+from aimo_gaz.solver.solver_config import vLLMHarness
 from aimo_gaz.prompts.prompt import Prompt
 import logging
 import typing
 
 class CodeSolver(Solver):
-    def __init__(self, model: Model, prompt: Prompt, logger: logging.Logger = None, **inference_kwargs):
+    def __init__(self, model: Union[vLLMHarness, Model], prompt: Prompt, logger: logging.Logger = None, **inference_kwargs):
         assert model is not None, "model must be provided."
         assert prompt is not None, "prompt must be provided."
         self.model = model
@@ -15,7 +17,7 @@ class CodeSolver(Solver):
         self.history = []
         self.inference_kwargs["return_full_text"] = False # We only need the generated text coz we have the history
         self.inference_kwargs["stop_tokens"] = ["[END CODE]", "```", "<｜end▁of▁sentence｜>"]
-   
+
     def solve(self, problem_description: str) -> int:
         raise NotImplementedError("This method is not implemented.")
 
@@ -35,49 +37,41 @@ class CodeSolver(Solver):
         response = None
         try:
             response = self.model.generate(prompt, **self.inference_kwargs)
-        except:
+        except Exception as e:
+            raise(e)
             response = None
-            self.logger.exception("Encountered exception.")        
+            self.logger.exception("Encountered exception.")
         if response is None:
             generated_text = "Could not generate a response from the model."
             return generated_text
-        # UNUSED CODE
-        # elif False and len(response.results) == 1 and len(response.results[0].generated_text) == 1:
-        #     generated_text = response.results[0].generated_text[0]
-        #     if self.history[-1]['role'] == "assistant":
-        #         self.history[-1]['content'] += generated_text
-        #     else:
-        #         self.history.append({"role": "assistant", "content": generated_text})
-        #     self.logger.info(f"[CODE SOLVER] Generated text:\n{generated_text}")
-        #     return generated_text
-        else:
-            generated_texts = []
-            for result in response.results:
-                for gen_text in result.generated_text:
-                    if gen_text.endswith('[END CODE]'):
-                        generated_texts.append(gen_text.replace('[END CODE]', ''))
-                    elif gen_text.endswith('```'):
-                        generated_texts.append(gen_text.replace('```', ''))
-                    elif gen_text.endswith('<｜end▁of▁sentence｜>'):
-                        generated_texts.append(gen_text.replace('<｜end▁of▁sentence｜>', ''))
-                    else:
-                        generated_texts.append(f"{gen_text}")
-                    self.logger.info(f"[CODE SOLVER] Generated text:\n{gen_text}")
-            return generated_texts
-    
+        outs = self.model.parse_out(response)
+        generated_texts = []
+        for result in outs:
+            for gen_text in result:
+                if gen_text.endswith('[END CODE]'):
+                    generated_texts.append(gen_text.replace('[END CODE]', ''))
+                elif gen_text.endswith('```'):
+                    generated_texts.append(gen_text.replace('```', ''))
+                elif gen_text.endswith('<｜end▁of▁sentence｜>'):
+                    generated_texts.append(gen_text.replace('<｜end▁of▁sentence｜>', ''))
+                else:
+                    generated_texts.append(f"{gen_text}")
+                self.logger.info(f"[CODE SOLVER] Generated text:\n{gen_text}")
+        return generated_texts
+
     def add_response_to_history(self, generated_text: str):
         if self.history[-1]['role'] == "assistant":
             self.history[-1]['content'] += generated_text
         else:
             self.history.append({"role": "assistant", "content": generated_text})
-    
+
     def reset(self):
         self.history = []
 
     def __enter__(self):
         self.model.__enter__()
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.model.__exit__(exc_type, exc_val, exc_tb)
 

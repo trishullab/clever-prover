@@ -2,12 +2,67 @@ import omegaconf
 import os
 import logging
 import typing
+from typing import Union
 import hydra
 from aimo_gaz.prompts.prompt import Prompt, ConcatPrompt
 from aimo_gaz.prompts.cot_prompt import CoTPrompt
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
 from enum import Enum
+from aimo_gaz.models.model import Model
+from vllm import LLM, SamplingParams
+
+
+class vLLMHarness:
+    def __init__(self, model, sampling_params):
+        self.model = model
+        self.sampling_params = sampling_params
+        self._is_loaded = True
+
+    def generate(self, prompt, **kwargs):
+        # TODO - yucky, not sure if they have a standard way of doing this.
+        kwargs = self.make_safe_sampling_params(kwargs, self.model)
+        for key, value in kwargs.items():
+            setattr(self.sampling_params, key, value)
+        out = self.model.generate(prompt, self.sampling_params)
+        return out
+
+    def parse_out(self, out):
+        generated_text = [[y.text for y in x.outputs] for x in out]
+        return generated_text
+
+
+    @classmethod
+    def make_safe_sampling_params(cls, sampling_params, model):
+        safe_sampling_params = {}
+        for k, v in sampling_params.items():
+            if k == 'max_new_tokens':
+                safe_sampling_params['max_tokens'] = v
+            elif k in ['temperature', 'top_p', 'top_k']:
+                if v is not None:
+                    safe_sampling_params[k] = v
+            elif k == 'num_return_sequences':
+                safe_sampling_params['n'] = v
+            elif k == 'stop_tokens':
+                safe_sampling_params['stop'] = v#[model.get_tokenizer().convert_tokens_to_ids(x) for x in v if model.get_tokenizer().convert_tokens_to_ids(x) is not None]
+            else:
+                continue
+
+        return safe_sampling_params
+
+    @classmethod
+    def load_from_config(cls, model_name, vllm_params, sampling_params):
+        model = LLM(model_name, **vllm_params)
+        sampling_params = SamplingParams(**cls.make_safe_sampling_params(sampling_params, model))
+        return cls(model, sampling_params)
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+
 from aimo_gaz.solver.test_solver import TestSolver
 from aimo_gaz.solver.abs_solver import Solver
 from aimo_gaz.solver.vanilla_few_shot_solver import FewShotSolver as VanilaFewShotSolver
@@ -65,8 +120,10 @@ class PromptConfig:
 class ModelSettings(object):
     name_or_path: str
     logging_dir: str
+    use_vllm: bool
     model_args: dict = field(default_factory=dict)
-
+    vllm_model_args: dict = field(default_factory=dict)
+    vllm_sample_args: dict = field(default_factory=dict)
 
 @dataclass_json
 @dataclass
@@ -80,6 +137,7 @@ class InferenceSettings:
     max_length: int
     return_full_text: bool
     stop_tokens: list = field(default_factory=list)
+
 
 @dataclass_json
 @dataclass
@@ -95,25 +153,50 @@ class SolverConfig:
             return TestSolver()
         elif self.solver_type == SolverType.VanillaFewShotSolver:
             if self.model_settings.name_or_path not in GLOBAL_MODEL_CACHE:
-                model = Model(self.model_settings.name_or_path, self.model_settings.logging_dir, **self.model_settings.model_args)
-                GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
+                if self.model_settings.use_vllm:
+                    vllm_model = LLM(self.model_settings.name_or_path, **self.model_settings.vllm_model_args)
+                    sampling_params = SamplingParams(**self.model_settings.vllm_sample_args)
+                    model = vLLMHarness(vllm_model, sampling_params)
+                    GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
+
+                else:
+                    model = Model(self.model_settings.name_or_path, self.model_settings.logging_dir,
+                                  **self.model_settings.model_args)
+                    GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
             else:
                 model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
+
             prompt = self.prompt_config.get_prompt()
             inference_settings_dict = self.inference_settings.to_dict()
             return VanilaFewShotSolver(model, prompt, logger, **inference_settings_dict)
         elif self.solver_type == SolverType.CodeSolver:
             if self.model_settings.name_or_path not in GLOBAL_MODEL_CACHE:
-                model = Model(self.model_settings.name_or_path, self.model_settings.logging_dir, **self.model_settings.model_args)
-                GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
+                if self.model_settings.use_vllm:
+                    vllm_model = LLM(self.model_settings.name_or_path, **self.model_settings.vllm_model_args)
+                    sampling_params = SamplingParams(**self.model_settings.vllm_sample_args)
+                    model = vLLMHarness(vllm_model, sampling_params)
+                    GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
+
+                else:
+                    model = Model(self.model_settings.name_or_path, self.model_settings.logging_dir,
+                                  **self.model_settings.model_args)
+                    GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
             else:
                 model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
             prompt = self.prompt_config.get_prompt()
             return CodeSolver(model, prompt, logger, **self.inference_settings.to_dict())
         elif self.solver_type == SolverType.PlannerSolver:
             if self.model_settings.name_or_path not in GLOBAL_MODEL_CACHE:
-                model = Model(self.model_settings.name_or_path, self.model_settings.logging_dir, **self.model_settings.model_args)
-                GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
+                if self.model_settings.use_vllm:
+                    vllm_model = LLM(self.model_settings.name_or_path, **self.model_settings.vllm_model_args)
+                    sampling_params = SamplingParams(**self.model_settings.vllm_sample_args)
+                    model = vLLMHarness(vllm_model, sampling_params)
+                    GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
+
+                else:
+                    model = Model(self.model_settings.name_or_path, self.model_settings.logging_dir,
+                                  **self.model_settings.model_args)
+                    GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
             else:
                 model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
             prompt = self.prompt_config.get_prompt()
@@ -176,14 +259,16 @@ def parse_solver_config(cfg) -> typing.Union[SolverConfig, CoordinationSolverCon
         recursive_replace_keywords(cfg, "<AIMO_GAZ_ROOT>", gaz_root)
     is_coordination_solver = "planner" in cfg
     if not is_coordination_solver:
-        inference_settings = InferenceSettings(**cfg["inference_settings"])
+
         model_settings = ModelSettings(**cfg["model_settings"])
+        inference_settings = InferenceSettings(**cfg["inference_settings"])
+
         prompt_config = PromptConfig(**cfg["prompt_config"])
         prompt_config.prompt_type = PromptType(cfg["prompt_config"]["prompt_type"])
         solver_config = SolverConfig(
-            model_settings=model_settings, 
-            inference_settings=inference_settings, 
-            prompt_config=prompt_config, 
+            model_settings=model_settings,
+            inference_settings=inference_settings,
+            prompt_config=prompt_config,
             solver_type=SolverType(cfg["solver_type"]),
             solver_args=cfg["solver_args"])
         return solver_config
