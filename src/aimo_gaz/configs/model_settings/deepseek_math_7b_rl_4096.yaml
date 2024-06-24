@@ -18,6 +18,7 @@ model_args:
   is_seq2seq: False # Deepseek is Causal LM
   token:
   comet_experiment:
+  torch_dtype: auto
   base_device: 0
   device_map:
     model.embed_tokens : 0

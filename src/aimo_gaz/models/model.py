@@ -173,7 +173,7 @@ class Model(object):
 
     def _get_model_args(self):
         return {k: v for k, v in self._kwargs.items() if k in
-                ["token", "quantization_config", "device_map"]
+                ["token", "quantization_config", "device_map", "torch_dtype", "trust_remote_code"]
         }
 
     def _model_init(self) -> typing.Union[AutoModelForSeq2SeqLM, AutoModelForCausalLM]:
