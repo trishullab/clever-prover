@@ -39,10 +39,10 @@ model_args:
     model.layers.15 : 0
     model.layers.16 : 0
     model.layers.17 : 0
-    model.layers.18 : 1
-    model.layers.19 : 1
-    model.layers.20 : 1
-    model.layers.21 : 1
+    model.layers.18 : 0
+    model.layers.19 : 0
+    model.layers.20 : 0
+    model.layers.21 : 0
     model.layers.22 : 1
     model.layers.23 : 1
     model.layers.24 : 1
