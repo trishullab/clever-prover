@@ -18,6 +18,7 @@ def test_solver(solver: Solver):
 def main(cfg):
     dirpath = os.path.dirname(os.path.abspath(__file__))
     os.environ["AIMO_GAZ_ROOT"] = dirpath
+    os.environ["USE_VLLM"] = "True"
     os.chdir(dirpath)
     time_str = time.strftime("%Y%m%d-%H%M%S")
     os.makedirs(".logs", exist_ok=True)

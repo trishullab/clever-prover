@@ -10,7 +10,9 @@ from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
 from enum import Enum
 from aimo_gaz.models.model import Model
-from vllm import LLM, SamplingParams
+if os.environ.get("USE_VLLM", "False").lower() == "true":
+    # In case we cannot install VLLM
+    from vllm import LLM, SamplingParams
 
 
 class vLLMHarness:
