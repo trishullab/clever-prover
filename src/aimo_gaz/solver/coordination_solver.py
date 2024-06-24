@@ -6,7 +6,7 @@ from aimo_gaz.solver.abs_solver import Solver
 from aimo_gaz.solver.planner_solver import PlannerSolver
 from aimo_gaz.solver.code_solver import CodeSolver
 from aimo_gaz.solver.execution_solver import ExecutionSolver
-from aimo_gaz.solver.ask_vote import AskVote
+# from aimo_gaz.solver.ask_vote import AskVote
 from enum import Enum
 from collections import Counter
 
