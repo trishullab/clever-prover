@@ -9,7 +9,7 @@ class PlannerPrompt(ConcatPrompt):
                          append_system_prompt_after_every_message)
         self.system_prompt = None
         self.user_messages = ['',
-                              """Below is a problem statement. Write for me the first couple steps you would do to solve this problem.  Only write the first couple steps please.\n\nProblem Statement: {}"""]
+                              """Below is a problem statement. Write for me the first couple steps you would do to solve this problem.  Only write the first couple steps please.\n\nProblem Statement: {}\n\nPlease reason step by step."""]
 
         # self.user_messages = [
         # """Give a BRIEF high-level procedure, in the form of a SHORT list of at most 5 steps, that lists the intermediate subgoals that should be performed using sympy, NOT YOU, to solve this problem. Do NOT try to solve the problem, do NOT include any computations or choices. Write [END PROCEDURE] when you have finished the list. An example is shown below.

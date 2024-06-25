@@ -102,17 +102,23 @@ class CoordinationSolver(Solver):
                     choices = '\n'.join([f'( {chr(65 + i)} ) {answer}' for i, answer in enumerate(answers)])
                     prompt = f"""User: Below is a problem description. Which answer do you think is best?
 
-    Problem Description: 
-    {problem_description}
+Problem Description: 
+{problem_description}
 
-    Choices:
-    {choices}
-
-    Assistant:
-    $\\boxed"""
+Choices:
+{choices}
+                    """.strip() + """\n\nPlease reason step by step, and put your final answer within \\boxed{}.
+Assistant:
+                    """.rstrip()
+                    prompt += '\n'
                     response = model.generate(prompt, **self.solvers['coder'].inference_kwargs)
                     outs = model.parse_out(response)
-                    most_common_answer = outs[0][0][0:min(10, len(outs[0][0]))]
+                    # most_common_answer = outs[0][0][0:min(10, len(outs[0][0]))]
+                    most_common_answer = outs[0][0].split("\\boxed{")
+                    if len(most_common_answer) > 1 and len(most_common_answer[-1]) > 0:
+                        most_common_answer = most_common_answer[-1][0]
+                    else:
+                        raise Exception("Couldn't parse the answer.")
 
                     # get which letter is in most_common_answer
                     for i, answer in enumerate(answers):

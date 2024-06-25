@@ -11,6 +11,7 @@ Below is a math problem you are to solve (positive numerical answer!):
 \"{}\"
 Analyze this problem and think step by step to come to a solution with programs. After solving the problem, output the final numerical answer within \\boxed{}.
 Once you found the answer write [END] and stop the response.\n\n
+Please reason step by step, and put your final answer within \\boxed{}.\n\n
 """
     def get_prompt(self, messages: list[dict[str, str]]) -> str:
         return self.translate_for_deepseek(messages)

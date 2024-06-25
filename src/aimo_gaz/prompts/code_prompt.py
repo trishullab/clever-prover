@@ -7,7 +7,8 @@ class CodePrompt(ConcatPrompt):
         self.user_message = """Below is a problem statement and the first couple steps in trying to solve it. Can you write a python program that tries to solve the problem statement using Sympy? The code should always answer with a number. Make sure it runs correctly! End the code by writing [END CODE].\n\nProblem Statement:
 {}
 First Couple Steps:
-1. {}         
+1. {}     
+Please reason step by step.
 """
 #         self.user_message = """Below is the math problem you must solve:
 # {}
