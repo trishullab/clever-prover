@@ -6,4 +6,4 @@ defaults:
 
 solver_type: ExecutionSolver
 solver_args:
-  timeout_in_secs: 10.0
+  timeout_in_secs: 15.0

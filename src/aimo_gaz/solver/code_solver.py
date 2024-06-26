@@ -18,7 +18,7 @@ class CodeSolver(Solver):
         self.inference_kwargs["return_full_text"] = False # We only need the generated text coz we have the history
         self.inference_kwargs["stop_tokens"] = ["[END CODE]", "```", "<｜end▁of▁sentence｜>"]
 
-    def solve(self, problem_description: str) -> int:
+    def solve(self, problem_description: str, time_allowed: int) -> int:
         raise NotImplementedError("This method is not implemented.")
 
     def solve_intermediate(self, problem_description: str, plan: str = None) -> typing.Union[str, typing.List[str]]:

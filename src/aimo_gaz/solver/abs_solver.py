@@ -12,7 +12,7 @@ class Solver(ABC):
         pass
 
     @abstractmethod
-    def solve(self, problem_description: str) -> int:
+    def solve(self, problem_description: str, time_allowed : int) -> int:
         pass
 
     @abstractmethod

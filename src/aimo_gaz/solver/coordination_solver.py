@@ -1,6 +1,8 @@
 import logging
 import typing
 import time
+import math
+import random
 import copy
 from aimo_gaz.solver.abs_solver import Solver
 from aimo_gaz.solver.planner_solver import PlannerSolver
@@ -56,7 +58,7 @@ class CoordinationSolver(Solver):
             solver.reset()
         self.history = []
 
-    def plan_code_exec_extract_last_maj_vote(self, problem_description: str) -> int:
+    def plan_code_exec_extract_last_maj_vote(self, problem_description: str, time_allowed: int) -> int:
         assert len(self.solvers) > 0, "No solvers provided."
         assert "planner" in self.solvers, "Planner solver not provided."
         assert "coder" in self.solvers, "Coder solver not provided."
@@ -64,37 +66,117 @@ class CoordinationSolver(Solver):
         planner: PlannerSolver = self.solvers["planner"]
         coder: CodeSolver = self.solvers["coder"]
         executor: ExecutionSolver = self.solvers["executor"]
-        attempts = 0
+        global_attempts, local_attempts = 0, 0
+        total_repairs = 0
         codes = []
-        while attempts < self.num_attempts:
-            # Plan
-            plan = planner.solve_intermediate(problem_description)
-            # Code
-            # coder.history = copy.deepcopy(planner.history) # Coder should know the plan with full context
-            coder.inference_kwargs["num_return_sequences"] = self.num_code_gens
-            codes_gen = coder.solve_intermediate(problem_description=problem_description, plan=plan)
-            if isinstance(codes_gen, str):
-                codes_gen = [codes_gen]
-            codes.extend(codes_gen)
-            attempts += 1
-            planner.reset()
-            coder.reset()
-        # Execute
-        executor.history = copy.deepcopy(coder.history)
-        outputs = executor.solve_intermediate_parallel(codes)
-        # Extract the last output
-        last_outputs = [executor.extract_last_output(output) for output in outputs]
-        # See if this is a valid answer
-        float_answers = [None] * len(last_outputs)
-        for i, output in enumerate(last_outputs):
-            try:
-                float_answers[i] = float(output)
+        global_float_answers = []
+        PROBLEM_STARTING_TIME, PLANNER_AVG_TIME, CODER_AVG_TIME, REPAIR_AVG_TIME = time.time(), 0, 0, 0
+        ATTEMPTS_TO_TRY = self.num_attempts
+        TIME_LEFT = True
+        CURR_TIME_LEFT = time_allowed 
+        # curr_time = time.time()
+        assert self.num_attempts == 5
+        while CURR_TIME_LEFT > 30 and TIME_LEFT:
+            curr_time = time.time()
+            ATTEMPTS_TO_TRY = math.floor(CURR_TIME_LEFT/(PLANNER_AVG_TIME + CODER_AVG_TIME + 10)) if global_attempts != 0 else min(self.num_attempts, math.floor(CURR_TIME_LEFT/(PLANNER_AVG_TIME + CODER_AVG_TIME + 5)))
+            self.logger.info(f"Giving {ATTEMPTS_TO_TRY} attempts on current problem. Time left {CURR_TIME_LEFT} with average call times planner: {PLANNER_AVG_TIME}, coder: {CODER_AVG_TIME}, repairer: {REPAIR_AVG_TIME}")
+            if ATTEMPTS_TO_TRY <= 0:
+                TIME_LEFT = False
+                break
+            while local_attempts < ATTEMPTS_TO_TRY:
+                # Plan
+                plan_start_time = time.time()
+                plan = planner.solve_intermediate(problem_description)
+                PLANNER_AVG_TIME = (PLANNER_AVG_TIME + (time.time() - plan_start_time)) if global_attempts == 0 else (PLANNER_AVG_TIME * global_attempts + (time.time() - plan_start_time))/(global_attempts + 1)
+                # Code
+                # coder.history = copy.deepcopy(planner.history) # Coder should know the plan with full context
+                coder.inference_kwargs["num_return_sequences"] = self.num_code_gens
+                coder_start_time = time.time()
+                codes_gen = coder.solve_intermediate(problem_description=problem_description, plan=plan)
+                CODER_AVG_TIME += CODER_AVG_TIME + (time.time() - coder_start_time) if global_attempts == 0 else (CODER_AVG_TIME * global_attempts + (time.time() - coder_start_time))/(global_attempts + 1)
+                if isinstance(codes_gen, str):
+                    codes_gen = [codes_gen]
+                codes.extend(codes_gen)
+                local_attempts += 1
+                global_attempts += 1
+                planner.reset()
+                coder.reset()
+            # Execute
+            executor.history = copy.deepcopy(coder.history)
+            outputs = executor.solve_intermediate_parallel(codes)
+            # Extract the last output
+            last_outputs = [executor.extract_last_output(output) for output in outputs]
+            # See if this is a valid answer
+            float_answers = [None] * len(last_outputs)
+            for i, output in enumerate(last_outputs):
+                try:
+                    float_answers[i] = float(output)
+                except:
+                    pass
+            # TODO: collect the invalid answers, and have the model run the repair agent on those:
+            invalid_idxs = [i for i, answer in enumerate(float_answers) if answer is None]
+            fixed_codes = []
+            try: 
+                self.logger.info(f"Running the repair model on {len(invalid_idxs)} bad codes")
+                for idx in invalid_idxs: # TODO: Is this slow by doing with inside?
+                    with self.solvers['coder']: 
+                        prompt = f"""User: Below is a math problem that has an integer solution and a python program which returns an output which is not an integer. Please solve the problem by writing a program using the result of supplied program.
+
+Problem Description: 
+{problem_description}
+
+```python
+{codes[idx]}
+```
+```output
+{last_outputs[idx]}
+```
+
+
+                        """.strip() + """\n\nPlease write a fixed python program which solves the problem. Think step by step, and put your final answer within \\boxed{}.
+Assistant:
+```python
+                        """.rstrip()
+                        prompt += '\n'
+                        repair_start_time = time.time()
+                        response = model.generate(prompt, **self.solvers['coder'].inference_kwargs) # TODO: Does this augment the history?
+                        REPAIR_AVG_TIME =  (REPAIR_AVG_TIME + time.time() - repair_start_time) if total_repairs == 0 else (total_repairs * REPAIR_AVG_TIME + time.time() - repair_start_time) / (1 + total_repairs)
+                        total_repairs += 1
+                        # uses the same stop tokens so we should be good on that end
+                        outs = self.model.parse_out(response)
+                        assert len(outs) == 1
+                        for result in outs:
+                            for gen_text in result:
+                                if gen_text.endswith('[END CODE]'):
+                                    fixed_codes.append(gen_text.replace('[END CODE]', ''))
+                                elif gen_text.endswith('```'):
+                                    fixed_codes.append(gen_text.replace('```', ''))
+                                elif gen_text.endswith('<｜end▁of▁sentence｜>'):
+                                    fixed_codes.append(gen_text.replace('<｜end▁of▁sentence｜>', ''))
+                                else:
+                                    fixed_codes.append(f"{gen_text}")
             except:
-                pass
-        # Take the majority non-None non-negative answer
-        answers = [answer for answer in float_answers if answer is not None and answer >= 0]
+                continue
+            if len(fixed_codes) > 0:
+                repaired_outputs = executor.solve_intermediate_parallel(fixed_codes)
+                # Extract the last output
+                repaired_last_outputs = [executor.extract_last_output(output) for output in repaired_outputs]
+            else:
+                repaired_last_outputs = []
+            repaired_float_answers = [None] * len(repaired_last_outputs)
+            for i, output in enumerate(repaired_last_outputs):
+                try:
+                    repaired_float_answers = float(output)
+                except:
+                    pass
+            global_float_answers += float_answers
+            global_float_answers += repaired_float_answers
+            local_attempts = 0
+            CURR_TIME = math.floor(CURR_TIME - (time.time() - curr_time))
+        # Take the majority non-None # non-negative answer
+        answers = [answer for answer in global_float_answers if answer is not None] #and answer >= 0]
         if len(answers) == 0:
-            return -1
+            return random.randint(0,999)
         else:
             try:
                 with self.solvers['coder']:
@@ -136,13 +218,13 @@ Assistant:
 
             return mod_answer
 
-    def solve(self, problem_description: str) -> int:
+    def solve(self, problem_description: str, time_allowed: int) -> int:
         assert len(self.solvers) > 0, "No solvers provided."
         self.start_time = time.time()
         self.logger.info(f"Starting to solve problem: {problem_description}")
         answer = -1
         if self.stragegy == CoordinationSolverStrategy.PLAN_CODE_EXEC_EXRACT_LAST_MAJ_VOTE:
-            answer = self.plan_code_exec_extract_last_maj_vote(problem_description)
+            answer = self.plan_code_exec_extract_last_maj_vote(problem_description, time_allowed)
         else:
             raise NotImplementedError(f"Strategy {self.stragegy} is not implemented.")
         self.end_time = time.time()
