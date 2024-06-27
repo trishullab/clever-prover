@@ -238,8 +238,13 @@ Assistant:
             else:
                 answer_counter = Counter(bad_answers)
                 most_common_answer = answer_counter.most_common(1)[0][0]
-                int_answer = int(most_common_answer)
-                mod_answer = int_answer % 1000
+                most_common_answer_count = answer_counter.most_common(1)[0][1]
+                if most_common_answer_count > 1:
+                    int_answer = int(most_common_answer)
+                    mod_answer = int_answer % 1000
+                else:
+                    mod_answer = int(random.choice(bad_answers))
+                    mod_answer = mod_answer % 1000
                 return mod_answer
         else:
             try:
@@ -260,7 +265,7 @@ Assistant:
                     self.logger.info(f"[PICK ANSWER] Prompting the model with:\n{prompt}")
                     response = model.generate(prompt, **self.solvers['coder'].inference_kwargs)
                     outs = model.parse_out(response)
-                    self.logger.info(f"Model's generated outputs are:\n {outs[0][0]}")
+                    self.logger.info(f"Picked answer:\n {outs[0][0]}")
                     # most_common_answer = outs[0][0][0:min(10, len(outs[0][0]))]
                     most_common_answer = outs[0][0].split("\\boxed{")
                     if len(most_common_answer) > 1 and len(most_common_answer[-1]) > 0:
@@ -279,8 +284,13 @@ Assistant:
             except Exception as e:
                 answer_counter = Counter(answers)
                 most_common_answer = answer_counter.most_common(1)[0][0]
-                int_answer = int(most_common_answer)
-                mod_answer = int_answer % 1000
+                most_common_answer_count = answer_counter.most_common(1)[0][1]
+                if most_common_answer_count > 1:
+                    int_answer = int(most_common_answer)
+                    mod_answer = int_answer % 1000
+                else:
+                    mod_answer = int(random.choice(answers))
+                    mod_answer = mod_answer % 1000
             self.logger.info(f"Model's generated answers are {answers}")
             return mod_answer
 
