@@ -76,7 +76,7 @@ class CoordinationSolver(Solver):
                 if self._cloned_exec_solver is None:
                     self._cloned_exec_solver = copy.deepcopy(self.solvers["executor"])
                 self._cloned_exec_solver.reset()
-                outs = self._cloned_exec_solver.solve_intermediate_parallel([f"simplify('{output}')"])
+                outs = self._cloned_exec_solver.solve_intermediate_parallel([f"print(simplify('{output}'))"])
                 simpl_output = self._cloned_exec_solver.extract_last_output(outs[0])
                 self.logger.info(f"Sympy simplified output is {simpl_output}")
                 return float(simpl_output)
