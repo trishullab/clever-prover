@@ -4,7 +4,7 @@ use_vllm: True
 vllm_model_args:
   dtype: half
 vllm_sample_args:
-  temperature: 0.8
+  temperature: 0.8207
   top_p: 0.95
 
 model_args:

@@ -2,7 +2,7 @@ import csv
 import logging
 import time
 import matplotlib.pyplot as plt
-
+import math
 from aimo_gaz.solver.abs_solver import Solver
 from aimo_gaz.solver.test_solver import TestSolver
 from aimo_gaz.solver.vanilla_few_shot_solver import FewShotSolver
@@ -21,8 +21,9 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger : logg
     category_statistics = {}
     total = 0
     correct = 0
-
+    total_time_left = 9 * 60 * 60 - 600 # 600 is an upper bound on the startup time, as seen from kaggle test logs
     for exidx, ex in enumerate(data):
+        start_timer = time.time()
         problem = ex.get('problem', ex.get('Question'))
         assert problem is not None, f'Problem not found in example: {ex}'
 
@@ -37,7 +38,7 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger : logg
 
         category = ex.get('Tag')
 
-        solver_ans = solver.solve(problem)
+        solver_ans = solver.solve(problem, time_allowed = total_time_left//(50 - total))
 
         solver_is_correct = int(solver_ans) % 1000 == int(answer)
 
@@ -52,7 +53,7 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger : logg
         if category:
             category_statistics.setdefault(category, {'correct': 0, 'total': 0})['total'] += 1
             category_statistics[category]['correct'] += solver_is_correct
-
+        total_time_left -= math.ceil(time.time()-start_timer)
     return {
         'total': total,
         'correct': correct,

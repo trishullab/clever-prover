@@ -1,6 +1,6 @@
 max_new_tokens: 1024
-temperature: 0.9
-top_p: 1.0
+temperature: 0.8207
+top_p: 0.95
 top_k:
 do_sample: true
 num_return_sequences: 1

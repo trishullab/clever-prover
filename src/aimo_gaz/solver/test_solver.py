@@ -10,7 +10,7 @@ class TestSolver(Solver):
     def solve(self, problem_description: str):
         return 1
     
-    def solve_intermediate(self, problem_description: str):
+    def solve_intermediate(self, problem_description: str,  time_allowed: int):
         return "1"
     
     def reset(self):

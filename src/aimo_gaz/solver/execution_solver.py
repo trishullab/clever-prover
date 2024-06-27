@@ -86,7 +86,7 @@ Execution failed with return code {process.returncode}.
         else:
             return output
 
-    def solve(self, problem_description: str) -> int:
+    def solve(self, problem_description: str, time_allowed: int) -> int:
         raise NotImplementedError("This method is not implemented.")
     
     def code_decorator(self, code: str) -> str:

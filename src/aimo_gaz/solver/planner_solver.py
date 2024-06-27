@@ -18,7 +18,7 @@ class PlannerSolver(Solver):
         self.inference_kwargs["stop_tokens"] = ["[END PROCEDURE]", "7.", "the answer is", "\n\n", "<｜end▁of▁sentence｜>"]
         self.history = []
 
-    def solve(self, problem_description: str) -> int:
+    def solve(self, problem_description: str, time_allowed: int) -> int:
         raise NotImplementedError("This method is not implemented.")
 
     def solve_intermediate(self, problem_description: str) -> str:

@@ -18,7 +18,7 @@ class FewShotSolver(Solver):
         if "problem_description_message" not in self.inference_kwargs:
             self.inference_kwargs["problem_description_message"] = "Below is a math problem you are to solve (positive numerical answer!):"
 
-    def solve(self, problem_description: str) -> int:
+    def solve(self, problem_description: str, time_allowed: int) -> int:
         if not self.model._is_loaded:
             self.model.__enter__()
         # Prompt the model with the problem description
