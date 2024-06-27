@@ -4,8 +4,6 @@ import time
 import math
 import random
 import copy
-import multiprocessing
-multiprocessing.set_start_method('spawn', True)
 from sympy import *
 from aimo_gaz.solver.abs_solver import Solver
 from aimo_gaz.solver.planner_solver import PlannerSolver
@@ -33,6 +31,7 @@ class CoordinationSolver(Solver):
         self.coordination_kwargs = coordination_kwargs
         self.history = []
         self._init_hyperparameters()
+        self._cloned_exec_solver : ExecutionSolver = None
     
     def _init_hyperparameters(self):
         self.num_code_gens = self.coordination_kwargs.get("num_code_gens", 1)
@@ -40,6 +39,7 @@ class CoordinationSolver(Solver):
         self.code_timeout_in_secs = self.coordination_kwargs.get("code_timeout_in_secs", 2*60) # 2 minutes default
         self.problem_timeout_in_secs = self.coordination_kwargs.get("problem_timeout_in_secs", 20*60) # 20 minutes default
         self.num_attempts = self.coordination_kwargs.get("num_attempts", 5)
+        self.picker_optional = self.coordination_kwargs.get("picker_optional", False)
         self.start_time = None
         self.end_time = None
 
@@ -73,18 +73,12 @@ class CoordinationSolver(Solver):
         except Exception as e:
             self.logger.info(f"Could not parse {output} as rational with exception {e}.")
             try:
-                context = multiprocessing.Manager().dict()
-                simplify_job = multiprocessing.Process(target=self._run_simplify, args=(output, context))
-                try:
-                    simplify_job.start()
-                    simplify_job.join(timeout=5)
-                except Exception as e:
-                    try:
-                        simplify_job.kill()
-                    except Exception as e:
-                        pass
-                simpl_output = context.get("simp_output", None)
-                self.logger.info(f"Sympy output is {simpl_output}")
+                if self._cloned_exec_solver is None:
+                    self._cloned_exec_solver = copy.deepcopy(self.solvers["executor"])
+                self._cloned_exec_solver.reset()
+                outs = self._cloned_exec_solver.solve_intermediate_parallel([f"simplify('{output}')"])
+                simpl_output = self._cloned_exec_solver.extract_last_output(outs[0])
+                self.logger.info(f"Sympy simplified output is {simpl_output}")
                 return float(simpl_output)
             except Exception as e:
                 self.logger.info(f"Could not parse {output} as sympy expression with exception {e}.")
@@ -150,13 +144,6 @@ class CoordinationSolver(Solver):
             for i, output in enumerate(last_outputs):
                 try:
                     float_answers[i] = self._parse_integer(output)
-                    # rational_pattern = r'Rational\((\d+),(\d+)\)'
-                    # match = re.search(rational_pattern, output)
-                    # if match:
-                    #     float_answers[i] = float(match.group(1)) + float(match.group(2))
-                    # else:
-                    #     float_answers[i] = float(output)
-                    
                     if abs(int(float_answers[i]) - float_answers[i])  > eps:
                         float_answers[i] = None
                 except Exception as e:
@@ -229,13 +216,6 @@ Assistant:
             for i, output in enumerate(repaired_last_outputs):
                 try:
                     repaired_float_answers[i] = self._parse_integer(output)
-                    # rational_pattern = r'Rational\((\d+),(\d+)\)'
-                    # match = re.search(rational_pattern, output)
-                    # if match:
-                    #     repaired_float_answers[i] = float(match.group(1)) + float(match.group(2))
-                    # else:
-                    #     repaired_float_answers[i] = float(output)
-                    
                     if abs(int(repaired_float_answers[i]) - repaired_float_answers[i])  > eps:
                         repaired_float_answers[i] = None
                 except Exception as e:
@@ -271,7 +251,7 @@ Assistant:
                 most_common_answer = most_common_answers[0][0]
             else:
                 most_common_answer = None
-            if most_common_answer is not None:
+            if most_common_answer is not None and self.picker_optional:
                 int_answer = int(most_common_answer)
                 mod_answer = int_answer % 1000
                 self.logger.info(f"Will not run pick answer, as the majority vote is {mod_answer}")

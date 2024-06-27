@@ -10,3 +10,4 @@ coordination_kwargs:
   code_timeout_in_secs: 15.0
   problem_timeout_in_secs: 1200.0
   num_attempts: 5
+  picker_optional: False
