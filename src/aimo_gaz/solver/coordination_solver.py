@@ -4,7 +4,7 @@ import time
 import math
 import random
 import copy
-import re
+import multiprocessing
 from sympy import *
 from aimo_gaz.solver.abs_solver import Solver
 from aimo_gaz.solver.planner_solver import PlannerSolver
@@ -63,13 +63,25 @@ class CoordinationSolver(Solver):
     def _convert_float_to_rational(self, float_num: float) -> Rational:
         return Rational(float_num).limit_denominator()
 
+    def _run_simplify(self, output, context):
+        context["simp_output"] = simplify(output)
+
     def _parse_integer(self, output):
         try:
             return float(output)
         except Exception as e:
             self.logger.info(f"Could not parse {output} as rational with exception {e}.")
             try:
-                simpl_output = simplify(output)
+                context = multiprocessing.Manager().dict()
+                simplfiy_job = multiprocessing.Process(target=self._run_simplify, args=(output, context))
+                try:
+                    simplfiy_job.start()
+                    simplfiy_job.join(timeout=5)
+                except Exception as e:
+                    simplfiy_job.terminate()
+                    simplfiy_job.join()
+                simpl_output = context.get("simp_output", None)
+                self.logger.info(f"Sympy output is {simpl_output}")
                 return float(simpl_output)
             except Exception as e:
                 self.logger.info(f"Could not parse {output} as sympy expression with exception {e}.")
