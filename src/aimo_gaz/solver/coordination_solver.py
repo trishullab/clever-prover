@@ -257,6 +257,7 @@ Choices:
 Assistant:
                     """.rstrip()
                     prompt += '\n'
+                    self.logger.info(f"[PICK ANSWER] Prompting the model with:\n{prompt}")
                     response = model.generate(prompt, **self.solvers['coder'].inference_kwargs)
                     outs = model.parse_out(response)
                     self.logger.info(f"Model's generated outputs are:\n {outs[0][0]}")
