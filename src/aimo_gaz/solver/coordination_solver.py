@@ -76,7 +76,6 @@ class CoordinationSolver(Solver):
         ATTEMPTS_TO_TRY = self.num_attempts
         TIME_LEFT = True
         CURR_TIME_LEFT = time_allowed 
-        assert self.num_attempts == 5
         while CURR_TIME_LEFT > 30 and TIME_LEFT:
             curr_time = time.time()
             ATTEMPTS_TO_TRY = math.floor(CURR_TIME_LEFT/(PLANNER_AVG_TIME + CODER_AVG_TIME + 10)) if global_attempts != 0 else min(self.num_attempts, math.floor(CURR_TIME_LEFT/(PLANNER_AVG_TIME + CODER_AVG_TIME + 5)))
