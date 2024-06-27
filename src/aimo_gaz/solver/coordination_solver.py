@@ -59,6 +59,30 @@ class CoordinationSolver(Solver):
         for solver in self.solvers.values():
             solver.reset()
         self.history = []
+    
+    def _convert_float_to_rational(self, float_num: float) -> Rational:
+        return Rational(float_num).limit_denominator()
+
+    def _parse_rational(self, output):
+        rational_pattern = r'Rational\((\d+),(\d+)\)'
+        match = re.search(rational_pattern, output)
+        if match:
+            return float(match.group(1)) + float(match.group(2))
+        else:
+            rational_pattern = r'(\d+)/(\d+)' # Example: 1/2
+            match = re.search(rational_pattern, output)
+            if match:
+                return float(match.group(1)) + float(match.group(2))
+            else:
+                rational_pattern = r'(\d+).(\d+)' # Example: 1.5
+                match = re.search(rational_pattern, output)
+                if match:
+                    # Reduce it to the simplest form
+                    float_num = float(str(match.group(1)) + '.' + str(match.group(2)))
+                    return self._convert_float_to_rational(float_num)
+                else:
+                    return float(output)
+
 
     def plan_code_exec_extract_last_maj_vote(self, problem_description: str, time_allowed: int) -> int:
         assert len(self.solvers) > 0, "No solvers provided."
@@ -76,6 +100,7 @@ class CoordinationSolver(Solver):
         ATTEMPTS_TO_TRY = self.num_attempts
         TIME_LEFT = True
         CURR_TIME_LEFT = time_allowed 
+        eps = 10e-6
         while CURR_TIME_LEFT > 30 and TIME_LEFT:
             curr_time = time.time()
             ATTEMPTS_TO_TRY = math.floor(CURR_TIME_LEFT/(PLANNER_AVG_TIME + CODER_AVG_TIME + 10)) if global_attempts != 0 else min(self.num_attempts, math.floor(CURR_TIME_LEFT/(PLANNER_AVG_TIME + CODER_AVG_TIME + 5)))
@@ -110,14 +135,15 @@ class CoordinationSolver(Solver):
             float_answers = [None] * len(last_outputs)
             for i, output in enumerate(last_outputs):
                 try:
-                    rational_pattern = r'Rational\((\d+),(\d+)\)'
-                    match = re.search(rational_pattern, output)
-                    if match:
-                        float_answers[i] = float(match.group(1)) + float(match.group(2))
-                    else:
-                        float_answers[i] = float(output)
+                    float_answers[i] = self._parse_rational(output)
+                    # rational_pattern = r'Rational\((\d+),(\d+)\)'
+                    # match = re.search(rational_pattern, output)
+                    # if match:
+                    #     float_answers[i] = float(match.group(1)) + float(match.group(2))
+                    # else:
+                    #     float_answers[i] = float(output)
                     
-                    if int(float_answers[i]) != float_answers[i]:
+                    if abs(int(float_answers[i]) - float_answers[i])  > eps:
                         float_answers[i] = None
                 except Exception as e:
                     self.logger.info(f"Could not parse {output}, with exception {e}.")
@@ -177,14 +203,15 @@ Assistant:
             repaired_float_answers = [None] * len(repaired_last_outputs)
             for i, output in enumerate(repaired_last_outputs):
                 try:
-                    rational_pattern = r'Rational\((\d+),(\d+)\)'
-                    match = re.search(rational_pattern, output)
-                    if match:
-                        repaired_float_answers[i] = float(match.group(1)) + float(match.group(2))
-                    else:
-                        repaired_float_answers[i] = float(output)
+                    float_answers[i] = self._parse_rational(output)
+                    # rational_pattern = r'Rational\((\d+),(\d+)\)'
+                    # match = re.search(rational_pattern, output)
+                    # if match:
+                    #     repaired_float_answers[i] = float(match.group(1)) + float(match.group(2))
+                    # else:
+                    #     repaired_float_answers[i] = float(output)
                     
-                    if int(repaired_float_answers[i]) != repaired_float_answers[i]:
+                    if abs(int(repaired_float_answers[i]) - repaired_float_answers[i])  > eps:
                         repaired_float_answers[i] = None
                 except Exception as e:
                     self.logger.info(f"Could not parse {output}, with exception {e}.")
