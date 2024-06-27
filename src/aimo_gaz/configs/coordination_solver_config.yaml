@@ -8,5 +8,5 @@ coordination_kwargs:
   num_code_gens: 1
   num_plans: 1
   code_timeout_in_secs: 15.0
-  problem_timeout_in_secs: 900.0
+  problem_timeout_in_secs: 1200.0
   num_attempts: 5
