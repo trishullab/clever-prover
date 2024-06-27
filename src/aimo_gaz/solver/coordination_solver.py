@@ -5,6 +5,7 @@ import math
 import random
 import copy
 import multiprocessing
+multiprocessing.set_start_method('spawn', True)
 from sympy import *
 from aimo_gaz.solver.abs_solver import Solver
 from aimo_gaz.solver.planner_solver import PlannerSolver
@@ -73,13 +74,15 @@ class CoordinationSolver(Solver):
             self.logger.info(f"Could not parse {output} as rational with exception {e}.")
             try:
                 context = multiprocessing.Manager().dict()
-                simplfiy_job = multiprocessing.Process(target=self._run_simplify, args=(output, context))
+                simplify_job = multiprocessing.Process(target=self._run_simplify, args=(output, context))
                 try:
-                    simplfiy_job.start()
-                    simplfiy_job.join(timeout=5)
+                    simplify_job.start()
+                    simplify_job.join(timeout=5)
                 except Exception as e:
-                    simplfiy_job.terminate()
-                    simplfiy_job.join()
+                    try:
+                        simplify_job.kill()
+                    except Exception as e:
+                        pass
                 simpl_output = context.get("simp_output", None)
                 self.logger.info(f"Sympy output is {simpl_output}")
                 return float(simpl_output)
@@ -259,6 +262,21 @@ Assistant:
                     mod_answer = mod_answer % 1000
                 return mod_answer
         else:
+            answer_counter = Counter(answers)
+            most_common_answers = answer_counter.most_common(2)
+            if len(most_common_answers) == 1:
+                most_common_answer = most_common_answers[0][0]
+            elif len(most_common_answers) == 2 and most_common_answers[0][1] > most_common_answers[1][1]:
+                # There is no tie in the majority vote
+                most_common_answer = most_common_answers[0][0]
+            else:
+                most_common_answer = None
+            if most_common_answer is not None:
+                int_answer = int(most_common_answer)
+                mod_answer = int_answer % 1000
+                self.logger.info(f"Will not run pick answer, as the majority vote is {mod_answer}")
+                self.logger.info(f"Model's generated answers are {answers}")
+                return mod_answer
             try:
                 with self.solvers['coder']:
                     model = self.solvers['coder'].model
