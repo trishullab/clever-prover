@@ -90,7 +90,10 @@ Execution failed with return code {process.returncode}.
         raise NotImplementedError("This method is not implemented.")
     
     def code_decorator(self, code: str) -> str:
-        code = code.replace('\n', '\n    ') # Add indentation to put the code in a try-except block
+        code = code.lstrip() # Remove leading whitespace
+        # Add indentation to put the code in a try-except block
+        code = "    " + code.replace('\n', '\n    ')
+        # code = code.replace('\n', '\n    ') # Add indentation to put the code in a try-except block
         new_code = f"""
 print("[OUTPUT START]")
 try:

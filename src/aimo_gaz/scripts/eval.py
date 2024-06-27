@@ -21,7 +21,8 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger : logg
     category_statistics = {}
     total = 0
     correct = 0
-    total_time_left = 9 * 60 * 60 - 600 # 600 is an upper bound on the startup time, as seen from kaggle test logs
+    # TODO change to 1.5 * 650
+    total_time_left = 9 * 60 * 60 - 1.5 * 650 # 600 is an upper bound on the startup time, as seen from kaggle test logs
     for exidx, ex in enumerate(data):
         start_timer = time.time()
         problem = ex.get('problem', ex.get('Question'))
