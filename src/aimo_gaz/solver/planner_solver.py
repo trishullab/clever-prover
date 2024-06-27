@@ -51,7 +51,7 @@ class PlannerSolver(Solver):
         if not generated_text.strip().endswith("[END PROCEDURE]"):
             generated_text = generated_text.rstrip('\n') + "\n[END PROCEDURE]"
         self.logger.info(f"[PLANNER] Plan generated:\n{generated_text}")
-        return f"1. {generated_text.replace('[END PROCEDURE]', '')}"
+        return f"{generated_text.replace('[END PROCEDURE]', '')}"
         # generated_text
 
     def reset(self):
