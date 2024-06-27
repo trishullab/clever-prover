@@ -5,7 +5,7 @@ import math
 import random
 import copy
 import re
-from sympy import Rational
+from sympy import *
 from aimo_gaz.solver.abs_solver import Solver
 from aimo_gaz.solver.planner_solver import PlannerSolver
 from aimo_gaz.solver.code_solver import CodeSolver
@@ -63,25 +63,17 @@ class CoordinationSolver(Solver):
     def _convert_float_to_rational(self, float_num: float) -> Rational:
         return Rational(float_num).limit_denominator()
 
-    def _parse_rational(self, output):
-        rational_pattern = r'Rational\((\d+),(\d+)\)'
-        match = re.search(rational_pattern, output)
-        if match:
-            return float(match.group(1)) + float(match.group(2))
-        else:
-            rational_pattern = r'(\d+)/(\d+)' # Example: 1/2
-            match = re.search(rational_pattern, output)
-            if match:
-                return float(match.group(1)) + float(match.group(2))
-            else:
-                rational_pattern = r'(\d+).(\d+)' # Example: 1.5
-                match = re.search(rational_pattern, output)
-                if match:
-                    # Reduce it to the simplest form
-                    float_num = float(str(match.group(1)) + '.' + str(match.group(2)))
-                    return self._convert_float_to_rational(float_num)
-                else:
-                    return float(output)
+    def _parse_integer(self, output):
+        try:
+            return float(output)
+        except Exception as e:
+            self.logger.info(f"Could not parse {output} as rational with exception {e}.")
+            try:
+                simpl_output = simplify(output)
+                return float(simpl_output)
+            except Exception as e:
+                self.logger.info(f"Could not parse {output} as sympy expression with exception {e}.")
+                return float(output)
 
 
     def plan_code_exec_extract_last_maj_vote(self, problem_description: str, time_allowed: int) -> int:
@@ -108,24 +100,31 @@ class CoordinationSolver(Solver):
             if ATTEMPTS_TO_TRY <= 0:
                 TIME_LEFT = False
                 break
-            while local_attempts < ATTEMPTS_TO_TRY:
-                # Plan
-                plan_start_time = time.time()
-                plan = planner.solve_intermediate(problem_description)
-                PLANNER_AVG_TIME = (PLANNER_AVG_TIME + (time.time() - plan_start_time)) if global_attempts == 0 else (PLANNER_AVG_TIME * global_attempts + (time.time() - plan_start_time))/(global_attempts + 1)
-                # Code
-                # coder.history = copy.deepcopy(planner.history) # Coder should know the plan with full context
-                coder.inference_kwargs["num_return_sequences"] = self.num_code_gens
-                coder_start_time = time.time()
-                codes_gen = coder.solve_intermediate(problem_description=problem_description, plan=plan)
-                CODER_AVG_TIME = CODER_AVG_TIME + (time.time() - coder_start_time) if global_attempts == 0 else (CODER_AVG_TIME * global_attempts + (time.time() - coder_start_time))/(global_attempts + 1)
-                if isinstance(codes_gen, str):
-                    codes_gen = [codes_gen]
-                codes.extend(codes_gen)
+            while local_attempts < ATTEMPTS_TO_TRY and CURR_TIME_LEFT > 30:
+                try:
+                    # Plan
+                    plan_start_time = time.time()
+                    plan = planner.solve_intermediate(problem_description)
+                    PLANNER_AVG_TIME = (PLANNER_AVG_TIME + (time.time() - plan_start_time)) if global_attempts == 0 else (PLANNER_AVG_TIME * global_attempts + (time.time() - plan_start_time))/(global_attempts + 1)
+                    # Code
+                    coder.inference_kwargs["num_return_sequences"] = self.num_code_gens
+                    coder_start_time = time.time()
+                    codes_gen = coder.solve_intermediate(problem_description=problem_description, plan=plan)
+                    CODER_AVG_TIME = CODER_AVG_TIME + (time.time() - coder_start_time) if global_attempts == 0 else (CODER_AVG_TIME * global_attempts + (time.time() - coder_start_time))/(global_attempts + 1)
+                    if isinstance(codes_gen, str):
+                        codes_gen = [codes_gen]
+                    codes.extend(codes_gen)
+                except Exception as e:
+                    self.logger.info(f"Exception encountered in planning and coding phase: {e}.")
+                    pass
                 local_attempts += 1
                 global_attempts += 1
                 planner.reset()
                 coder.reset()
+                time_now = time.time()
+                CURR_TIME_LEFT = math.floor(CURR_TIME_LEFT - (time_now - curr_time))
+                curr_time = time_now
+                self.logger.info(f"Time left after planning and coding is {CURR_TIME_LEFT}")
             # Execute
             executor.history = copy.deepcopy(coder.history)
             outputs = executor.solve_intermediate_parallel(codes)
@@ -135,7 +134,7 @@ class CoordinationSolver(Solver):
             float_answers = [None] * len(last_outputs)
             for i, output in enumerate(last_outputs):
                 try:
-                    float_answers[i] = self._parse_rational(output)
+                    float_answers[i] = self._parse_integer(output)
                     # rational_pattern = r'Rational\((\d+),(\d+)\)'
                     # match = re.search(rational_pattern, output)
                     # if match:
@@ -152,13 +151,14 @@ class CoordinationSolver(Solver):
             global_float_answers += float_answers
             invalid_idxs = [i for i, answer in enumerate(float_answers) if answer is None]
             fixed_codes = []
-            try: 
-                self.logger.info(f"Running the repair model on {len(invalid_idxs)} bad codes, indices are {invalid_idxs} and number of outputs is {len(last_outputs)}")
-                with self.solvers['coder']: 
-                    for idx in invalid_idxs: 
+            self.logger.info(f"Running the repair model on {len(invalid_idxs)} bad codes, indices are {invalid_idxs} and number of outputs is {len(last_outputs)}")
+            with self.solvers['coder']: 
+                for idx in invalid_idxs: 
+                    try:
                         model = self.solvers['coder'].model
-                        prompt = f"""User: Below is a math problem that has an integer solution and a python program which returns an output which is not the final solution. Solve the problem by writing a python program using sympy, you can use the result of the previous program. Make sure you code runs correctly!
-
+                        prompt = f"""User: Below is a math problem that has an integer solution and a python program which returns an output which is not the final solution. 
+Solve the problem by writing a python program using sympy, you can use the result of the previous program. 
+Make sure you code runs correctly! The answer to the problem should be an integer in range 0 to 999.
 Problem Description: 
 {problem_description}
 
@@ -168,11 +168,16 @@ Problem Description:
 ```output
 {last_outputs[idx]}
 ```
-                        """.strip() + """\n\n Write python code using sympy which solves the problem. Think step by step, make sure the code runs correctly and that the final solution is an integer! Do not copy the above code, instead fix it up so that it finishes by printing the final answer. Your code should finish by printing the final answer.
+
+Write python code using sympy which solves the problem. 
+Think step by step, make sure the code runs correctly and that the final solution is an integer! 
+Do not copy the above code, instead fix it up so that it finishes by printing the final answer. 
+Your code should finish by printing the final answer. The answer to the problem should be an integer in range 0 to 999.
 Assistant:
 ```python code:
 """
                         repair_start_time = time.time()
+                        self.logger.info(f"[REPAIR] Prompting the model with:\n{prompt}")
                         response = model.generate(prompt, **self.solvers['coder'].inference_kwargs) # TODO: Does this augment the history?
                         REPAIR_AVG_TIME =  (REPAIR_AVG_TIME + time.time() - repair_start_time) if total_repairs == 0 else (total_repairs * REPAIR_AVG_TIME + time.time() - repair_start_time) / (1 + total_repairs)
                         total_repairs += 1
@@ -190,10 +195,15 @@ Assistant:
                                     fixed_codes.append("    " + gen_text.replace('<｜end▁of▁sentence｜>', ''))
                                 else:
                                     fixed_codes.append(f"    {gen_text}")
-                            
-            except Exception as e:
-                self.logger.info(f"Encountered exception during repair phase: {e}.")
-                pass
+                    except Exception as e:
+                        self.logger.info(f"Encountered exception during repair phase: {e}.")
+                        pass
+                    time_now = time.time()
+                    CURR_TIME_LEFT = math.floor(CURR_TIME_LEFT - (time_now - curr_time))
+                    curr_time = time_now
+                    self.logger.info(f"Time left after repair is {CURR_TIME_LEFT}")
+                    if CURR_TIME_LEFT <= 30:
+                        break
             if len(fixed_codes) > 0:
                 repaired_outputs = executor.solve_intermediate_parallel(fixed_codes)
                 # Extract the last output
@@ -203,7 +213,7 @@ Assistant:
             repaired_float_answers = [None] * len(repaired_last_outputs)
             for i, output in enumerate(repaired_last_outputs):
                 try:
-                    float_answers[i] = self._parse_rational(output)
+                    repaired_float_answers[i] = self._parse_integer(output)
                     # rational_pattern = r'Rational\((\d+),(\d+)\)'
                     # match = re.search(rational_pattern, output)
                     # if match:
@@ -214,14 +224,14 @@ Assistant:
                     if abs(int(repaired_float_answers[i]) - repaired_float_answers[i])  > eps:
                         repaired_float_answers[i] = None
                 except Exception as e:
-                    self.logger.info(f"Could not parse {output}, with exception {e}.")
+                    self.logger.info(f"Could not parse {output} after repair, with exception {e}.")
                     pass
             global_float_answers += repaired_float_answers
             local_attempts = 0
             CURR_TIME_LEFT = math.floor(CURR_TIME_LEFT - (time.time() - curr_time))
         # Take the majority non-None
-        answers = [answer for answer in global_float_answers if answer is not None and answer != 0 and answer >= 0]
-        bad_answers = [abs(answer) for answer in global_float_answers if answer is not None and answer == 0 or answer < 0]
+        answers = [answer for answer in global_float_answers if answer is not None and (answer > 0)]
+        bad_answers = [abs(answer) for answer in global_float_answers if answer is not None and (answer <= 0)]
         if len(answers) == 0:
             if len(bad_answers) == 0:
                 return random.randint(0,999)
@@ -249,6 +259,7 @@ Assistant:
                     prompt += '\n'
                     response = model.generate(prompt, **self.solvers['coder'].inference_kwargs)
                     outs = model.parse_out(response)
+                    self.logger.info(f"Model's generated outputs are:\n {outs[0][0]}")
                     # most_common_answer = outs[0][0][0:min(10, len(outs[0][0]))]
                     most_common_answer = outs[0][0].split("\\boxed{")
                     if len(most_common_answer) > 1 and len(most_common_answer[-1]) > 0:
