@@ -6,7 +6,7 @@ if root_dir not in sys.path:
     sys.path.append(root_dir)
 import os
 import json
-import openai
+from openai import OpenAI
 import typing
 import tiktoken
 
@@ -65,8 +65,9 @@ class GptAccess(object):
         assert secret_filepath.endswith(".json"), "Secret filepath must be a .json file"
         assert os.path.exists(secret_filepath), "Secret filepath does not exist"
         self.secret_filepath = secret_filepath
-        self._load_secret()
-        self.models_supported = openai.Model.list().data
+        api_key = self._get_secret()
+        self.client = OpenAI(api_key=api_key)
+        self.models_supported = self.client.models.list().data
         self.models_supported_name = [model.id for model in self.models_supported]
         if model_name is not None:
             assert model_name in self.models_supported_name, f"Model name {model_name} not supported"
@@ -80,7 +81,7 @@ class GptAccess(object):
 
     def get_models(self) -> list:
         return self.models_supported
-    
+
     # def complete_prompt(self,
     #     prompt: str,
     #     model: typing.Optional[str] = None,
@@ -127,7 +128,7 @@ class GptAccess(object):
             stop: list = ["\n"]) -> typing.Tuple[list, dict]:
         model = self.model_name if model is None else model
         if self.is_open_ai_model:
-            response = openai.ChatCompletion.create(
+            response = self.client.chat.completions.create(
                 model=model,
                 messages=messages,
                 max_tokens=max_tokens,
@@ -143,7 +144,7 @@ class GptAccess(object):
             self.usage["completion_tokens"] += usage.completion_tokens
             self.usage["total_tokens"] += usage.total_tokens
         else:
-            response = openai.ChatCompletion.create(
+            response = self.client.chat.completions.create(
                 model=model,
                 messages=messages,
                 max_tokens=max_tokens,
@@ -168,7 +169,7 @@ class GptAccess(object):
             "reason": response.choices[-1].finish_reason if len(response.choices) > 0 else "stop"
         }
         return return_responses, usage_dict
-    
+
     def num_tokens_from_messages(self, messages, model=None):
         # Model name is like "gpt-3.5-turbo-0613"
         model = model if model is not None else self.model_name
@@ -211,11 +212,12 @@ class GptAccess(object):
         num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
         return num_tokens
 
-    def _load_secret(self) -> None:
+    def _get_secret(self) -> str:
         with open(self.secret_filepath, "r") as f:
             secret = json.load(f)
             # openai.organization = secret["organization"]
-            openai.api_key = secret["api_key"]
+            api_key = secret["api_key"]
+        return api_key
 
     def get_usage(self) -> dict:
         return self.usage
