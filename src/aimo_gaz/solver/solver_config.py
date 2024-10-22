@@ -9,7 +9,7 @@ from aimo_gaz.prompts.cot_prompt import CoTPrompt
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
 from enum import Enum
-from aimo_gaz.models.model import Model
+from aimo_gaz.models.old_model import Model
 if os.environ.get("USE_VLLM", "False").lower() == "true":
     # In case we cannot install VLLM
     from vllm import LLM, SamplingParams
@@ -72,7 +72,7 @@ from aimo_gaz.solver.coordination_solver import CoordinationSolver, Coordination
 from aimo_gaz.solver.code_solver import CodeSolver
 from aimo_gaz.solver.planner_solver import PlannerSolver
 from aimo_gaz.solver.execution_solver import ExecutionSolver
-from aimo_gaz.models.model import Model
+from aimo_gaz.models.old_model import Model
 from aimo_gaz.prompts.code_prompt import CodePrompt
 from aimo_gaz.prompts.planner_prompt import PlannerPrompt
 

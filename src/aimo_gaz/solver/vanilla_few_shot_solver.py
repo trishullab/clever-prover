@@ -1,5 +1,5 @@
 from aimo_gaz.solver.abs_solver import Solver
-from aimo_gaz.models.model import Model
+from aimo_gaz.models.old_model import Model
 from aimo_gaz.solver.solver_config import vLLMHarness
 from typing import Union
 from aimo_gaz.prompts.prompt import Prompt

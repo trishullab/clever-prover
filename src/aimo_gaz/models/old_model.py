@@ -6,8 +6,6 @@ import json
 import random
 import shutil
 from enum import Enum
-from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json
 from torch.utils.data import Dataset, DataLoader
 from transformers import (
     AutoModelForSeq2SeqLM,
@@ -33,6 +31,7 @@ if MODEL_TRAINING_MODE:
     from comet_ml import Experiment
     from aimo_gaz.models.custom_sft_trainer import GenerateEvalSFTTrainer
     from aimo_gaz.models.custom_s2s_trainer import GenerateEvalS2STrainer
+from aimo_gaz.models.abs_model import GenerationResult, GenerationResults, Model
 
 class AutoRegressiveSequenceSearch(Enum):
     NucleusSampling = "nucleus_sampling"
@@ -77,25 +76,6 @@ class LogMetricCallback(TrainerCallback):
             self._idx = len(state.log_history)
         super().on_log(args, state, control, **kwargs)
 
-@dataclass_json
-@dataclass
-class GenerationResult(object):
-    input_text: str
-    generated_text: typing.List[str] = field(default_factory=list)
-    neg_log_likelihood: typing.List[float] = field(default_factory=list)
-
-@dataclass_json
-@dataclass
-class GenerationResults(object):
-    results: typing.List[GenerationResult] = field(default_factory=list)
-
-    def __iter__(self):
-        return iter(self.results)
-    
-    def __getitem__(self, key):
-        assert isinstance(key, int), "Please provide an integer key"
-        return self.results[key]
-
 class StopOnTokens(StoppingCriteria):
     """Stopping criteria based on a list of tokens"""
     def __init__(self, stop_tokens: typing.List[str], tokenizer: AutoTokenizer, input_length: int):
@@ -132,7 +112,7 @@ class StopOnTokens(StoppingCriteria):
                     input_ids[idx][i] = self.pad_token_tensor
         return all([x != -1 for x in stop_decisions])
 
-class Model(object):
+class OldModel(Model):
     """Wrapper for a Llama model"""
 
     def __init__(self, name: str, training_args: TrainingArguments = None, log_folder: str = None, **kwargs):
@@ -707,9 +687,9 @@ if __name__ == '__main__':
     is_seq2seq = "t5" in model_name.lower()
     token = None
     if device_map is not None:
-        model = Model(model_name, token=token, use_lora=False, is_seq2seq=is_seq2seq, device_map=device_map)
+        model = OldModel(model_name, token=token, use_lora=False, is_seq2seq=is_seq2seq, device_map=device_map)
     else:
-        model = Model(model_name, token=token, use_lora=False, is_seq2seq=is_seq2seq)
+        model = OldModel(model_name, token=token, use_lora=False, is_seq2seq=is_seq2seq)
     main_prompt = "Do simple math problems (Answer only the number and use '[END]' to finish the response):\nQuestion: 2 + 2\nAnswer: 4\n[END]"
     with model:
         for response in model.generate(
