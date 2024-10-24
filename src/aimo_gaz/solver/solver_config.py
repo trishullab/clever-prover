@@ -22,7 +22,7 @@ class vLLMHarness:
         self._is_loaded = True
 
     def generate(self, prompt, **kwargs):
-        # TODO - yucky, not sure if they have a standard way of doing this.
+        # TODO: - yucky, not sure if they have a standard way of doing this.
         kwargs = self.make_safe_sampling_params(kwargs, self.model)
         for key, value in kwargs.items():
             setattr(self.sampling_params, key, value)

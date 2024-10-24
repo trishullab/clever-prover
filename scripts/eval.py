@@ -97,7 +97,7 @@ if __name__ == "__main__":
         else:
             assert False, f'Unknown benchmark: {benchmark}'
 
-        # TODO - you can change the solver class when more are made.
+        # TODO: - you can change the solver class when more are made.
         stats = evaluate(data, solver_cls=TestSolver)
 
         print(f'Benchmark: {benchmark}')

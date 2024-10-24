@@ -21,7 +21,7 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger : logg
     category_statistics = {}
     total = 0
     correct = 0
-    # TODO change to 1.5 * 650
+    # TODO: change to 1.5 * 650
     total_time_left = 9 * 60 * 60 - 1.5 * 650 # 600 is an upper bound on the startup time, as seen from kaggle test logs
     for exidx, ex in enumerate(data):
         start_timer = time.time()
@@ -88,7 +88,7 @@ def evaluate_on_benchmarks(benchmark, valid_path, solver, time_str = None, logge
     logger = logger if logger is not None else logging.getLogger(__name__)
     data = get_csv_data(valid_path)
 
-    # TODO - you can change the solver class when more are made.
+    # TODO: - you can change the solver class when more are made.
     stats = evaluate(data, solver=solver, logger=logger)
 
     logger.info(f'Benchmark: {benchmark}')
@@ -123,7 +123,7 @@ if __name__ == "__main__":
         else:
             assert False, f'Unknown benchmark: {benchmark}'
 
-        # TODO - you can change the solver class when more are made.
+        # TODO: - you can change the solver class when more are made.
         stats = evaluate(data, solver_cls=TestSolver)
 
         print(f'Benchmark: {benchmark}')

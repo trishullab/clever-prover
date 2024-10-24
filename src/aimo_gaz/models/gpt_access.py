@@ -117,7 +117,7 @@ class GptAccess(object):
     #     return resp
 
     def complete_chat(self,
-            messages: typing.List[str],
+            messages: typing.List[typing.Dict[str, str]],
             model: typing.Optional[str] = None,
             n: int = 1,
             max_tokens: int = 5,
