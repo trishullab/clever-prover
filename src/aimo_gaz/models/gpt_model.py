@@ -14,16 +14,16 @@ class GptModel(Model):
 
     def generate(self,
                  inputs: typing.Union[typing.List[typing.List[typing.Dict[str, str]]], typing.List[typing.Dict[str, str]]],
-                 **kwargs
+                 **kwargs # TODO: add assert to catch unused kwargs?
                  ) -> GenerationResults:
         if isinstance(inputs[0], dict):
             inputs = [inputs]
         
         generation_results = GenerationResults()
         for text in inputs:
-            generated_text, _ = self._gpt_access.complete_chat(text, max_tokens=15, n=2, temperature=0.8)
+            generated_text, _ = self._gpt_access.complete_chat(text, **kwargs)
             generated_text = [response["content"] for response in generated_text]
-            result = GenerationResult(input_text=text, generated_text=generated_text, neg_log_likelihood=[])
+            result = GenerationResult(input_text=text, generated_text=generated_text)
             generation_results.results.append(result)
 
         return generation_results
@@ -102,6 +102,10 @@ if __name__ == '__main__':
                         }
                     ]
                 ],
+                max_tokens=15,
+                n=2,
+                temperature=0.8,
+                stop=["[END]"],
                 # max_new_tokens=10,
                 # temperature=0.1, # Nucleus sampling
                 # do_sample=True, # Nucleus sampling

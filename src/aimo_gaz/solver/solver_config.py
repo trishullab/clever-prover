@@ -15,54 +15,54 @@ if os.environ.get("USE_VLLM", "False").lower() == "true":
     from vllm import LLM, SamplingParams
 
 
-class vLLMHarness:
-    def __init__(self, model, sampling_params):
-        self.model = model
-        self.sampling_params = sampling_params
-        self._is_loaded = True
+# class vLLMHarness:
+#     def __init__(self, model, sampling_params):
+#         self.model = model
+#         self.sampling_params = sampling_params
+#         self._is_loaded = True
 
-    def generate(self, prompt, **kwargs):
-        # TODO: - yucky, not sure if they have a standard way of doing this.
-        kwargs = self.make_safe_sampling_params(kwargs, self.model)
-        for key, value in kwargs.items():
-            setattr(self.sampling_params, key, value)
-        out = self.model.generate(prompt, self.sampling_params)
-        return out
+#     def generate(self, prompt, **kwargs):
+#         # TODO: - yucky, not sure if they have a standard way of doing this.
+#         kwargs = self.make_safe_sampling_params(kwargs, self.model)
+#         for key, value in kwargs.items():
+#             setattr(self.sampling_params, key, value)
+#         out = self.model.generate(prompt, self.sampling_params)
+#         return out
 
-    def parse_out(self, out):
-        generated_text = [[y.text for y in x.outputs] for x in out]
-        return generated_text
+#     def parse_out(self, out):
+#         generated_text = [[y.text for y in x.outputs] for x in out]
+#         return generated_text
 
 
-    @classmethod
-    def make_safe_sampling_params(cls, sampling_params, model):
-        safe_sampling_params = {}
-        for k, v in sampling_params.items():
-            if k == 'max_new_tokens':
-                safe_sampling_params['max_tokens'] = v
-            elif k in ['temperature', 'top_p', 'top_k']:
-                if v is not None:
-                    safe_sampling_params[k] = v
-            elif k == 'num_return_sequences':
-                safe_sampling_params['n'] = v
-            elif k == 'stop_tokens':
-                safe_sampling_params['stop'] = v#[model.get_tokenizer().convert_tokens_to_ids(x) for x in v if model.get_tokenizer().convert_tokens_to_ids(x) is not None]
-            else:
-                continue
+#     @classmethod
+#     def make_safe_sampling_params(cls, sampling_params, model):
+#         safe_sampling_params = {}
+#         for k, v in sampling_params.items():
+#             if k == 'max_new_tokens':
+#                 safe_sampling_params['max_tokens'] = v
+#             elif k in ['temperature', 'top_p', 'top_k']:
+#                 if v is not None:
+#                     safe_sampling_params[k] = v
+#             elif k == 'num_return_sequences':
+#                 safe_sampling_params['n'] = v
+#             elif k == 'stop_tokens':
+#                 safe_sampling_params['stop'] = v#[model.get_tokenizer().convert_tokens_to_ids(x) for x in v if model.get_tokenizer().convert_tokens_to_ids(x) is not None]
+#             else:
+#                 continue
 
-        return safe_sampling_params
+#         return safe_sampling_params
 
-    @classmethod
-    def load_from_config(cls, model_name, vllm_params, sampling_params):
-        model = LLM(model_name, **vllm_params)
-        sampling_params = SamplingParams(**cls.make_safe_sampling_params(sampling_params, model))
-        return cls(model, sampling_params)
+#     @classmethod
+#     def load_from_config(cls, model_name, vllm_params, sampling_params):
+#         model = LLM(model_name, **vllm_params)
+#         sampling_params = SamplingParams(**cls.make_safe_sampling_params(sampling_params, model))
+#         return cls(model, sampling_params)
 
-    def __enter__(self):
-        pass
+#     def __enter__(self):
+#         pass
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
+#     def __exit__(self, exc_type, exc_val, exc_tb):
+#         pass
 
 
 from aimo_gaz.solver.test_solver import TestSolver

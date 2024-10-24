@@ -16,7 +16,7 @@ class CodeSolver(Solver):
         self.logger = logger
         self.history = []
         self.inference_kwargs["return_full_text"] = False # We only need the generated text coz we have the history
-        self.inference_kwargs["stop_tokens"] = ["[END CODE]", "```", "<｜end▁of▁sentence｜>"]
+        self.inference_kwargs["stop_tokens"] = ["[END CODE]", "```", "<｜end▁of▁sentence｜>"] # TODO: ensure these are actually passed in
 
     def solve(self, problem_description: str, time_allowed: int) -> int:
         raise NotImplementedError("This method is not implemented.")
