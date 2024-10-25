@@ -14,8 +14,18 @@ class GptModel(Model):
 
     def generate(self,
                  inputs: typing.Union[typing.List[typing.List[typing.Dict[str, str]]], typing.List[typing.Dict[str, str]]],
-                 **kwargs # TODO: add assert to catch unused kwargs?
+                 **kwargs
                  ) -> GenerationResults:
+
+        expected_kwargs = set(["n", "max_tokens", "temperature", "top_p", "frequency_penalty", "presence_penalty", "stop"])
+        for arg in kwargs:
+            assert arg in expected_kwargs, \
+                f"""Unexpected argument '{arg}' found in kwargs passed to generate()
+
+All passed kwargs: {kwargs.keys()}
+
+Expected kwargs: {expected_kwargs}"""
+
         if isinstance(inputs[0], dict):
             inputs = [inputs]
         
@@ -37,47 +47,6 @@ if __name__ == '__main__':
     import numpy as np
     import json
     model_name = "gpt-4o"
-    # device_map = [('model.embed_tokens', 0),
-    #              ('model.layers.0', 0),
-    #              ('model.layers.1', 0),
-    #              ('model.layers.2', 0),
-    #              ('model.layers.3', 1),
-    #              ('model.layers.4', 1),
-    #              ('model.layers.5', 1),
-    #              ('model.layers.6', 1),
-    #              ('model.layers.7', 1),
-    #              ('model.layers.8', 1),
-    #              ('model.layers.9', 1),
-    #              ('model.layers.10', 1),
-    #              ('model.layers.11', 1),
-    #              ('model.layers.12', 1),
-    #              ('model.layers.13', 1),
-    #              ('model.layers.14', 2),
-    #              ('model.layers.15', 2),
-    #              ('model.layers.16', 2),
-    #              ('model.layers.17', 2),
-    #              ('model.layers.18', 2),
-    #              ('model.layers.19', 2),
-    #              ('model.layers.20', 2),
-    #              ('model.layers.21', 2),
-    #              ('model.layers.22', 3),
-    #              ('model.layers.23', 3),
-    #              ('model.layers.24', 3),
-    #              ('model.layers.25', 3),
-    #              ('model.layers.26', 3),
-    #              ('model.layers.27', 3),
-    #              ('model.layers.28', 3),
-    #              ('model.layers.29', 3),
-    #              ('model.norm', 3),
-    #              ('lm_head', 3)]
-    # base_device = 3
-    # device_map = {x[0]: x[1] + base_device for x in device_map}
-    # is_seq2seq = "t5" in model_name.lower()
-    # token = None
-    # if device_map is not None:
-    #     model = GptModel(model_name, token=token, use_lora=False, is_seq2seq=is_seq2seq, device_map=device_map)
-    # else:
-    #     model = GptModel(model_name, token=token, use_lora=False, is_seq2seq=is_seq2seq)
     model = GptModel(model_name)
     main_prompt = "Do simple math problems (Answer only the number and use '[END]' to finish the response):\nQuestion: 2 + 2\nAnswer: 4\n[END]"
     with model:
