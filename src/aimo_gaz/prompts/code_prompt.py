@@ -15,7 +15,7 @@ First Couple Steps:
 # {}
 # Solve the problem by writing a python program that uses sympy which computes the final answer. You can use the procedure above if you think it is useful. Do NOT copy it directly into your program.
 # Make sure to print the final answer on a new line using print command. End the code by writing [END CODE]."""
-        self.assistant_message_start = """```python code:
+        self.assistant_message_start = """```python
 """
     def get_prompt(self, messages: list[dict[str, str]]) -> str:
         if messages[-1]['role'] == 'assistant': # already have information produced
@@ -29,7 +29,8 @@ First Couple Steps:
                 'content': self.user_message.format(messages_copy[-2]['content'], messages_copy[-1]['content'])
             })
             messages.append({'role': 'assistant', 'content': self.assistant_message_start})
-        return self.translate_for_deepseek(messages, no_newline_after_assistant=True)
+        # return self.translate_for_deepseek(messages, no_newline_after_assistant=True)
+        return messages
 
     def parse_response(self, response: str) -> str:
         return response

@@ -20,14 +20,14 @@ class CoordinationSolverStrategy(Enum):
         return self.value
 
 class CoordinationSolver(Solver):
-    def __init__(self, 
-        solvers: typing.Dict[str, Solver], 
-        startegy: CoordinationSolverStrategy, 
-        logger: logging.Logger = None, 
+    def __init__(self,
+        solvers: typing.Dict[str, Solver],
+        strategy: CoordinationSolverStrategy,
+        logger: logging.Logger = None,
         **coordination_kwargs):
         self.logger = logger
         self.solvers = solvers
-        self.stragegy = startegy
+        self.strategy = strategy
         self.coordination_kwargs = coordination_kwargs
         self.history = []
         self._init_hyperparameters()
@@ -189,14 +189,15 @@ Assistant:
                         for result in outs:
                             for gen_text in result:
                                 self.logger.info(f"Repair phase: Output generated code, before cleaning, is {gen_text}")
-                                if gen_text.endswith('[END CODE]'):
-                                    fixed_codes.append("    " + gen_text.replace('[END CODE]', ''))
-                                elif gen_text.endswith('```'):
-                                    fixed_codes.append("    " + gen_text.replace('```', ''))
-                                elif gen_text.endswith('<｜end▁of▁sentence｜>'):
-                                    fixed_codes.append("    " + gen_text.replace('<｜end▁of▁sentence｜>', ''))
-                                else:
-                                    fixed_codes.append(f"    {gen_text}")
+                                # if gen_text.endswith('[END CODE]'):
+                                #     fixed_codes.append("    " + gen_text.replace('[END CODE]', ''))
+                                # elif gen_text.endswith('```'):
+                                #     fixed_codes.append("    " + gen_text.replace('```', ''))
+                                # elif gen_text.endswith('<｜end▁of▁sentence｜>'):
+                                #     fixed_codes.append("    " + gen_text.replace('<｜end▁of▁sentence｜>', ''))
+                                # else:
+                                #     fixed_codes.append(f"    {gen_text}")
+                                fixed_codes.append(f"    {gen_text}")
                     except Exception as e:
                         self.logger.info(f"Encountered exception during repair phase: {e}.")
                         pass
@@ -310,10 +311,10 @@ Assistant:
         self.logger.info(f"Starting to solve problem: {problem_description}")
         answer = -1
         try:
-            if self.stragegy == CoordinationSolverStrategy.PLAN_CODE_EXEC_EXRACT_LAST_MAJ_VOTE:
+            if self.strategy == CoordinationSolverStrategy.PLAN_CODE_EXEC_EXRACT_LAST_MAJ_VOTE:
                 answer = self.plan_code_exec_extract_last_maj_vote(problem_description, time_allowed)
             else:
-                raise NotImplementedError(f"Strategy {self.stragegy} is not implemented.")
+                raise NotImplementedError(f"Strategy {self.strategy} is not implemented.")
         except Exception as e:
             self.logger.info(f"Exception encountered in strategy : {e}")
             answer = random.randint(0,999)

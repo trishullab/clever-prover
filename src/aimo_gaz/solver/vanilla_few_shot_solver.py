@@ -1,13 +1,11 @@
 from aimo_gaz.solver.abs_solver import Solver
-from aimo_gaz.models.old_model import Model
-from aimo_gaz.solver.solver_config import vLLMHarness
-from typing import Union
+from aimo_gaz.models.abs_model import Model
 from aimo_gaz.prompts.prompt import Prompt
 from collections import Counter
 import logging
 
 class FewShotSolver(Solver):
-    def __init__(self, model: Union[vLLMHarness, Model], prompt: Prompt, logger: logging.Logger = None, **inference_kwargs):
+    def __init__(self, model: Model, prompt: Prompt, logger: logging.Logger = None, **inference_kwargs):
         assert model is not None, "model must be provided."
         assert prompt is not None, "prompt must be provided."
         self.model = model
@@ -19,7 +17,7 @@ class FewShotSolver(Solver):
             self.inference_kwargs["problem_description_message"] = "Below is a math problem you are to solve (positive numerical answer!):"
 
     def solve(self, problem_description: str, time_allowed: int) -> int:
-        if not self.model._is_loaded:
+        if not self.model.is_loaded():
             self.model.__enter__()
         # Prompt the model with the problem description
         message = {"role": "user", "content": problem_description}

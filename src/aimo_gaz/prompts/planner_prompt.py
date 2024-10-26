@@ -44,7 +44,8 @@ class PlannerPrompt(ConcatPrompt):
             messages[-1]['content'] = self.user_messages[1].format(messages[-1]['content'])
             # messages.append({'role': 'assistant', 'content': self.assistant_message_starts[1]})
             messages.append({'role': 'assistant', 'content': "Sure I'll list the first couple steps.\n0. I would break down the problem into simpler steps, this can be done by the following\n1."})
-        return self.translate_for_deepseek(messages, no_newline_after_assistant=True)
+        # return self.translate_for_deepseek(messages, no_newline_after_assistant=True)
+        return messages
 
     def parse_response(self, response: str) -> str:
         return response

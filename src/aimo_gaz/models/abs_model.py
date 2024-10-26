@@ -24,6 +24,10 @@ class GenerationResults(object):
 class Model(ABC):
 
     @abstractmethod
+    def is_loaded(self):
+        pass
+
+    @abstractmethod
     def __enter__(self):
         pass
 

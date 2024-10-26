@@ -40,7 +40,7 @@ class GptAccess(object):
             top_p: float = 1.0,
             frequency_penalty: float = 0.0,
             presence_penalty: float = 0.0,
-            stop: list = ["\n"]) -> typing.Tuple[list, dict]: # TODO: output doesn't include stop, is this a problem?
+            stop: list = []) -> typing.Tuple[list, dict]:
         model = self.model_name if model is None else model
         if self.is_open_ai_model:
             response = self.client.chat.completions.create(

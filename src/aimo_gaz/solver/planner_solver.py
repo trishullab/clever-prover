@@ -1,28 +1,28 @@
 from aimo_gaz.solver.abs_solver import Solver
-from aimo_gaz.models.old_model import Model
-from aimo_gaz.solver.solver_config import vLLMHarness
+from aimo_gaz.models.abs_model import Model
+from aimo_gaz.models.gpt_model import GptModel
+# from aimo_gaz.solver.solver_config import vLLMHarness
 from aimo_gaz.prompts.prompt import Prompt
-from typing import Union
 import logging
 
 class PlannerSolver(Solver):
-    def __init__(self, model: Union[vLLMHarness, Model], prompt: Prompt, logger: logging.Logger = None, **inference_kwargs):
+    def __init__(self, model: Model, prompt: Prompt, logger: logging.Logger = None, **inference_kwargs):
         assert model is not None, "model must be provided."
         assert prompt is not None, "prompt must be provided."
         self.model = model
         self.prompt = prompt
         self.inference_kwargs = inference_kwargs
         self.logger = logger
-        self.inference_kwargs["num_return_sequences"] = 1 # Only one response is needed from planner agent
-        self.inference_kwargs["return_full_text"] = False # We only need the generated text coz we have the history
-        self.inference_kwargs["stop_tokens"] = ["[END PROCEDURE]", "7.", "the answer is", "\n\n", "<｜end▁of▁sentence｜>"] # TODO: ensure these are actually passed in
+        self.inference_kwargs["n"] = 1 # Only one response is needed from planner agent
+        # self.inference_kwargs["return_full_text"] = False # We only need the generated text coz we have the history # TODO: Might need this later? For now, defaults to False.
+        self.inference_kwargs["stop"] = ["[END PROCEDURE]", "7.", "the answer is", "<｜end▁of▁sentence｜>"]
         self.history = []
 
     def solve(self, problem_description: str, time_allowed: int) -> int:
         raise NotImplementedError("This method is not implemented.")
 
     def solve_intermediate(self, problem_description: str) -> str:
-        if not self.model._is_loaded:
+        if not self.model.is_loaded():
             self.model.__enter__()
         # Prompt the model for the plan
         message = {"role": "user", "content": problem_description}
@@ -48,11 +48,13 @@ class PlannerSolver(Solver):
         else:
             self.history.append({"role": "assistant", "content": generated_text})
         assert len(outs) == 1, "No response (or too many responses) from the model."
-        if not generated_text.strip().endswith("[END PROCEDURE]"):
-            generated_text = generated_text.rstrip('\n') + "\n[END PROCEDURE]"
+        # if not generated_text.strip().endswith("[END PROCEDURE]"):
+        #     generated_text = generated_text.rstrip('\n') + "\n[END PROCEDURE]"
+        # self.logger.info(f"[PLANNER] Plan generated:\n{generated_text}")
+        # return f"{generated_text.replace('[END PROCEDURE]', '')}"
+        generated_text = generated_text.rstrip('\n') + "\n" # TODO: Is adding the extra newline necessary?
         self.logger.info(f"[PLANNER] Plan generated:\n{generated_text}")
-        return f"{generated_text.replace('[END PROCEDURE]', '')}"
-        # generated_text
+        return f"{generated_text}"
 
     def reset(self):
         self.history = []
@@ -67,65 +69,69 @@ class PlannerSolver(Solver):
 if __name__ == "__main__":
     # Test the PlannerSolver class
     from aimo_gaz.prompts.planner_prompt import PlannerPrompt
+    from aimo_gaz.tools.log_utils import setup_logger
     import time
+    import os
 
-    model_name_or_path = "deepseek-ai/deepseek-math-7b-rl" # "deepseek-ai/deepseek-math-7b-rl" #"deepseek-ai/deepseek-coder-1.3b-instruct"
-    model_logging_dir = ".logs/model"
+    time_str = time.strftime("%Y%m%d-%H%M%S")
+    os.makedirs(".logs", exist_ok=True)
+    os.makedirs(f".logs/{time_str}", exist_ok=True)
+    logger = setup_logger("aimo_gaz", f".logs/{time_str}/planner_solver_test.log")
 
-    model_args = {
-        "no_init_eval": True,
-        "padding": True,
-        "truncation": True,
-        "max_seq_length": 4096, # 16384
-        "max_length": 4096, # 16384
-        "load_model": True,
-        "use_lora": True,
-        "is_seq2seq": False,
-        "token": None,
-        "comet_experiment": None,
-        "base_device": 0
-    }
+    # model_name_or_path = "deepseek-ai/deepseek-math-7b-rl" # "deepseek-ai/deepseek-math-7b-rl" #"deepseek-ai/deepseek-coder-1.3b-instruct"
+    model_name = "gpt-4o"
+    # model_logging_dir = ".logs/model"
+
+    # model_args = {
+    #     "no_init_eval": True,
+    #     "padding": True,
+    #     "truncation": True,
+    #     "max_seq_length": 4096, # 16384
+    #     "max_length": 4096, # 16384
+    #     "load_model": True,
+    #     "use_lora": True,
+    #     "is_seq2seq": False,
+    #     "token": None,
+    #     "comet_experiment": None,
+    #     "base_device": 0
+    # }
+    # inference_args = {
+    #     "max_new_tokens": 1024,
+    #     "temperature": 0.7,
+    #     "top_p": 1.0,
+    #     "top_k": None,
+    #     "do_sample": True,
+    #     "num_return_sequences": 1,
+    #     "max_length": 2048,
+    #     "return_full_text": True, # We want the problem description to be returned as well
+    #     "stop_tokens": ["[END PROCEDURE]", "\n\n"] # TODO: Decide the stop token and probably mention it in the prompt class
+    # }
     inference_args = {
-        "max_new_tokens": 1024,
+        "max_tokens": 1024,
         "temperature": 0.7,
         "top_p": 1.0,
-        "top_k": None,
-        "do_sample": True,
-        "num_return_sequences": 1,
-        "max_length": 2048,
-        "return_full_text": True, # We want the problem description to be returned as well
-        "stop_tokens": ["[END PROCEDURE]", "\n\n"] # TODO: Decide the stop token and probably mention it in the prompt class
     }
-    vllm_inference_args = {
-        "max_tokens": 512,
-        "temperature": 0.9,
-        "top_p": 1.0,
-        # "top_k": None,
-        # "do_sample": True,
-        "n": 1,
-        # "max_length": 2048,
-        # "return_full_text": True, # We want the problem description to be returned as well
-        "stop_token_ids": ["[END]"] # TODO: Decide the stop token and probably mention it in the prompt class
-    }
-    use_vllm = True
+    use_vllm = False
     if use_vllm:
-        vllm_model_args = {
-            "dtype": "float16", "gpu_memory_utilization": 0.95, "tensor_parallel_size": 2, 'max_model_len':1024, #"tokenizer": "deepseek-ai/deepseek-coder-1.3b-instruct",
-            "speculative_model": "deepseek-ai/deepseek-coder-1.3b-instruct", "num_speculative_tokens": 5, "use_v2_block_manager": True
-        }
-        model = vLLMHarness.load_from_config(model_name_or_path, vllm_model_args, vllm_inference_args)
-        prompt = PlannerPrompt(system_prompt="", example_prompt="")  # These are hard-coded in the class anyway
-        problem_description = "There exists a unique increasing geometric sequence of five 2-digit positive integers. What is their sum?"
-        solver = PlannerSolver(model, prompt)
+        # vllm_model_args = {
+        #     "dtype": "float16", "gpu_memory_utilization": 0.95, "tensor_parallel_size": 2, 'max_model_len':1024, #"tokenizer": "deepseek-ai/deepseek-coder-1.3b-instruct",
+        #     "speculative_model": "deepseek-ai/deepseek-coder-1.3b-instruct", "num_speculative_tokens": 5, "use_v2_block_manager": True
+        # }
+        # model = vLLMHarness.load_from_config(model_name_or_path, vllm_model_args, vllm_inference_args)
+        # prompt = PlannerPrompt(system_prompt="", example_prompt="")  # These are hard-coded in the class anyway
+        # problem_description = "There exists a unique increasing geometric sequence of five 2-digit positive integers. What is their sum?"
+        # solver = PlannerSolver(model, prompt)
+        assert False
     else:
-        model = Model(model_name_or_path, model_logging_dir, **model_args)
+        # model = GptModel(model_name_or_path, model_logging_dir, **model_args)
+        model = GptModel(model_name)
         prompt = PlannerPrompt(system_prompt="", example_prompt="")  # These are hard-coded in the class anyway
         problem_description = "There exists a unique increasing geometric sequence of five 2-digit positive integers. What is their sum?"
-        solver = PlannerSolver(model, prompt, **inference_args)
+        solver = PlannerSolver(model, prompt, logger, **inference_args)
 
     with solver:
         is_solved = False
-        max_tries = 5
+        max_tries = 1
         current_tries = 0
         while not is_solved and current_tries < max_tries:
             current_tries += 1
@@ -147,4 +153,3 @@ if __name__ == "__main__":
             # # Now prompt the model with the new plan
             # problem_description = new_plan
             # is_solved = input("Is the problem solved? (y/n): ").lower() == "y"
-    pass

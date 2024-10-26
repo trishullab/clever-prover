@@ -1,13 +1,12 @@
 from aimo_gaz.solver.abs_solver import Solver
-from aimo_gaz.models.old_model import Model
-from typing import Union
-from aimo_gaz.solver.solver_config import vLLMHarness
+from aimo_gaz.models.abs_model import Model
+from aimo_gaz.models.gpt_model import GptModel
 from aimo_gaz.prompts.prompt import Prompt
 import logging
 import typing
 
 class CodeSolver(Solver):
-    def __init__(self, model: Union[vLLMHarness, Model], prompt: Prompt, logger: logging.Logger = None, **inference_kwargs):
+    def __init__(self, model: Model, prompt: Prompt, logger: logging.Logger = None, **inference_kwargs):
         assert model is not None, "model must be provided."
         assert prompt is not None, "prompt must be provided."
         self.model = model
@@ -15,14 +14,14 @@ class CodeSolver(Solver):
         self.inference_kwargs = inference_kwargs
         self.logger = logger
         self.history = []
-        self.inference_kwargs["return_full_text"] = False # We only need the generated text coz we have the history
-        self.inference_kwargs["stop_tokens"] = ["[END CODE]", "```", "<｜end▁of▁sentence｜>"] # TODO: ensure these are actually passed in
+        # self.inference_kwargs["return_full_text"] = False # We only need the generated text coz we have the history # TODO: Might need this later? For now, defaults to False.
+        self.inference_kwargs["stop"] = ["[END CODE]", "```\n", "<｜end▁of▁sentence｜>"]
 
     def solve(self, problem_description: str, time_allowed: int) -> int:
         raise NotImplementedError("This method is not implemented.")
 
     def solve_intermediate(self, problem_description: str, plan: str = None) -> typing.Union[str, typing.List[str]]:
-        if not self.model._is_loaded:
+        if not self.model.is_loaded():
             self.model.__enter__()
         # Prompt the model for the plan
         if problem_description is not None and plan is not None:
@@ -39,8 +38,8 @@ class CodeSolver(Solver):
             response = self.model.generate(prompt, **self.inference_kwargs)
         except Exception as e:
             raise(e)
-            response = None
-            self.logger.exception("Encountered exception.")
+            # response = None
+            # self.logger.exception("Encountered exception.")
         if response is None:
             generated_text = "Could not generate a response from the model."
             return generated_text
@@ -48,14 +47,15 @@ class CodeSolver(Solver):
         generated_texts = []
         for result in outs:
             for gen_text in result:
-                if gen_text.endswith('[END CODE]'):
-                    generated_texts.append(gen_text.replace('[END CODE]', ''))
-                elif gen_text.endswith('```'):
-                    generated_texts.append(gen_text.replace('```', ''))
-                elif gen_text.endswith('<｜end▁of▁sentence｜>'):
-                    generated_texts.append(gen_text.replace('<｜end▁of▁sentence｜>', ''))
-                else:
-                    generated_texts.append(f"{gen_text}")
+                # if gen_text.endswith('[END CODE]'):
+                #     generated_texts.append(gen_text.replace('[END CODE]', ''))
+                # elif gen_text.endswith('```'):
+                #     generated_texts.append(gen_text.replace('```', ''))
+                # elif gen_text.endswith('<｜end▁of▁sentence｜>'):
+                #     generated_texts.append(gen_text.replace('<｜end▁of▁sentence｜>', ''))
+                # else:
+                #     generated_texts.append(f"{gen_text}")
+                generated_texts.append(f"{gen_text}")
                 self.logger.info(f"[CODE SOLVER] Generated text:\n{gen_text}")
         return generated_texts
 
@@ -81,38 +81,48 @@ if __name__ == "__main__":
     import os
     from aimo_gaz.prompts.code_prompt import CodePrompt
     from aimo_gaz.tools.log_utils import setup_logger
+
     time_str = time.strftime("%Y%m%d-%H%M%S")
     os.makedirs(".logs", exist_ok=True)
     os.makedirs(f".logs/{time_str}", exist_ok=True)
     os.makedirs(f".logs/{time_str}/temp", exist_ok=True)
-    logger = setup_logger("aimo_gaz", f".logs/{time_str}/colde_solver_test.log")
-    model_name_or_path = "deepseek-ai/deepseek-coder-1.3b-instruct"
-    model_logging_dir = ".logs/model"
-    model_args = {
-        "no_init_eval": True,
-        "padding": True,
-        "truncation": True,
-        "max_seq_length": 16384,
-        "max_length": 16384,
-        "load_model": True,
-        "use_lora": False,
-        "is_seq2seq": False,
-        "token": None,
-        "comet_experiment": None,
-        # "base_device": 3
-    }
+    logger = setup_logger("aimo_gaz", f".logs/{time_str}/code_solver_test.log")
+
+    # model_name_or_path = "deepseek-ai/deepseek-coder-1.3b-instruct"
+    model_name = "gpt-4o"
+    # model_logging_dir = ".logs/model"
+    # model_args = {
+    #     "no_init_eval": True,
+    #     "padding": True,
+    #     "truncation": True,
+    #     "max_seq_length": 16384,
+    #     "max_length": 16384,
+    #     "load_model": True,
+    #     "use_lora": False,
+    #     "is_seq2seq": False,
+    #     "token": None,
+    #     "comet_experiment": None,
+    #     # "base_device": 3
+    # }
+    # inference_args = {
+    #     "max_new_tokens": 1024,
+    #     "temperature": 0.9,
+    #     "top_p": 1.0,
+    #     "top_k": None,
+    #     "do_sample": True,
+    #     "num_return_sequences": 1,
+    #     "max_length": 2048,
+    #     "return_full_text": True, # We want the problem description to be returned as well
+    #     "stop_tokens": ["[END]"] # TODO: Decide the stop token and probably mention it in the prompt class
+    # }
     inference_args = {
-        "max_new_tokens": 1024,
+        "max_tokens": 1024,
         "temperature": 0.9,
         "top_p": 1.0,
-        "top_k": None,
-        "do_sample": True,
-        "num_return_sequences": 1,
-        "max_length": 2048,
-        "return_full_text": True, # We want the problem description to be returned as well
-        "stop_tokens": ["[END]"] # TODO: Decide the stop token and probably mention it in the prompt class
+        "n": 1,
     }
-    model = Model(model_name_or_path, model_logging_dir, **model_args)
+    # model = Model(model_name_or_path, model_logging_dir, **model_args)
+    model = GptModel(model_name)
     prompt = CodePrompt(system_prompt="", example_prompt="") # These are hard-coded in the class anyway
     solver = CodeSolver(model, prompt, logger, **inference_args)
     problem_description = "Find the value of x in the equation 2x + 3 = 7."
@@ -122,17 +132,16 @@ if __name__ == "__main__":
             if not os.path.exists(f".logs/{time_str}/temp/plan.md"):
                 with open(f".logs/{time_str}/temp/plan.md", "w") as f:
                     f.write(problem_description)
-            input("Write the plan to solve the problem in file .logs/temp/plan.md and press enter.")
+            input("Write the plan to solve the problem in file '.logs/temp/plan.md' and press enter.")
             with open(f".logs/{time_str}/temp/plan.md", "r") as f:
                 plan = f.read()
-            code = solver.solve_intermediate(plan)
-            actual_code = code.find("```python code:")
-            actual_code = code[actual_code + len("```python code:"):].strip()
-            actual_code = actual_code[:-len("[END]")].strip() if actual_code.endswith("[END]") else actual_code
+            code = solver.solve_intermediate(problem_description, plan) # TODO: This input repeats the problem description twice.
+            actual_code_ind = code[0].find("```python")
+            actual_code = code[0][actual_code_ind + len("```python"):].strip()
+            # actual_code = actual_code[:-len("[END]")].strip() if actual_code.endswith("[END]") else actual_code
             # dump the code in a file
             with open(f".logs/{time_str}/temp/code.py", "w") as f:
                 f.write(actual_code)
-            print(f"Run the command python .logs/{time_str}/temp/code.py.")
+            print(f"Run the command 'python .logs/{time_str}/temp/code.py'.")
             input("Run the code manually and press enter.")
             is_solved = input("Is the problem solved? (y/n): ").lower() == "y"
-    pass

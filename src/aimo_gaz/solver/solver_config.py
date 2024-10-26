@@ -2,67 +2,69 @@ import omegaconf
 import os
 import logging
 import typing
-from typing import Union
 import hydra
 from aimo_gaz.prompts.prompt import Prompt, ConcatPrompt
 from aimo_gaz.prompts.cot_prompt import CoTPrompt
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
 from enum import Enum
-from aimo_gaz.models.old_model import Model
+from aimo_gaz.models.abs_model import Model
+from aimo_gaz.models.gpt_model import GptModel
 if os.environ.get("USE_VLLM", "False").lower() == "true":
     # In case we cannot install VLLM
     from vllm import LLM, SamplingParams
 
 
-# class vLLMHarness:
-#     def __init__(self, model, sampling_params):
-#         self.model = model
-#         self.sampling_params = sampling_params
-#         self._is_loaded = True
+class vLLMHarness(Model):
+    def __init__(self, model, sampling_params):
+        self.model = model
+        self.sampling_params = sampling_params
+    
+    def is_loaded(self):
+        return True
 
-#     def generate(self, prompt, **kwargs):
-#         # TODO: - yucky, not sure if they have a standard way of doing this.
-#         kwargs = self.make_safe_sampling_params(kwargs, self.model)
-#         for key, value in kwargs.items():
-#             setattr(self.sampling_params, key, value)
-#         out = self.model.generate(prompt, self.sampling_params)
-#         return out
+    def generate(self, prompt, **kwargs):
+        # TODO: - yucky, not sure if they have a standard way of doing this.
+        kwargs = self.make_safe_sampling_params(kwargs, self.model)
+        for key, value in kwargs.items():
+            setattr(self.sampling_params, key, value)
+        out = self.model.generate(prompt, self.sampling_params)
+        return out
 
-#     def parse_out(self, out):
-#         generated_text = [[y.text for y in x.outputs] for x in out]
-#         return generated_text
+    def parse_out(self, out):
+        generated_text = [[y.text for y in x.outputs] for x in out]
+        return generated_text
 
 
-#     @classmethod
-#     def make_safe_sampling_params(cls, sampling_params, model):
-#         safe_sampling_params = {}
-#         for k, v in sampling_params.items():
-#             if k == 'max_new_tokens':
-#                 safe_sampling_params['max_tokens'] = v
-#             elif k in ['temperature', 'top_p', 'top_k']:
-#                 if v is not None:
-#                     safe_sampling_params[k] = v
-#             elif k == 'num_return_sequences':
-#                 safe_sampling_params['n'] = v
-#             elif k == 'stop_tokens':
-#                 safe_sampling_params['stop'] = v#[model.get_tokenizer().convert_tokens_to_ids(x) for x in v if model.get_tokenizer().convert_tokens_to_ids(x) is not None]
-#             else:
-#                 continue
+    @classmethod
+    def make_safe_sampling_params(cls, sampling_params, model):
+        safe_sampling_params = {}
+        for k, v in sampling_params.items():
+            if k == 'max_new_tokens':
+                safe_sampling_params['max_tokens'] = v
+            elif k in ['temperature', 'top_p', 'top_k']:
+                if v is not None:
+                    safe_sampling_params[k] = v
+            elif k == 'num_return_sequences':
+                safe_sampling_params['n'] = v
+            elif k == 'stop_tokens':
+                safe_sampling_params['stop'] = v#[model.get_tokenizer().convert_tokens_to_ids(x) for x in v if model.get_tokenizer().convert_tokens_to_ids(x) is not None]
+            else:
+                continue
 
-#         return safe_sampling_params
+        return safe_sampling_params
 
-#     @classmethod
-#     def load_from_config(cls, model_name, vllm_params, sampling_params):
-#         model = LLM(model_name, **vllm_params)
-#         sampling_params = SamplingParams(**cls.make_safe_sampling_params(sampling_params, model))
-#         return cls(model, sampling_params)
+    @classmethod
+    def load_from_config(cls, model_name, vllm_params, sampling_params):
+        model = LLM(model_name, **vllm_params)
+        sampling_params = SamplingParams(**cls.make_safe_sampling_params(sampling_params, model))
+        return cls(model, sampling_params)
 
-#     def __enter__(self):
-#         pass
+    def __enter__(self):
+        pass
 
-#     def __exit__(self, exc_type, exc_val, exc_tb):
-#         pass
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
 
 
 from aimo_gaz.solver.test_solver import TestSolver
@@ -72,7 +74,7 @@ from aimo_gaz.solver.coordination_solver import CoordinationSolver, Coordination
 from aimo_gaz.solver.code_solver import CodeSolver
 from aimo_gaz.solver.planner_solver import PlannerSolver
 from aimo_gaz.solver.execution_solver import ExecutionSolver
-from aimo_gaz.models.old_model import Model
+from aimo_gaz.models.gpt_model import GptModel
 from aimo_gaz.prompts.code_prompt import CodePrompt
 from aimo_gaz.prompts.planner_prompt import PlannerPrompt
 
@@ -162,7 +164,7 @@ class SolverConfig:
                     GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
 
                 else:
-                    model = Model(self.model_settings.name_or_path, self.model_settings.logging_dir,
+                    model = GptModel(self.model_settings.name_or_path, self.model_settings.logging_dir,
                                   **self.model_settings.model_args)
                     GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
             else:
@@ -180,7 +182,7 @@ class SolverConfig:
                     GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
 
                 else:
-                    model = Model(self.model_settings.name_or_path, self.model_settings.logging_dir,
+                    model = GptModel(self.model_settings.name_or_path, self.model_settings.logging_dir,
                                   **self.model_settings.model_args)
                     GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
             else:
@@ -196,8 +198,8 @@ class SolverConfig:
                     GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
 
                 else:
-                    model = Model(self.model_settings.name_or_path, self.model_settings.logging_dir,
-                                  **self.model_settings.model_args)
+                    model = GptModel(self.model_settings.name_or_path, self.model_settings.logging_dir,
+                                     **self.model_settings.model_args)
                     GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
             else:
                 model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]

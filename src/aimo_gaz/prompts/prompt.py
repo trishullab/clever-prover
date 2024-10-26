@@ -23,37 +23,37 @@ class Prompt(ABC):
                 self.example_prompt = f.read()
 
 
-    def translate_for_deepseek(self, messages, no_newline_after_assistant=False):
-        last_role = None
-        seen_user_role_before = False
+    # def translate_for_deepseek(self, messages, no_newline_after_assistant=False):
+    #     last_role = None
+    #     seen_user_role_before = False
 
-        prompt = ''
-        is_last_message = False
-        msg_count = 0
-        for message in messages:
-            msg_count += 1
-            is_last_message = msg_count == len(messages)
-            if message['role'] == 'user':
+    #     prompt = ''
+    #     is_last_message = False
+    #     msg_count = 0
+    #     for message in messages:
+    #         msg_count += 1
+    #         is_last_message = msg_count == len(messages)
+    #         if message['role'] == 'user':
 
-                if last_role == 'assistant':
-                    prompt += '<｜end▁of▁sentence｜>'
-                # if self.system_prompt is not None and (self.append_system_prompt_after_every_message or not seen_user_role_before):
-                #     # prompt += f'User: {self.system_prompt}{message["content"]}\n'
-                #     prompt += f"User: {self.system_prompt.format(message['content']).strip()}\n"
-                # else:
-                #     prompt += f'User: {message["content"].strip()}\n'
-                prompt += f'User: {message["content"].strip()}\n'
-                last_role = 'user'
-                seen_user_role_before = True
-            elif message['role'] == 'assistant':
-                if no_newline_after_assistant and is_last_message:
-                    prompt += f'Assistant: {message["content"].strip()}'
-                else:
-                    prompt += f'Assistant: {message["content"].strip()}\n'
-                last_role = 'assistant'
-        if last_role == 'user':
-            prompt += 'Assistant:'
-        return prompt
+    #             if last_role == 'assistant':
+    #                 prompt += '<｜end▁of▁sentence｜>'
+    #             # if self.system_prompt is not None and (self.append_system_prompt_after_every_message or not seen_user_role_before):
+    #             #     # prompt += f'User: {self.system_prompt}{message["content"]}\n'
+    #             #     prompt += f"User: {self.system_prompt.format(message['content']).strip()}\n"
+    #             # else:
+    #             #     prompt += f'User: {message["content"].strip()}\n'
+    #             prompt += f'User: {message["content"].strip()}\n'
+    #             last_role = 'user'
+    #             seen_user_role_before = True
+    #         elif message['role'] == 'assistant':
+    #             if no_newline_after_assistant and is_last_message:
+    #                 prompt += f'Assistant: {message["content"].strip()}'
+    #             else:
+    #                 prompt += f'Assistant: {message["content"].strip()}\n'
+    #             last_role = 'assistant'
+    #     if last_role == 'user':
+    #         prompt += 'Assistant:'
+    #     return prompt
 
 
     @abstractmethod
