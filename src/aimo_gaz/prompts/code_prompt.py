@@ -4,7 +4,12 @@ import copy
 class CodePrompt(ConcatPrompt):
     def __init__(self, system_prompt_path: str = None, example_prompt_path: str = None, system_prompt: str = None, example_prompt: str = None, append_system_prompt_after_every_message: bool = False):
         super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt, append_system_prompt_after_every_message)
-        self.user_message = """Below is a problem statement and the first couple steps in trying to solve it. Can you write a python program that tries to solve the problem statement using Sympy? The code should always answer with a number. Make sure it runs correctly! End the code by writing [END CODE].\n\nProblem Statement:
+#         self.user_message = """Below is a problem statement and the first couple steps in trying to solve it. Can you write a python program that tries to solve the problem statement using Sympy? The code should always answer with a number. Make sure it runs correctly! End the code by writing [END CODE].\n\nProblem Statement:
+# {}
+# First Couple Steps:
+# 1. {}
+# """
+        self.user_message = """Below is a problem statement and the first couple steps in trying to solve it. Can you write a python program that tries to solve the problem statement using Sympy? The code should always answer by printing only a number and nothing else. Make sure it runs correctly! End the code by writing [END CODE].\n\nProblem Statement:
 {}
 First Couple Steps:
 1. {}
@@ -20,7 +25,7 @@ First Couple Steps:
     def get_prompt(self, messages: list[dict[str, str]]) -> str:
         if messages[-1]['role'] == 'assistant': # already have information produced
             messages.append({'role': 'user', 'content': self.user_message})
-            messages.append({'role': 'assistant', 'content': self.assistant_message_start})
+            messages.append({'role': 'assistant', 'content': self.assistant_message_start}) # TODO: Do this in a more natural way?
         if messages[-1]['role'] == 'user': # fresh sample, not using history from other solvers
             messages_copy = copy.deepcopy(messages)
             messages.clear()

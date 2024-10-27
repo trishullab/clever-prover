@@ -3,7 +3,7 @@ from aimo_gaz.models.abs_model import GenerationResult, GenerationResults, Model
 from aimo_gaz.models.gpt_access import GptAccess
 
 class GptModel(Model):
-    def __init__(self, name: str, *, secret_filepath: str = ".secrets/openai_key.json"):
+    def __init__(self, name: str, *, secret_filepath: str = "../../.secrets/openai_key.json"):
         self._gpt_access = GptAccess(secret_filepath, model_name=name)
     
     def is_loaded(self):

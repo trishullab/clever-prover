@@ -1,12 +1,12 @@
-max_tokens: 1024
+max_new_tokens: 1024
 temperature: 0.8207
 top_p: 0.95
-# top_k:
-# do_sample: true
-n: 1
-# max_length: 2048
-# return_full_text: false
-stop:
+top_k:
+do_sample: true
+num_return_sequences: 1
+max_length: 2048
+return_full_text: false
+stop_tokens:
   # - "```output"
   # - "```python"
   # - "```\nOutput"

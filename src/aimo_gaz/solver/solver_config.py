@@ -69,7 +69,7 @@ class vLLMHarness(Model):
 
 from aimo_gaz.solver.test_solver import TestSolver
 from aimo_gaz.solver.abs_solver import Solver
-from aimo_gaz.solver.vanilla_few_shot_solver import FewShotSolver as VanilaFewShotSolver
+from aimo_gaz.solver.vanilla_few_shot_solver import FewShotSolver as VanillaFewShotSolver
 from aimo_gaz.solver.coordination_solver import CoordinationSolver, CoordinationSolverStrategy
 from aimo_gaz.solver.code_solver import CodeSolver
 from aimo_gaz.solver.planner_solver import PlannerSolver
@@ -129,18 +129,27 @@ class ModelSettings(object):
     vllm_model_args: dict = field(default_factory=dict)
     vllm_sample_args: dict = field(default_factory=dict)
 
+# @dataclass_json
+# @dataclass
+# class InferenceSettings:
+#     max_new_tokens: int
+#     temperature: float
+#     top_p: float
+#     top_k: int
+#     do_sample: bool
+#     num_return_sequences: int
+#     max_length: int
+#     return_full_text: bool
+#     stop_tokens: list = field(default_factory=list)
+
 @dataclass_json
 @dataclass
 class InferenceSettings:
-    max_new_tokens: int
+    max_tokens: int
     temperature: float
     top_p: float
-    top_k: int
-    do_sample: bool
-    num_return_sequences: int
-    max_length: int
-    return_full_text: bool
-    stop_tokens: list = field(default_factory=list)
+    n: int
+    stop: list = field(default_factory=list)
 
 
 @dataclass_json
@@ -172,7 +181,7 @@ class SolverConfig:
 
             prompt = self.prompt_config.get_prompt()
             inference_settings_dict = self.inference_settings.to_dict()
-            return VanilaFewShotSolver(model, prompt, logger, **inference_settings_dict)
+            return VanillaFewShotSolver(model, prompt, logger, **inference_settings_dict)
         elif self.solver_type == SolverType.CodeSolver:
             if self.model_settings.name_or_path not in GLOBAL_MODEL_CACHE:
                 if self.model_settings.use_vllm:
@@ -182,8 +191,10 @@ class SolverConfig:
                     GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
 
                 else:
-                    model = GptModel(self.model_settings.name_or_path, self.model_settings.logging_dir,
-                                  **self.model_settings.model_args)
+                    model = GptModel(self.model_settings.name_or_path,
+                                    #  self.model_settings.logging_dir,
+                                    #  **self.model_settings.model_args,
+                                    )
                     GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
             else:
                 model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
@@ -198,8 +209,10 @@ class SolverConfig:
                     GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
 
                 else:
-                    model = GptModel(self.model_settings.name_or_path, self.model_settings.logging_dir,
-                                     **self.model_settings.model_args)
+                    model = GptModel(self.model_settings.name_or_path,
+                                    #  self.model_settings.logging_dir,
+                                    #  **self.model_settings.model_args,
+                                    )
                     GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
             else:
                 model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]

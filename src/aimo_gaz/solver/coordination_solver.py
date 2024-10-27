@@ -100,11 +100,14 @@ class CoordinationSolver(Solver):
         PROBLEM_STARTING_TIME, PLANNER_AVG_TIME, CODER_AVG_TIME, REPAIR_AVG_TIME = time.time(), 0, 0, 0
         ATTEMPTS_TO_TRY = self.num_attempts
         TIME_LEFT = True
-        CURR_TIME_LEFT = time_allowed 
+        CURR_TIME_LEFT = time_allowed
         eps = 10e-6
-        while CURR_TIME_LEFT > 30 and TIME_LEFT:
+        outer_attempts_to_try = 1
+        while CURR_TIME_LEFT > 30 and TIME_LEFT and outer_attempts_to_try > 0:
+            outer_attempts_to_try -= 1
             curr_time = time.time()
-            ATTEMPTS_TO_TRY = math.floor(CURR_TIME_LEFT/(PLANNER_AVG_TIME + CODER_AVG_TIME + 10)) if global_attempts != 0 else min(self.num_attempts, math.floor(CURR_TIME_LEFT/(PLANNER_AVG_TIME + CODER_AVG_TIME + 5)))
+            # ATTEMPTS_TO_TRY = math.floor(CURR_TIME_LEFT/(PLANNER_AVG_TIME + CODER_AVG_TIME + 10)) if global_attempts != 0 else min(self.num_attempts, math.floor(CURR_TIME_LEFT/(PLANNER_AVG_TIME + CODER_AVG_TIME + 5)))
+            ATTEMPTS_TO_TRY = 5
             self.logger.info(f"Giving {ATTEMPTS_TO_TRY} attempts on current problem. Time left {CURR_TIME_LEFT} with average call times planner: {PLANNER_AVG_TIME}, coder: {CODER_AVG_TIME}, repairer: {REPAIR_AVG_TIME}")
             if ATTEMPTS_TO_TRY <= 0:
                 TIME_LEFT = False
@@ -116,10 +119,10 @@ class CoordinationSolver(Solver):
                     plan = planner.solve_intermediate(problem_description)
                     PLANNER_AVG_TIME = (PLANNER_AVG_TIME + (time.time() - plan_start_time)) if global_attempts == 0 else (PLANNER_AVG_TIME * global_attempts + (time.time() - plan_start_time))/(global_attempts + 1)
                     # Code
-                    coder.inference_kwargs["num_return_sequences"] = self.num_code_gens
+                    coder.inference_kwargs["n"] = self.num_code_gens
                     coder_start_time = time.time()
                     codes_gen = coder.solve_intermediate(problem_description=problem_description, plan=plan)
-                    CODER_AVG_TIME = CODER_AVG_TIME + (time.time() - coder_start_time) if global_attempts == 0 else (CODER_AVG_TIME * global_attempts + (time.time() - coder_start_time))/(global_attempts + 1)
+                    CODER_AVG_TIME = (CODER_AVG_TIME + (time.time() - coder_start_time)) if global_attempts == 0 else (CODER_AVG_TIME * global_attempts + (time.time() - coder_start_time))/(global_attempts + 1)
                     if isinstance(codes_gen, str):
                         codes_gen = [codes_gen]
                     codes.extend(codes_gen)
@@ -134,6 +137,7 @@ class CoordinationSolver(Solver):
                 CURR_TIME_LEFT = math.floor(CURR_TIME_LEFT - (time_now - curr_time))
                 curr_time = time_now
                 self.logger.info(f"Time left after planning and coding is {CURR_TIME_LEFT}")
+            
             # Execute
             executor.history = copy.deepcopy(coder.history)
             outputs = executor.solve_intermediate_parallel(codes)
@@ -144,94 +148,99 @@ class CoordinationSolver(Solver):
             for i, output in enumerate(last_outputs):
                 try:
                     float_answers[i] = self._parse_integer(output)
-                    if abs(int(float_answers[i]) - float_answers[i])  > eps:
+                    if abs(int(float_answers[i]) - float_answers[i]) > eps:
                         float_answers[i] = None
                 except Exception as e:
                     self.logger.info(f"Could not parse {output}, with exception {e}.")
                     pass
-            # TODO: collect the invalid answers, and have the model run the repair agent on those:
             global_float_answers += float_answers
-            invalid_idxs = [i for i, answer in enumerate(float_answers) if answer is None]
-            fixed_codes = []
-            self.logger.info(f"Running the repair model on {len(invalid_idxs)} bad codes, indices are {invalid_idxs} and number of outputs is {len(last_outputs)}")
-            with self.solvers['coder']: 
-                for idx in invalid_idxs: 
-                    try:
-                        model = self.solvers['coder'].model
-                        prompt = f"""User: Below is a math problem that has an integer solution and a python program which returns an output which is not the final solution. 
-Solve the problem by writing a python program using sympy, you can use the result of the previous program. 
-Make sure you code runs correctly! The answer to the problem should be an integer in range 0 to 999.
-Problem Description: 
-{problem_description}
 
-```python
-{codes[idx]}
-```
-```output
-{last_outputs[idx]}
-```
+#             # collect the invalid answers, and have the model run the repair agent on those:
+#             invalid_idxs = [i for i, answer in enumerate(float_answers) if answer is None]
+#             fixed_codes = []
+#             self.logger.info(f"Running the repair model on {len(invalid_idxs)} bad codes, indices are {invalid_idxs} and number of outputs is {len(last_outputs)}")
+#             with self.solvers['coder']: 
+#                 for idx in invalid_idxs: 
+#                     try:
+#                         model = self.solvers['coder'].model
+#                         prompt = f"""User: Below is a math problem that has an integer solution and a python program which returns an output which is not the final solution. 
+# Solve the problem by writing a python program using sympy, you can use the result of the previous program. 
+# Make sure you code runs correctly! The answer to the problem should be an integer in range 0 to 999.
+# Problem Description: 
+# {problem_description}
 
-Write python code using sympy which solves the problem. 
-Think step by step, make sure the code runs correctly and that the final solution is an integer! 
-Do not copy the above code, instead fix it up so that it finishes by printing the final answer. 
-Your code should finish by printing the final answer. The answer to the problem should be an integer in range 0 to 999.
-Assistant:
-```python code:
-"""
-                        repair_start_time = time.time()
-                        self.logger.info(f"[REPAIR] Prompting the model with:\n{prompt}")
-                        response = model.generate(prompt, **self.solvers['coder'].inference_kwargs) # TODO: Does this augment the history?
-                        REPAIR_AVG_TIME =  (REPAIR_AVG_TIME + time.time() - repair_start_time) if total_repairs == 0 else (total_repairs * REPAIR_AVG_TIME + time.time() - repair_start_time) / (1 + total_repairs)
-                        total_repairs += 1
-                        # uses the same stop tokens so we should be good on that end
-                        outs = model.parse_out(response)
-                        assert len(outs) == 1
-                        for result in outs:
-                            for gen_text in result:
-                                self.logger.info(f"Repair phase: Output generated code, before cleaning, is {gen_text}")
-                                # if gen_text.endswith('[END CODE]'):
-                                #     fixed_codes.append("    " + gen_text.replace('[END CODE]', ''))
-                                # elif gen_text.endswith('```'):
-                                #     fixed_codes.append("    " + gen_text.replace('```', ''))
-                                # elif gen_text.endswith('<｜end▁of▁sentence｜>'):
-                                #     fixed_codes.append("    " + gen_text.replace('<｜end▁of▁sentence｜>', ''))
-                                # else:
-                                #     fixed_codes.append(f"    {gen_text}")
-                                fixed_codes.append(f"    {gen_text}")
-                    except Exception as e:
-                        self.logger.info(f"Encountered exception during repair phase: {e}.")
-                        pass
-                    time_now = time.time()
-                    CURR_TIME_LEFT = math.floor(CURR_TIME_LEFT - (time_now - curr_time))
-                    curr_time = time_now
-                    self.logger.info(f"Time left after repair is {CURR_TIME_LEFT}")
-                    if CURR_TIME_LEFT <= 30:
-                        break
-            if len(fixed_codes) > 0:
-                repaired_outputs = executor.solve_intermediate_parallel(fixed_codes)
-                # Extract the last output
-                repaired_last_outputs = [executor.extract_last_output(output) for output in repaired_outputs]
-            else:
-                repaired_last_outputs = []
-            repaired_float_answers = [None] * len(repaired_last_outputs)
-            for i, output in enumerate(repaired_last_outputs):
-                try:
-                    repaired_float_answers[i] = self._parse_integer(output)
-                    if abs(int(repaired_float_answers[i]) - repaired_float_answers[i])  > eps:
-                        repaired_float_answers[i] = None
-                except Exception as e:
-                    self.logger.info(f"Could not parse {output} after repair, with exception {e}.")
-                    pass
-            global_float_answers += repaired_float_answers
+# ```python
+# {codes[idx]}
+# ```
+# ```output
+# {last_outputs[idx]}
+# ```
+
+# Write python code using sympy which solves the problem. 
+# Think step by step, make sure the code runs correctly and that the final solution is an integer! 
+# Do not copy the above code, instead fix it up so that it finishes by printing the final answer. 
+# Your code should finish by printing the final answer. The answer to the problem should be an integer in range 0 to 999.
+# Assistant:
+# ```python code:
+# """
+#                         repair_start_time = time.time()
+#                         self.logger.info(f"[REPAIR] Prompting the model with:\n{prompt}")
+#                         response = model.generate(prompt, **self.solvers['coder'].inference_kwargs) # TODO: Does this augment the history?
+#                         REPAIR_AVG_TIME =  (REPAIR_AVG_TIME + time.time() - repair_start_time) if total_repairs == 0 else (total_repairs * REPAIR_AVG_TIME + time.time() - repair_start_time) / (1 + total_repairs)
+#                         total_repairs += 1
+#                         # uses the same stop tokens so we should be good on that end
+#                         outs = model.parse_out(response)
+#                         assert len(outs) == 1
+#                         for result in outs:
+#                             for gen_text in result:
+#                                 self.logger.info(f"Repair phase: Output generated code, before cleaning, is {gen_text}")
+#                                 # if gen_text.endswith('[END CODE]'):
+#                                 #     fixed_codes.append("    " + gen_text.replace('[END CODE]', ''))
+#                                 # elif gen_text.endswith('```'):
+#                                 #     fixed_codes.append("    " + gen_text.replace('```', ''))
+#                                 # elif gen_text.endswith('<｜end▁of▁sentence｜>'):
+#                                 #     fixed_codes.append("    " + gen_text.replace('<｜end▁of▁sentence｜>', ''))
+#                                 # else:
+#                                 #     fixed_codes.append(f"    {gen_text}")
+#                                 fixed_codes.append(f"    {gen_text}")
+#                     except Exception as e:
+#                         self.logger.info(f"Encountered exception during repair phase: {e}.")
+#                         pass
+                    # time_now = time.time()
+                    # CURR_TIME_LEFT = math.floor(CURR_TIME_LEFT - (time_now - curr_time))
+                    # curr_time = time_now
+                    # self.logger.info(f"Time left after repair is {CURR_TIME_LEFT}")
+                    # if CURR_TIME_LEFT <= 30:
+                    #     break
+            # if len(fixed_codes) > 0:
+            #     repaired_outputs = executor.solve_intermediate_parallel(fixed_codes)
+            #     # Extract the last output
+            #     repaired_last_outputs = [executor.extract_last_output(output) for output in repaired_outputs]
+            # else:
+            #     repaired_last_outputs = []
+            # repaired_float_answers = [None] * len(repaired_last_outputs)
+            # for i, output in enumerate(repaired_last_outputs):
+            #     try:
+            #         repaired_float_answers[i] = self._parse_integer(output)
+            #         if abs(int(repaired_float_answers[i]) - repaired_float_answers[i])  > eps:
+            #             repaired_float_answers[i] = None
+            #     except Exception as e:
+            #         self.logger.info(f"Could not parse {output} after repair, with exception {e}.")
+            #         pass
+            # global_float_answers += repaired_float_answers
             local_attempts = 0
             CURR_TIME_LEFT = math.floor(CURR_TIME_LEFT - (time.time() - curr_time))
+
         # Take the majority non-None
         answers = [answer for answer in global_float_answers if answer is not None and (answer > 0)]
         bad_answers = [abs(answer) for answer in global_float_answers if answer is not None and (answer <= 0)]
+        self.logger.info(f"Taking the majority vote: global_float_answers: {global_float_answers} answers: {answers}, bad_answers: {bad_answers}")
         if len(answers) == 0:
             if len(bad_answers) == 0:
+                self.logger.info("No answers found, choosing random number.")
                 return random.randint(0,999)
             else:
+                self.logger.info("Only bad answers found.")
                 answer_counter = Counter(bad_answers)
                 most_common_answer = answer_counter.most_common(1)[0][0]
                 most_common_answer_count = answer_counter.most_common(1)[0][1]
@@ -243,6 +252,7 @@ Assistant:
                     mod_answer = mod_answer % 1000
                 return mod_answer
         else:
+            self.logger.info("Answers found.")
             answer_counter = Counter(answers)
             most_common_answers = answer_counter.most_common(2)
             if len(most_common_answers) == 1:
@@ -252,7 +262,7 @@ Assistant:
                 most_common_answer = most_common_answers[0][0]
             else:
                 most_common_answer = None
-            if most_common_answer is not None and self.picker_optional:
+            if (most_common_answer is not None and self.picker_optional) or len(answer_counter) == 1:
                 int_answer = int(most_common_answer)
                 mod_answer = int_answer % 1000
                 self.logger.info(f"Will not run pick answer, as the majority vote is {mod_answer}")
@@ -262,17 +272,20 @@ Assistant:
                 with self.solvers['coder']:
                     model = self.solvers['coder'].model
                     choices = '\n'.join([f'( {chr(65 + i)} ) {answer}' for i, answer in enumerate(answers)])
-                    prompt = f"""User: Below is a problem description. Which answer do you think is best?
+                    prompt = f"""Below is a problem description. Which answer do you think is best?
 
 Problem Description: 
 {problem_description}
 
 Choices:
 {choices}
-                    """.strip() + """\n\nPlease reason step by step, and put your final answer within \\boxed{}.
-Assistant:
-                    """.rstrip()
-                    prompt += '\n'
+                    """.strip() + "\n\nPlease reason step by step, and put your final answer within \\boxed{}."
+                    prompt = [
+                        {
+                            "role": "user",
+                            "content": prompt
+                        },
+                    ]
                     self.logger.info(f"[PICK ANSWER] Prompting the model with:\n{prompt}")
                     response = model.generate(prompt, **self.solvers['coder'].inference_kwargs)
                     outs = model.parse_out(response)
@@ -286,7 +299,7 @@ Assistant:
 
                     # get which letter is in most_common_answer
                     for i, answer in enumerate(answers):
-                        if chr(65 + i) in most_common_answer:
+                        if chr(65 + i) in most_common_answer or str(answer) == most_common_answer:
                             most_common_answer = answer
                             break
 
@@ -316,7 +329,7 @@ Assistant:
             else:
                 raise NotImplementedError(f"Strategy {self.strategy} is not implemented.")
         except Exception as e:
-            self.logger.info(f"Exception encountered in strategy : {e}")
+            self.logger.info(f"Exception encountered in strategy, choosing random answer : {e}")
             answer = random.randint(0,999)
         self.end_time = time.time()
         self.logger.info(f"Finished solving in {self.end_time - self.start_time} seconds.")

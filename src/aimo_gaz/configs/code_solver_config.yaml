@@ -1,5 +1,5 @@
 defaults:
-  - model_settings: deepseek_math_7b_rl_4096 # Name of model settings file
+  - model_settings: gpt-4o # Name of model settings file
   - inference_settings: 1024_1.yaml # Name of training data settings file
   - prompt_config: cot_prompt_config # Name of training settings file
   - override hydra/job_logging: 'disabled'
@@ -9,5 +9,5 @@ solver_args:
 prompt_config:
   prompt_type: CodePrompt
 inference_settings:
-  stop_tokens:
+  stop:
     - '[END CODE]'

@@ -55,6 +55,9 @@ class CodeSolver(Solver):
                 #     generated_texts.append(gen_text.replace('<｜end▁of▁sentence｜>', ''))
                 # else:
                 #     generated_texts.append(f"{gen_text}")
+                actual_code_ind = gen_text.find("```python")
+                if actual_code_ind != -1:
+                    gen_text = gen_text[actual_code_ind + len("```python"):].strip()
                 generated_texts.append(f"{gen_text}")
                 self.logger.info(f"[CODE SOLVER] Generated text:\n{gen_text}")
         return generated_texts
@@ -136,9 +139,10 @@ if __name__ == "__main__":
             with open(f".logs/{time_str}/temp/plan.md", "r") as f:
                 plan = f.read()
             code = solver.solve_intermediate(problem_description, plan) # TODO: This input repeats the problem description twice.
-            actual_code_ind = code[0].find("```python")
-            actual_code = code[0][actual_code_ind + len("```python"):].strip()
+            # actual_code = code.find("```python code:")
+            # actual_code = code[actual_code + len("```python code:"):].strip()
             # actual_code = actual_code[:-len("[END]")].strip() if actual_code.endswith("[END]") else actual_code
+            actual_code = code[0]
             # dump the code in a file
             with open(f".logs/{time_str}/temp/code.py", "w") as f:
                 f.write(actual_code)
