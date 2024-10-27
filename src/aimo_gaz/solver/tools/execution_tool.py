@@ -1,11 +1,11 @@
-from aimo_gaz.solver.abs_solver import Solver
+from aimo_gaz.solver.abs_solver_and_tool import Tool
 import logging
 import os
 import tempfile
 import typing
 from subprocess import Popen, PIPE, STDOUT, TimeoutExpired
 
-class ExecutionSolver(Solver):
+class ExecutionTool(Tool):
     def __init__(self, logger: logging.Logger = None, timeout_in_secs: float = 10.0):
         assert logger is not None, "logger must be provided."
         self.logger = logger
@@ -85,9 +85,6 @@ Execution failed with return code {process.returncode}.
 [OUTPUT END]"""
         else:
             return output
-
-    def solve(self, problem_description: str, time_allowed: int) -> int:
-        raise NotImplementedError("This method is not implemented.")
     
     def code_decorator(self, code: str) -> str:
         code = code.lstrip() # Remove leading whitespace
@@ -184,14 +181,14 @@ print("[OUTPUT END]")"""
         pass
 
 if __name__ == "__main__":
-    # Test the ExecutionSolver class
+    # Test the ExecutionTool class
     import time
-    from aimo_gaz.tools.log_utils import setup_logger
+    from aimo_gaz.utils.log_utils import setup_logger
     time_str = time.strftime("%Y%m%d-%H%M%S")
     os.makedirs(".logs", exist_ok=True)
     os.makedirs(f".logs/{time_str}", exist_ok=True)
     os.makedirs(f".logs/{time_str}/temp", exist_ok=True)
-    logger = setup_logger("aimo_gaz", f".logs/{time_str}/execution_solver_test.log")
+    logger = setup_logger("aimo_gaz", f".logs/{time_str}/execution_tool_test.log")
     code = """
 x = symbols('x')
 eq = Eq(x**2 - 2*x - 8, 0)
@@ -199,7 +196,7 @@ print(f\"Solving equation: {eq}\")
 sol = solve(eq, x)
 print(sol)
 """
-    solver = ExecutionSolver(logger=logger, timeout_in_secs=5)
-    with solver:
-        output = solver.solve_intermediate(code)
+    tool = ExecutionTool(logger=logger, timeout_in_secs=5)
+    with tool:
+        output = tool.solve_intermediate(code)
         print(output)

@@ -4,6 +4,6 @@ defaults:
   - prompt_config: cot_prompt_config # Name of training settings file
   - override hydra/job_logging: 'disabled'
 
-solver_type: ExecutionSolver
-solver_args:
+solver_or_tool_type: ExecutionTool
+solver_or_tool_args:
   timeout_in_secs: 15.0

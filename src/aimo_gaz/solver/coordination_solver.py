@@ -5,11 +5,10 @@ import math
 import random
 import copy
 from sympy import *
-from aimo_gaz.solver.abs_solver import Solver
-from aimo_gaz.solver.planner_solver import PlannerSolver
-from aimo_gaz.solver.code_solver import CodeSolver
-from aimo_gaz.solver.execution_solver import ExecutionSolver
-# from aimo_gaz.solver.ask_vote import AskVote
+from aimo_gaz.solver.abs_solver_and_tool import Solver, Tool
+from aimo_gaz.solver.tools.planner_tool import PlannerTool
+from aimo_gaz.solver.tools.code_tool import CodeTool
+from aimo_gaz.solver.tools.execution_tool import ExecutionTool
 from enum import Enum
 from collections import Counter
 
@@ -21,17 +20,17 @@ class CoordinationSolverStrategy(Enum):
 
 class CoordinationSolver(Solver):
     def __init__(self,
-        solvers: typing.Dict[str, Solver],
+        tools: typing.Dict[str, Tool],
         strategy: CoordinationSolverStrategy,
         logger: logging.Logger = None,
         **coordination_kwargs):
         self.logger = logger
-        self.solvers = solvers
+        self.tools = tools
         self.strategy = strategy
         self.coordination_kwargs = coordination_kwargs
         self.history = []
         self._init_hyperparameters()
-        self._cloned_exec_solver : ExecutionSolver = None
+        self._cloned_exec_tool : ExecutionTool = None
     
     def _init_hyperparameters(self):
         self.num_code_gens = self.coordination_kwargs.get("num_code_gens", 1)
@@ -43,22 +42,19 @@ class CoordinationSolver(Solver):
         self.start_time = None
         self.end_time = None
 
-    def solve_intermediate(self, problem_description: str) -> str:
-        raise NotImplementedError("This solver does not solve problems partially.")
-
     def __enter__(self):
-        for solver in self.solvers.values():
-            solver.__enter__()
+        for tool in self.tools.values():
+            tool.__enter__()
         return self
     
     def __exit__(self, exc_type, exc_val, exc_tb):
-        for solver in self.solvers.values():
-            solver.__exit__(exc_type, exc_val, exc_tb)
+        for tool in self.tools.values():
+            tool.__exit__(exc_type, exc_val, exc_tb)
         pass
 
     def reset(self):
-        for solver in self.solvers.values():
-            solver.reset()
+        for tool in self.tools.values():
+            tool.reset()
         self.history = []
     
     def _convert_float_to_rational(self, float_num: float) -> Rational:
@@ -73,11 +69,11 @@ class CoordinationSolver(Solver):
         except Exception as e:
             self.logger.info(f"Could not parse {output} as rational with exception {e}.")
             try:
-                if self._cloned_exec_solver is None:
-                    self._cloned_exec_solver = copy.deepcopy(self.solvers["executor"])
-                self._cloned_exec_solver.reset()
-                outs = self._cloned_exec_solver.solve_intermediate_parallel([f"print(simplify('{output}'))"])
-                simpl_output = self._cloned_exec_solver.extract_last_output(outs[0])
+                if self._cloned_exec_tool is None:
+                    self._cloned_exec_tool = copy.deepcopy(self.tools["executor"])
+                self._cloned_exec_tool.reset()
+                outs = self._cloned_exec_tool.solve_intermediate_parallel([f"print(simplify('{output}'))"])
+                simpl_output = self._cloned_exec_tool.extract_last_output(outs[0])
                 self.logger.info(f"Sympy simplified output is {simpl_output}")
                 return float(simpl_output)
             except Exception as e:
@@ -86,15 +82,15 @@ class CoordinationSolver(Solver):
 
 
     def plan_code_exec_extract_last_maj_vote(self, problem_description: str, time_allowed: int) -> int:
-        assert len(self.solvers) > 0, "No solvers provided."
-        assert "planner" in self.solvers, "Planner solver not provided."
-        assert "coder" in self.solvers, "Coder solver not provided."
-        assert "executor" in self.solvers, "Executor solver not provided."
-        planner: PlannerSolver = self.solvers["planner"]
-        coder: CodeSolver = self.solvers["coder"]
-        executor: ExecutionSolver = self.solvers["executor"]
+        assert len(self.tools) > 0, "No tools provided."
+        assert "planner" in self.tools, "Planner tool not provided."
+        assert "coder" in self.tools, "Coder tool not provided."
+        assert "executor" in self.tools, "Executor tool not provided."
+        planner: PlannerTool = self.tools["planner"]
+        coder: CodeTool = self.tools["coder"]
+        executor: ExecutionTool = self.tools["executor"]
         global_attempts, local_attempts = 0, 0
-        total_repairs = 0
+        # total_repairs = 0
         codes = []
         global_float_answers = []
         PROBLEM_STARTING_TIME, PLANNER_AVG_TIME, CODER_AVG_TIME, REPAIR_AVG_TIME = time.time(), 0, 0, 0
@@ -159,10 +155,10 @@ class CoordinationSolver(Solver):
 #             invalid_idxs = [i for i, answer in enumerate(float_answers) if answer is None]
 #             fixed_codes = []
 #             self.logger.info(f"Running the repair model on {len(invalid_idxs)} bad codes, indices are {invalid_idxs} and number of outputs is {len(last_outputs)}")
-#             with self.solvers['coder']: 
+#             with self.tools['coder']: 
 #                 for idx in invalid_idxs: 
 #                     try:
-#                         model = self.solvers['coder'].model
+#                         model = self.tools['coder'].model
 #                         prompt = f"""User: Below is a math problem that has an integer solution and a python program which returns an output which is not the final solution. 
 # Solve the problem by writing a python program using sympy, you can use the result of the previous program. 
 # Make sure you code runs correctly! The answer to the problem should be an integer in range 0 to 999.
@@ -185,7 +181,7 @@ class CoordinationSolver(Solver):
 # """
 #                         repair_start_time = time.time()
 #                         self.logger.info(f"[REPAIR] Prompting the model with:\n{prompt}")
-#                         response = model.generate(prompt, **self.solvers['coder'].inference_kwargs) # TODO: Does this augment the history?
+#                         response = model.generate(prompt, **self.tools['coder'].inference_kwargs) # TODO: Does this augment the history?
 #                         REPAIR_AVG_TIME =  (REPAIR_AVG_TIME + time.time() - repair_start_time) if total_repairs == 0 else (total_repairs * REPAIR_AVG_TIME + time.time() - repair_start_time) / (1 + total_repairs)
 #                         total_repairs += 1
 #                         # uses the same stop tokens so we should be good on that end
@@ -269,8 +265,8 @@ class CoordinationSolver(Solver):
                 self.logger.info(f"Model's generated answers are {answers}")
                 return mod_answer
             try:
-                with self.solvers['coder']:
-                    model = self.solvers['coder'].model
+                with self.tools['coder']:
+                    model = self.tools['coder'].model
                     choices = '\n'.join([f'( {chr(65 + i)} ) {answer}' for i, answer in enumerate(answers)])
                     prompt = f"""Below is a problem description. Which answer do you think is best?
 
@@ -287,7 +283,7 @@ Choices:
                         },
                     ]
                     self.logger.info(f"[PICK ANSWER] Prompting the model with:\n{prompt}")
-                    response = model.generate(prompt, **self.solvers['coder'].inference_kwargs)
+                    response = model.generate(prompt, **self.tools['coder'].inference_kwargs)
                     outs = model.parse_out(response)
                     self.logger.info(f"Picked answer:\n {outs[0][0]}")
                     # most_common_answer = outs[0][0][0:min(10, len(outs[0][0]))]
@@ -319,7 +315,7 @@ Choices:
             return mod_answer
 
     def solve(self, problem_description: str, time_allowed: int) -> int:
-        assert len(self.solvers) > 0, "No solvers provided."
+        assert len(self.tools) > 0, "No tools provided."
         self.start_time = time.time()
         self.logger.info(f"Starting to solve problem: {problem_description}")
         answer = -1

@@ -1,11 +1,11 @@
-from aimo_gaz.solver.abs_solver import Solver
+from aimo_gaz.solver.abs_solver_and_tool import Tool
 from aimo_gaz.models.abs_model import Model
 from aimo_gaz.models.gpt_model import GptModel
 from aimo_gaz.prompts.prompt import Prompt
 import logging
 import typing
 
-class CodeSolver(Solver):
+class CodeTool(Tool):
     def __init__(self, model: Model, prompt: Prompt, logger: logging.Logger = None, **inference_kwargs):
         assert model is not None, "model must be provided."
         assert prompt is not None, "prompt must be provided."
@@ -16,9 +16,6 @@ class CodeSolver(Solver):
         self.history = []
         # self.inference_kwargs["return_full_text"] = False # We only need the generated text coz we have the history # TODO: Might need this later? For now, defaults to False.
         self.inference_kwargs["stop"] = ["[END CODE]", "```\n", "<｜end▁of▁sentence｜>"]
-
-    def solve(self, problem_description: str, time_allowed: int) -> int:
-        raise NotImplementedError("This method is not implemented.")
 
     def solve_intermediate(self, problem_description: str, plan: str = None) -> typing.Union[str, typing.List[str]]:
         if not self.model.is_loaded():
@@ -31,7 +28,7 @@ class CodeSolver(Solver):
             self.history.append(message_problem)
             self.history.append(message_plan)
         prompt = self.prompt.get_prompt(self.history)
-        self.logger.info(f"[CODE SOLVER] Raw prompt used:\n{prompt}")
+        self.logger.info(f"[CODE TOOL] Raw prompt used:\n{prompt}")
         # Get the model response
         response = None
         try:
@@ -59,7 +56,7 @@ class CodeSolver(Solver):
                 if actual_code_ind != -1:
                     gen_text = gen_text[actual_code_ind + len("```python"):].strip()
                 generated_texts.append(f"{gen_text}")
-                self.logger.info(f"[CODE SOLVER] Generated text:\n{gen_text}")
+                self.logger.info(f"[CODE TOOL] Generated text:\n{gen_text}")
         return generated_texts
 
     def add_response_to_history(self, generated_text: str):
@@ -79,17 +76,17 @@ class CodeSolver(Solver):
         self.model.__exit__(exc_type, exc_val, exc_tb)
 
 if __name__ == "__main__":
-    # Test the PlannerSolver class
+    # Test the PlannerTool class
     import time
     import os
     from aimo_gaz.prompts.code_prompt import CodePrompt
-    from aimo_gaz.tools.log_utils import setup_logger
+    from aimo_gaz.utils.log_utils import setup_logger
 
     time_str = time.strftime("%Y%m%d-%H%M%S")
     os.makedirs(".logs", exist_ok=True)
     os.makedirs(f".logs/{time_str}", exist_ok=True)
     os.makedirs(f".logs/{time_str}/temp", exist_ok=True)
-    logger = setup_logger("aimo_gaz", f".logs/{time_str}/code_solver_test.log")
+    logger = setup_logger("aimo_gaz", f".logs/{time_str}/code_tool_test.log")
 
     # model_name_or_path = "deepseek-ai/deepseek-coder-1.3b-instruct"
     model_name = "gpt-4o"
@@ -127,9 +124,9 @@ if __name__ == "__main__":
     # model = Model(model_name_or_path, model_logging_dir, **model_args)
     model = GptModel(model_name)
     prompt = CodePrompt(system_prompt="", example_prompt="") # These are hard-coded in the class anyway
-    solver = CodeSolver(model, prompt, logger, **inference_args)
+    tool = CodeTool(model, prompt, logger, **inference_args)
     problem_description = "Find the value of x in the equation 2x + 3 = 7."
-    with solver:
+    with tool:
         is_solved = False
         while not is_solved:
             if not os.path.exists(f".logs/{time_str}/temp/plan.md"):
@@ -138,7 +135,7 @@ if __name__ == "__main__":
             input("Write the plan to solve the problem in file '.logs/temp/plan.md' and press enter.")
             with open(f".logs/{time_str}/temp/plan.md", "r") as f:
                 plan = f.read()
-            code = solver.solve_intermediate(problem_description, plan) # TODO: This input repeats the problem description twice.
+            code = tool.solve_intermediate(problem_description, plan) # TODO: This input repeats the problem description twice.
             # actual_code = code.find("```python code:")
             # actual_code = code[actual_code + len("```python code:"):].strip()
             # actual_code = actual_code[:-len("[END]")].strip() if actual_code.endswith("[END]") else actual_code

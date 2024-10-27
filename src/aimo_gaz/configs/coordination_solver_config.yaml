@@ -1,6 +1,6 @@
-planner: planner_solver_config.yaml
-executor: execution_solver_config.yaml
-coder: code_solver_config.yaml
+planner: planner_tool_config.yaml
+executor: execution_tool_config.yaml
+coder: code_tool_config.yaml
 
 strategy: plan_code_exec_extract_last_maj_vote
 

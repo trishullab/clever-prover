@@ -1,11 +1,11 @@
-from aimo_gaz.solver.abs_solver import Solver
+from aimo_gaz.solver.abs_solver_and_tool import Tool
 from aimo_gaz.models.abs_model import Model
 from aimo_gaz.models.gpt_model import GptModel
-# from aimo_gaz.solver.solver_config import vLLMHarness
+# from aimo_gaz.solver.solver_and_tool_config import vLLMHarness
 from aimo_gaz.prompts.prompt import Prompt
 import logging
 
-class PlannerSolver(Solver):
+class PlannerTool(Tool):
     def __init__(self, model: Model, prompt: Prompt, logger: logging.Logger = None, **inference_kwargs):
         assert model is not None, "model must be provided."
         assert prompt is not None, "prompt must be provided."
@@ -17,9 +17,6 @@ class PlannerSolver(Solver):
         # self.inference_kwargs["return_full_text"] = False # We only need the generated text coz we have the history # TODO: Might need this later? For now, defaults to False.
         self.inference_kwargs["stop"] = ["[END PROCEDURE]", "7.", "the answer is", "<｜end▁of▁sentence｜>"]
         self.history = []
-
-    def solve(self, problem_description: str, time_allowed: int) -> int:
-        raise NotImplementedError("This method is not implemented.")
 
     def solve_intermediate(self, problem_description: str) -> str:
         if not self.model.is_loaded():
@@ -67,16 +64,16 @@ class PlannerSolver(Solver):
         self.model.__exit__(exc_type, exc_val, exc_tb)
 
 if __name__ == "__main__":
-    # Test the PlannerSolver class
+    # Test the PlannerTool class
     from aimo_gaz.prompts.planner_prompt import PlannerPrompt
-    from aimo_gaz.tools.log_utils import setup_logger
+    from aimo_gaz.utils.log_utils import setup_logger
     import time
     import os
 
     time_str = time.strftime("%Y%m%d-%H%M%S")
     os.makedirs(".logs", exist_ok=True)
     os.makedirs(f".logs/{time_str}", exist_ok=True)
-    logger = setup_logger("aimo_gaz", f".logs/{time_str}/planner_solver_test.log")
+    logger = setup_logger("aimo_gaz", f".logs/{time_str}/planner_tool_test.log")
 
     # model_name_or_path = "deepseek-ai/deepseek-math-7b-rl" # "deepseek-ai/deepseek-math-7b-rl" #"deepseek-ai/deepseek-coder-1.3b-instruct"
     model_name = "gpt-4o"
@@ -120,23 +117,23 @@ if __name__ == "__main__":
         # model = vLLMHarness.load_from_config(model_name_or_path, vllm_model_args, vllm_inference_args)
         # prompt = PlannerPrompt(system_prompt="", example_prompt="")  # These are hard-coded in the class anyway
         # problem_description = "There exists a unique increasing geometric sequence of five 2-digit positive integers. What is their sum?"
-        # solver = PlannerSolver(model, prompt)
+        # tool = PlannerTool(model, prompt)
         assert False
     else:
         # model = GptModel(model_name_or_path, model_logging_dir, **model_args)
         model = GptModel(model_name)
         prompt = PlannerPrompt(system_prompt="", example_prompt="")  # These are hard-coded in the class anyway
         problem_description = "There exists a unique increasing geometric sequence of five 2-digit positive integers. What is their sum?"
-        solver = PlannerSolver(model, prompt, logger, **inference_args)
+        tool = PlannerTool(model, prompt, logger, **inference_args)
 
-    with solver:
+    with tool:
         is_solved = False
         max_tries = 1
         current_tries = 0
         while not is_solved and current_tries < max_tries:
             current_tries += 1
             start = time.time()
-            plan = solver.solve_intermediate(problem_description)
+            plan = tool.solve_intermediate(problem_description)
             end = time.time()
             print(f"Time taken to generate the plan: {end - start} seconds.")
             print(plan)

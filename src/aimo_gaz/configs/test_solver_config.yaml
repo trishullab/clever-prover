@@ -4,5 +4,5 @@ defaults:
   - prompt_config: test_prompt_config # Name of training settings file
   - override hydra/job_logging: 'disabled'
 
-solver_type: TestSolver
-solver_args:
+solver_or_tool_type: TestSolver
+solver_or_tool_args:

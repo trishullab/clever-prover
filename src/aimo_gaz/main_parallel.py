@@ -1,10 +1,10 @@
 import hydra
 import os
 import time
-from aimo_gaz.solver.solver_config import parse_solver_config, Solver
+from aimo_gaz.solver.solver_and_tool_config import parse_solver_or_tool_config, Solver
 from aimo_gaz.scripts.eval import evaluate_on_benchmarks
-from aimo_gaz.tools.log_utils import setup_logger
-from aimo_gaz.tools import distrib_util
+from aimo_gaz.utils.log_utils import setup_logger
+from aimo_gaz.utils import distrib_util
 import torch.distributed as dist
 import pandas as pd
 import numpy as np
@@ -31,8 +31,8 @@ def split_csv(file_path, num_splits, data_dir):
 def attempt_on_subset(rank, size, time_str, cfg, csv_path, benchmark_name, config_name="coordination_solver_config", version_base="1.2"):
     dist.init_process_group(backend='nccl', rank=rank, world_size=size)
     logger = setup_logger("aimo_gaz", f".logs/{time_str}/aimo_gaz_{rank}.log")
-    solver_config = parse_solver_config(cfg)
-    solver = solver_config.get_solver(logger)
+    solver_config = parse_solver_or_tool_config(cfg)
+    solver = solver_config.get_solver_or_tool(logger)
     with solver:
         logger.info(f"Running on {benchmark_name} split {rank}.")
         os.makedirs(f".logs/{time_str}/{benchmark_name}", exist_ok=True)

@@ -1,9 +1,9 @@
 import hydra
 import os
 import time
-from aimo_gaz.solver.solver_config import parse_solver_config, Solver
+from aimo_gaz.solver.solver_and_tool_config import parse_solver_or_tool_config, Solver
 from aimo_gaz.scripts.eval import evaluate_on_benchmarks
-from aimo_gaz.tools.log_utils import setup_logger
+from aimo_gaz.utils.log_utils import setup_logger
 
 
 def test_solver(solver: Solver):
@@ -24,8 +24,8 @@ def main(cfg):
     os.makedirs(".logs", exist_ok=True)
     os.makedirs(f".logs/{time_str}", exist_ok=True)
     logger = setup_logger("aimo_gaz", f".logs/{time_str}/aimo_gaz.log")
-    solver_config = parse_solver_config(cfg)
-    solver = solver_config.get_solver(logger)
+    solver_config = parse_solver_or_tool_config(cfg)
+    solver = solver_config.get_solver_or_tool(logger)
     with solver:
         # test_solver(solver)
         # Run benchmarking here

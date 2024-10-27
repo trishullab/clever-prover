@@ -1,4 +1,4 @@
-from aimo_gaz.solver.abs_solver import Solver
+from aimo_gaz.solver.abs_solver_and_tool import Solver
 from aimo_gaz.models.abs_model import Model
 from aimo_gaz.prompts.prompt import Prompt
 from collections import Counter
@@ -72,6 +72,3 @@ class FewShotSolver(Solver):
     
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.model.__exit__(exc_type, exc_val, exc_tb)
-
-    def solve_intermediate(self, problem_description: str):
-        raise NotImplementedError("solve_intermediate is not implemented for FewShotSolver.")
