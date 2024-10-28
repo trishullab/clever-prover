@@ -31,16 +31,25 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger : logg
         assert answer is not None, f'Answer not found in example: {ex}'
 
         try:
-            answer = int(answer)
+            answer = float(answer)
         except ValueError:
-            logger.error("ERROR: Answer is not an integer for row {}".format(exidx))
+            pass
+        if not isinstance(answer, float):
+            try:
+                answer = eval(answer)
+            except:
+                pass
+        if not isinstance(answer, float):
+            logger.error(f"ERROR: Answer '{answer}' is not a float or fraction for row {exidx}")
             continue
 
         category = ex.get('Tag')
 
         solver_ans = solver.solve(problem, time_allowed = total_time_left//(50 - total))
 
-        solver_is_correct = int(solver_ans) % 1000 == int(answer)
+        # solver_is_correct = int(solver_ans) % 1000 == int(answer)
+        eps = 1e-6
+        solver_is_correct = (abs(solver_ans - answer) < eps)
 
         total += 1
         correct += solver_is_correct
@@ -87,13 +96,12 @@ def evaluate_on_benchmarks(benchmark, valid_path, solver, time_str = None, logge
     logger = logger if logger is not None else logging.getLogger(__name__)
     data = get_csv_data(valid_path)
 
-    # TODO: - you can change the solver class when more are made.
     stats = evaluate(data, solver=solver, logger=logger)
 
     logger.info(f'Benchmark: {benchmark}')
-    logger.info(f'Accuracy: {stats["correct"] / stats["total"]:.2f}')
+    logger.info(f'Accuracy: {stats["correct"] / stats["total"]:.2f} ({stats["correct"]} / {stats["total"]})')
     for category, category_stats in stats['category_statistics'].items():
-        logger.info(f'Category: {category} ({category_stats["correct"] / category_stats["total"]:.2f})')
+        logger.info(f'Category: {category} ({category_stats["correct"] / category_stats["total"]:.2f} ({category_stats["correct"]} / {category_stats["total"]}))')
     logger.info('\n\n')
     time_str = time.strftime("%Y%m%d-%H%M%S") if time_str is None else time_str
     if len(stats['category_statistics']) != 0:
@@ -126,11 +134,10 @@ if __name__ == "__main__":
         stats = evaluate(data, solver_cls=TestSolver)
 
         print(f'Benchmark: {benchmark}')
-        print(f'Accuracy: {stats["correct"] / stats["total"]:.2f}')
+        print(f'Accuracy: {stats["correct"] / stats["total"]:.2f} ({stats["correct"]} / {stats["total"]})')
         for category, category_stats in stats['category_statistics'].items():
-            print(f'Category: {category} ({category_stats["correct"] / category_stats["total"]:.2f})')
+            print(f'Category: {category} ({category_stats["correct"] / category_stats["total"]:.2f} ({category_stats["correct"]} / {category_stats["total"]}))')
         print('\n\n')
 
         if len(stats['category_statistics']) != 0:
             plot_category_statistics(stats['category_statistics'])
-

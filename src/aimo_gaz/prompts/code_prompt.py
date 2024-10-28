@@ -9,7 +9,7 @@ class CodePrompt(ConcatPrompt):
 # First Couple Steps:
 # 1. {}
 # """
-        self.user_message = """Below is a problem statement and the first couple steps in trying to solve it. Can you write a python program that tries to solve the problem statement using Sympy? The code should always answer by printing only a number and nothing else. Make sure it runs correctly! End the code by writing [END CODE].\n\nProblem Statement:
+        self.user_message = """Below is a problem statement and the first couple steps in trying to solve it. Can you write a python program that tries to solve the problem statement using Sympy? The code should always answer by printing only a number (integer or fraction) and nothing else. Make sure it runs correctly! End the code by writing [END CODE].\n\nProblem Statement:
 {}
 First Couple Steps:
 1. {}

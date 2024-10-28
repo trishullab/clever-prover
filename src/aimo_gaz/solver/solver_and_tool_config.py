@@ -236,7 +236,7 @@ class CoordinationSolverConfig:
         tools = {
             "planner": self.planner.get_solver_or_tool(logger),
             "executor": self.executor.get_solver_or_tool(logger),
-            "coder": self.coder.get_solver_or_tool(logger)
+            "coder": self.coder.get_solver_or_tool(logger),
         }
         return CoordinationSolver(tools, self.strategy, logger, **self.coordination_kwargs)
 

@@ -81,7 +81,7 @@ class CoordinationSolver(Solver):
                 return float(output)
 
 
-    def plan_code_exec_extract_last_maj_vote(self, problem_description: str, time_allowed: int) -> int:
+    def plan_code_exec_extract_last_maj_vote(self, problem_description: str, time_allowed: int) -> float:
         assert len(self.tools) > 0, "No tools provided."
         assert "planner" in self.tools, "Planner tool not provided."
         assert "coder" in self.tools, "Coder tool not provided."
@@ -97,7 +97,7 @@ class CoordinationSolver(Solver):
         ATTEMPTS_TO_TRY = self.num_attempts
         TIME_LEFT = True
         CURR_TIME_LEFT = time_allowed
-        eps = 10e-6
+        # eps = 1e-6
         outer_attempts_to_try = 1
         while CURR_TIME_LEFT > 30 and TIME_LEFT and outer_attempts_to_try > 0:
             outer_attempts_to_try -= 1
@@ -139,16 +139,30 @@ class CoordinationSolver(Solver):
             outputs = executor.solve_intermediate_parallel(codes)
             # Extract the last output
             last_outputs = [executor.extract_last_output(output) for output in outputs]
+            
             # See if this is a valid answer
+            self.logger.info(f"Checking if executor outputs are valid answers.")
             float_answers = [None] * len(last_outputs)
             for i, output in enumerate(last_outputs):
+                # try:
+                #     float_answers[i] = self._parse_integer(output)
+                #     if abs(int(float_answers[i]) - float_answers[i]) > eps:
+                #         float_answers[i] = None
+                # except Exception as e:
+                #     self.logger.info(f"Could not parse {output}, with exception {e}.")
                 try:
-                    float_answers[i] = self._parse_integer(output)
-                    if abs(int(float_answers[i]) - float_answers[i]) > eps:
-                        float_answers[i] = None
-                except Exception as e:
-                    self.logger.info(f"Could not parse {output}, with exception {e}.")
+                    output = float(output)
+                except ValueError:
                     pass
+                if not isinstance(output, float):
+                    try:
+                        output = eval(output)
+                    except:
+                        pass
+                if not isinstance(output, float):
+                    self.logger.info(f"Could not parse '{output}' as a float or fraction.")
+                    continue
+                float_answers[i] = output
             global_float_answers += float_answers
 
 #             # collect the invalid answers, and have the model run the repair agent on those:
@@ -218,7 +232,7 @@ class CoordinationSolver(Solver):
             # for i, output in enumerate(repaired_last_outputs):
             #     try:
             #         repaired_float_answers[i] = self._parse_integer(output)
-            #         if abs(int(repaired_float_answers[i]) - repaired_float_answers[i])  > eps:
+            #         if abs(int(repaired_float_answers[i]) - repaired_float_answers[i]) > eps:
             #             repaired_float_answers[i] = None
             #     except Exception as e:
             #         self.logger.info(f"Could not parse {output} after repair, with exception {e}.")
@@ -228,28 +242,15 @@ class CoordinationSolver(Solver):
             CURR_TIME_LEFT = math.floor(CURR_TIME_LEFT - (time.time() - curr_time))
 
         # Take the majority non-None
-        answers = [answer for answer in global_float_answers if answer is not None and (answer > 0)]
-        bad_answers = [abs(answer) for answer in global_float_answers if answer is not None and (answer <= 0)]
-        self.logger.info(f"Taking the majority vote: global_float_answers: {global_float_answers} answers: {answers}, bad_answers: {bad_answers}")
+        answers = [answer for answer in global_float_answers if answer is not None]
+        self.logger.info(f"Taking the majority vote: global_float_answers: {global_float_answers}, answers: {answers}")
+        self.logger.info(f"Model's generated answers are {answers}")
         if len(answers) == 0:
-            if len(bad_answers) == 0:
-                self.logger.info("No answers found, choosing random number.")
-                return random.randint(0,999)
-            else:
-                self.logger.info("Only bad answers found.")
-                answer_counter = Counter(bad_answers)
-                most_common_answer = answer_counter.most_common(1)[0][0]
-                most_common_answer_count = answer_counter.most_common(1)[0][1]
-                if most_common_answer_count > 1:
-                    int_answer = int(most_common_answer)
-                    mod_answer = int_answer % 1000
-                else:
-                    mod_answer = int(random.choice(bad_answers))
-                    mod_answer = mod_answer % 1000
-                return mod_answer
+            self.logger.info("No answers found, returning 0.0.")
+            return 0.0
         else:
             self.logger.info("Answers found.")
-            answer_counter = Counter(answers)
+            answer_counter = Counter(answers) # TODO: Counter may not work well with float keys
             most_common_answers = answer_counter.most_common(2)
             if len(most_common_answers) == 1:
                 most_common_answer = most_common_answers[0][0]
@@ -259,15 +260,13 @@ class CoordinationSolver(Solver):
             else:
                 most_common_answer = None
             if (most_common_answer is not None and self.picker_optional) or len(answer_counter) == 1:
-                int_answer = int(most_common_answer)
-                mod_answer = int_answer % 1000
-                self.logger.info(f"Will not run pick answer, as the majority vote is {mod_answer}")
-                self.logger.info(f"Model's generated answers are {answers}")
-                return mod_answer
+                answer = most_common_answer
+                self.logger.info(f"Will not run pick answer, as the majority vote is {answer}")
+                return answer
             try:
                 with self.tools['coder']:
                     model = self.tools['coder'].model
-                    choices = '\n'.join([f'( {chr(65 + i)} ) {answer}' for i, answer in enumerate(answers)])
+                    choices = '\n'.join([f'( {chr(65 + i)} ) {answer}' for i, answer in enumerate(set(answers))]) # TODO: set may not work well with floats
                     prompt = f"""Below is a problem description. Which answer do you think is best?
 
 Problem Description: 
@@ -286,35 +285,34 @@ Choices:
                     response = model.generate(prompt, **self.tools['coder'].inference_kwargs)
                     outs = model.parse_out(response)
                     self.logger.info(f"Picked answer:\n {outs[0][0]}")
-                    # most_common_answer = outs[0][0][0:min(10, len(outs[0][0]))]
                     most_common_answer = outs[0][0].split("\\boxed{")
                     if len(most_common_answer) > 1 and len(most_common_answer[-1]) > 0:
-                        most_common_answer = most_common_answer[-1][0]
+                        most_common_answer = most_common_answer[-1]
                     else:
                         raise Exception("Couldn't parse the answer.")
 
                     # get which letter is in most_common_answer
+                    answer_chosen = False
                     for i, answer in enumerate(answers):
-                        if chr(65 + i) in most_common_answer or str(answer) == most_common_answer:
+                        if chr(65 + i) in most_common_answer or str(answer) == most_common_answer: # TODO: This probably doesn't work well for floats
                             most_common_answer = answer
+                            answer_chosen = True
                             break
+                    if not answer_chosen:
+                        raise Exception("Couldn't parse the answer.")
 
-                    int_answer = int(most_common_answer)
-                    mod_answer = int_answer % 1000
+                    answer = most_common_answer
             except Exception as e:
                 answer_counter = Counter(answers)
                 most_common_answer = answer_counter.most_common(1)[0][0]
                 most_common_answer_count = answer_counter.most_common(1)[0][1]
                 if most_common_answer_count > 1:
-                    int_answer = int(most_common_answer)
-                    mod_answer = int_answer % 1000
+                    answer = most_common_answer
                 else:
-                    mod_answer = int(random.choice(answers))
-                    mod_answer = mod_answer % 1000
-            self.logger.info(f"Model's generated answers are {answers}")
-            return mod_answer
+                    answer = random.choice(answers)
+            return answer
 
-    def solve(self, problem_description: str, time_allowed: int) -> int:
+    def solve(self, problem_description: str, time_allowed: int) -> float:
         assert len(self.tools) > 0, "No tools provided."
         self.start_time = time.time()
         self.logger.info(f"Starting to solve problem: {problem_description}")
@@ -325,8 +323,8 @@ Choices:
             else:
                 raise NotImplementedError(f"Strategy {self.strategy} is not implemented.")
         except Exception as e:
-            self.logger.info(f"Exception encountered in strategy, choosing random answer : {e}")
-            answer = random.randint(0,999)
+            self.logger.info(f"Exception encountered in strategy, returning 0.0 : {e}")
+            answer = 0.0
         self.end_time = time.time()
         self.logger.info(f"Finished solving in {self.end_time - self.start_time} seconds.")
         self.reset()
