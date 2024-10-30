@@ -99,9 +99,9 @@ def evaluate_on_benchmarks(benchmark, valid_path, solver, time_str = None, logge
     stats = evaluate(data, solver=solver, logger=logger)
 
     logger.info(f'Benchmark: {benchmark}')
-    logger.info(f'Accuracy: {stats["correct"] / stats["total"]:.2f} ({stats["correct"]} / {stats["total"]})')
+    logger.info(f'Accuracy: {stats["correct"] / stats["total"]:.2f} ( {stats["correct"]} / {stats["total"]} )')
     for category, category_stats in stats['category_statistics'].items():
-        logger.info(f'Category: {category} ({category_stats["correct"] / category_stats["total"]:.2f} ({category_stats["correct"]} / {category_stats["total"]}))')
+        logger.info(f'Category: {category} ({category_stats["correct"] / category_stats["total"]:.2f} ( {category_stats["correct"]} / {category_stats["total"]} ))')
     logger.info('\n\n')
     time_str = time.strftime("%Y%m%d-%H%M%S") if time_str is None else time_str
     if len(stats['category_statistics']) != 0:
@@ -134,9 +134,9 @@ if __name__ == "__main__":
         stats = evaluate(data, solver_cls=TestSolver)
 
         print(f'Benchmark: {benchmark}')
-        print(f'Accuracy: {stats["correct"] / stats["total"]:.2f} ({stats["correct"]} / {stats["total"]})')
+        print(f'Accuracy: {stats["correct"] / stats["total"]:.2f} ( {stats["correct"]} / {stats["total"]} )')
         for category, category_stats in stats['category_statistics'].items():
-            print(f'Category: {category} ({category_stats["correct"] / category_stats["total"]:.2f} ({category_stats["correct"]} / {category_stats["total"]}))')
+            print(f'Category: {category} ({category_stats["correct"] / category_stats["total"]:.2f} ( {category_stats["correct"]} / {category_stats["total"]} ))')
         print('\n\n')
 
         if len(stats['category_statistics']) != 0:

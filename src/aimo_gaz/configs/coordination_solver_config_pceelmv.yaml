@@ -1,0 +1,14 @@
+tools:
+  planner: planner_tool_config.yaml
+  executor: execution_tool_config.yaml
+  coder: code_tool_config.yaml
+
+strategy: plan_code_exec_extract_last_maj_vote
+
+coordination_kwargs:
+  num_code_gens: 1
+  num_plans: 1
+  code_timeout_in_secs: 15.0
+  problem_timeout_in_secs: 1200.0
+  num_attempts: 5
+  picker_optional: False

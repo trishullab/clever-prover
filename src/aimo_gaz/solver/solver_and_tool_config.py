@@ -226,18 +226,22 @@ class SolverOrToolConfig:
 @dataclass_json
 @dataclass
 class CoordinationSolverConfig:
-    planner: SolverOrToolConfig
-    executor: SolverOrToolConfig
-    coder: SolverOrToolConfig
+    # planner: SolverOrToolConfig
+    # executor: SolverOrToolConfig
+    # coder: SolverOrToolConfig
+    tool_configs: typing.Dict[str, SolverOrToolConfig]
     strategy: CoordinationSolverStrategy
     coordination_kwargs: dict = field(default_factory=dict)
 
     def get_solver_or_tool(self, logger: logging.Logger) -> CoordinationSolver:
-        tools = {
-            "planner": self.planner.get_solver_or_tool(logger),
-            "executor": self.executor.get_solver_or_tool(logger),
-            "coder": self.coder.get_solver_or_tool(logger),
-        }
+        # tools = {
+        #     "planner": self.planner.get_solver_or_tool(logger),
+        #     "executor": self.executor.get_solver_or_tool(logger),
+        #     "coder": self.coder.get_solver_or_tool(logger),
+        # }
+        tools = {}
+        for tool_name, tool_config in self.tool_configs.items():
+            tools[tool_name] = tool_config.get_solver_or_tool(logger)
         return CoordinationSolver(tools, self.strategy, logger, **self.coordination_kwargs)
 
 
@@ -274,7 +278,7 @@ def parse_solver_or_tool_config(cfg) -> typing.Union[SolverOrToolConfig, Coordin
     if gaz_root is not None:
         # Replace all the <gaz_root> placeholders in all the paths in all the setting
         recursive_replace_keywords(cfg, "<AIMO_GAZ_ROOT>", gaz_root)
-    is_coordination_solver = "planner" in cfg
+    is_coordination_solver = "tools" in cfg
     if not is_coordination_solver:
 
         model_settings = ModelSettings(**cfg["model_settings"])
@@ -292,13 +296,18 @@ def parse_solver_or_tool_config(cfg) -> typing.Union[SolverOrToolConfig, Coordin
     else:
         strategy = CoordinationSolverStrategy(cfg["strategy"])
         coordination_kwargs = cfg["coordination_kwargs"]
-        planner_config = cfg["planner"]
-        executor_config = cfg["executor"]
-        coder_config = cfg["coder"]
-        planner_cfg = hydra.compose(config_name=planner_config)
-        executor_cfg = hydra.compose(config_name=executor_config)
-        coder_cfg = hydra.compose(config_name=coder_config)
-        planner = parse_solver_or_tool_config(planner_cfg)
-        executor = parse_solver_or_tool_config(executor_cfg)
-        coder = parse_solver_or_tool_config(coder_cfg)
-        return CoordinationSolverConfig(planner, executor, coder, strategy, coordination_kwargs)
+        # planner_config = cfg["tools"]["planner"]
+        # executor_config = cfg["tools"]["executor"]
+        # coder_config = cfg["tools"]["coder"]
+        # planner_cfg = hydra.compose(config_name=planner_config)
+        # executor_cfg = hydra.compose(config_name=executor_config)
+        # coder_cfg = hydra.compose(config_name=coder_config)
+        # planner = parse_solver_or_tool_config(planner_cfg)
+        # executor = parse_solver_or_tool_config(executor_cfg)
+        # coder = parse_solver_or_tool_config(coder_cfg)
+        tool_configs = {}
+        for tool_name, tool_config in cfg["tools"].items():
+            tool_cfg = hydra.compose(config_name=tool_config)
+            tool_configs[tool_name] = parse_solver_or_tool_config(tool_cfg)
+        # return CoordinationSolverConfig(planner, executor, coder, strategy, coordination_kwargs)
+        return CoordinationSolverConfig(tool_configs, strategy, coordination_kwargs)

@@ -14,6 +14,7 @@ from collections import Counter
 
 class CoordinationSolverStrategy(Enum):
     PLAN_CODE_EXEC_EXRACT_LAST_MAJ_VOTE = "plan_code_exec_extract_last_maj_vote"
+    COORDINATOR_TOOL_HISTORY_LOOP = "coordinator_tool_history_loop"
 
     def __str__(self):
         return self.value
@@ -63,25 +64,76 @@ class CoordinationSolver(Solver):
     def _run_simplify(self, output, context):
         context["simp_output"] = simplify(output)
 
-    def _parse_integer(self, output):
+    # def _parse_integer(self, output):
+    #     try:
+    #         return float(output)
+    #     except Exception as e:
+    #         self.logger.info(f"Could not parse {output} as rational with exception {e}.")
+    #         try:
+    #             if self._cloned_exec_tool is None:
+    #                 self._cloned_exec_tool = copy.deepcopy(self.tools["executor"])
+    #             self._cloned_exec_tool.reset()
+    #             outs = self._cloned_exec_tool.solve_intermediate_parallel([f"print(simplify('{output}'))"])
+    #             simpl_output = self._cloned_exec_tool.extract_last_output(outs[0])
+    #             self.logger.info(f"Sympy simplified output is {simpl_output}")
+    #             return float(simpl_output)
+    #         except Exception as e:
+    #             self.logger.info(f"Could not parse {output} as sympy expression with exception {e}.")
+    #             return float(output)
+    
+    def _parse_float(self, input):
         try:
-            return float(output)
-        except Exception as e:
-            self.logger.info(f"Could not parse {output} as rational with exception {e}.")
-            try:
-                if self._cloned_exec_tool is None:
-                    self._cloned_exec_tool = copy.deepcopy(self.tools["executor"])
-                self._cloned_exec_tool.reset()
-                outs = self._cloned_exec_tool.solve_intermediate_parallel([f"print(simplify('{output}'))"])
-                simpl_output = self._cloned_exec_tool.extract_last_output(outs[0])
-                self.logger.info(f"Sympy simplified output is {simpl_output}")
-                return float(simpl_output)
-            except Exception as e:
-                self.logger.info(f"Could not parse {output} as sympy expression with exception {e}.")
-                return float(output)
+            return float(input)
+        except ValueError:
+            pass
+        try:
+            return eval(input)
+        except:
+            pass
+        return None
+    
+    def _log_and_add_to_history(self, message):
+        self.logger.info(message)
+        self.history.append(message)
 
 
-    def plan_code_exec_extract_last_maj_vote(self, problem_description: str, time_allowed: int) -> float:
+    def _coordinator_tool_history_loop(self, problem_description: str, time_allowed: int) -> float:
+        assert len(self.tools) > 0, "No tools provided."
+        assert "llm_guesser" in self.tools, "LLM guesser tool not provided."
+
+        llm_guesser: LLMGuesserTool = self.tools["llm_guesser"]
+
+        global_answer_guess = None
+
+        MAX_LOOPS = 5
+        loops_left = MAX_LOOPS
+        while loops_left > 0: # TODO: maybe add boolean variable to replace breaks?
+            loops_left -= 1
+
+            # TODO: prompt for tool
+            tool_str = "llm_guesser"
+            self._log_and_add_to_history(f"Coordinator chose tool: {tool_str}")
+
+            if tool_str == "llm_guesser":
+                guess_str = llm_guesser.solve_intermediate(problem_description)
+                guess_float = self._parse_float(guess_str)
+                if guess_float is not None:
+                    self._log_and_add_to_history(f"LLM guesser guessed: {guess_str}")
+
+                    global_answer_guess = guess_float # TODO: delete and give coordinator option to break instead
+                    break
+            else:
+                self._log_and_add_to_history(f"Coordinator chose invalid tool: {tool_str}")
+        
+        self._log_and_add_to_history("Solver finished looping.")
+        if global_answer_guess is None:
+            self._log_and_add_to_history("No guess for answer found, returning 0.0.")
+            global_answer_guess = 0.0
+        self._log_and_add_to_history(f"Solver returning: {global_answer_guess}")
+        return global_answer_guess
+
+
+    def _plan_code_exec_extract_last_maj_vote(self, problem_description: str, time_allowed: int) -> float:
         assert len(self.tools) > 0, "No tools provided."
         assert "planner" in self.tools, "Planner tool not provided."
         assert "coder" in self.tools, "Coder tool not provided."
@@ -150,16 +202,8 @@ class CoordinationSolver(Solver):
                 #         float_answers[i] = None
                 # except Exception as e:
                 #     self.logger.info(f"Could not parse {output}, with exception {e}.")
-                try:
-                    output = float(output)
-                except ValueError:
-                    pass
-                if not isinstance(output, float):
-                    try:
-                        output = eval(output)
-                    except:
-                        pass
-                if not isinstance(output, float):
+                output = self._parse_float(output)
+                if output is None:
                     self.logger.info(f"Could not parse '{output}' as a float or fraction.")
                     continue
                 float_answers[i] = output
@@ -216,28 +260,28 @@ class CoordinationSolver(Solver):
 #                     except Exception as e:
 #                         self.logger.info(f"Encountered exception during repair phase: {e}.")
 #                         pass
-                    # time_now = time.time()
-                    # CURR_TIME_LEFT = math.floor(CURR_TIME_LEFT - (time_now - curr_time))
-                    # curr_time = time_now
-                    # self.logger.info(f"Time left after repair is {CURR_TIME_LEFT}")
-                    # if CURR_TIME_LEFT <= 30:
-                    #     break
-            # if len(fixed_codes) > 0:
-            #     repaired_outputs = executor.solve_intermediate_parallel(fixed_codes)
-            #     # Extract the last output
-            #     repaired_last_outputs = [executor.extract_last_output(output) for output in repaired_outputs]
-            # else:
-            #     repaired_last_outputs = []
-            # repaired_float_answers = [None] * len(repaired_last_outputs)
-            # for i, output in enumerate(repaired_last_outputs):
-            #     try:
-            #         repaired_float_answers[i] = self._parse_integer(output)
-            #         if abs(int(repaired_float_answers[i]) - repaired_float_answers[i]) > eps:
-            #             repaired_float_answers[i] = None
-            #     except Exception as e:
-            #         self.logger.info(f"Could not parse {output} after repair, with exception {e}.")
-            #         pass
-            # global_float_answers += repaired_float_answers
+#                     time_now = time.time()
+#                     CURR_TIME_LEFT = math.floor(CURR_TIME_LEFT - (time_now - curr_time))
+#                     curr_time = time_now
+#                     self.logger.info(f"Time left after repair is {CURR_TIME_LEFT}")
+#                     if CURR_TIME_LEFT <= 30:
+#                         break
+#             if len(fixed_codes) > 0:
+#                 repaired_outputs = executor.solve_intermediate_parallel(fixed_codes)
+#                 # Extract the last output
+#                 repaired_last_outputs = [executor.extract_last_output(output) for output in repaired_outputs]
+#             else:
+#                 repaired_last_outputs = []
+#             repaired_float_answers = [None] * len(repaired_last_outputs)
+#             for i, output in enumerate(repaired_last_outputs):
+#                 try:
+#                     repaired_float_answers[i] = self._parse_integer(output)
+#                     if abs(int(repaired_float_answers[i]) - repaired_float_answers[i]) > eps:
+#                         repaired_float_answers[i] = None
+#                 except Exception as e:
+#                     self.logger.info(f"Could not parse {output} after repair, with exception {e}.")
+#                     pass
+#             global_float_answers += repaired_float_answers
             local_attempts = 0
             CURR_TIME_LEFT = math.floor(CURR_TIME_LEFT - (time.time() - curr_time))
 
@@ -319,7 +363,9 @@ Choices:
         answer = -1
         try:
             if self.strategy == CoordinationSolverStrategy.PLAN_CODE_EXEC_EXRACT_LAST_MAJ_VOTE:
-                answer = self.plan_code_exec_extract_last_maj_vote(problem_description, time_allowed)
+                answer = self._plan_code_exec_extract_last_maj_vote(problem_description, time_allowed)
+            elif self.strategy == CoordinationSolverStrategy.COORDINATOR_TOOL_HISTORY_LOOP:
+                answer = self._coordinator_tool_history_loop(problem_description, time_allowed)
             else:
                 raise NotImplementedError(f"Strategy {self.strategy} is not implemented.")
         except Exception as e:

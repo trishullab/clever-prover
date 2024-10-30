@@ -1,8 +1,9 @@
-planner: planner_tool_config.yaml
-executor: execution_tool_config.yaml
-coder: code_tool_config.yaml
+tools:
+  planner: planner_tool_config.yaml
+  executor: execution_tool_config.yaml
+  coder: code_tool_config.yaml
 
-strategy: plan_code_exec_extract_last_maj_vote
+strategy: coordinator_tool_history_loop
 
 coordination_kwargs:
   num_code_gens: 1
