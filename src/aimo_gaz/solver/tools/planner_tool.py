@@ -13,7 +13,7 @@ class PlannerTool(Tool):
         self.prompt = prompt
         self.inference_kwargs = inference_kwargs
         self.logger = logger
-        self.inference_kwargs["n"] = 1 # Only one response is needed from planner agent
+        self.inference_kwargs["n"] = 1 # Only one response is needed from planner tool
         self.inference_kwargs["stop"] = ["[END PROCEDURE]", "7.", "the answer is", "<｜end▁of▁sentence｜>"]
         self.history = []
 
@@ -41,12 +41,12 @@ class PlannerTool(Tool):
         #     outs = self.model.parse_out(response)
         #     generated_text = outs[0][0]
         outs = self.model.parse_out(response)
+        assert len(outs) == 1, "No response (or too many responses) from the model."
         generated_text = outs[0][0]
         if self.history[-1]['role'] == "assistant":
             self.history[-1]['content'] += generated_text
         else:
             self.history.append({"role": "assistant", "content": generated_text})
-        assert len(outs) == 1, "No response (or too many responses) from the model."
         # if not generated_text.strip().endswith("[END PROCEDURE]"):
         #     generated_text = generated_text.rstrip('\n') + "\n[END PROCEDURE]"
         # self.logger.info(f"[PLANNER] Plan generated:\n{generated_text}")

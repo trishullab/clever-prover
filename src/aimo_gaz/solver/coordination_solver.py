@@ -4,12 +4,13 @@ import time
 import math
 import random
 import copy
-from re import findall as re_findall # TODO: this is a workaround for mysterious re error
+import re as python_regex # 're' clashes with sympy type object
 from sympy import *
 from aimo_gaz.solver.abs_solver_and_tool import Solver, Tool
 from aimo_gaz.solver.tools.planner_tool import PlannerTool
 from aimo_gaz.solver.tools.code_tool import CodeTool
 from aimo_gaz.solver.tools.execution_tool import ExecutionTool
+from aimo_gaz.solver.tools.coordinator_tool import CoordinatorTool
 from aimo_gaz.solver.tools.llm_guesser_tool import LLMGuesserTool
 from enum import Enum
 from collections import Counter
@@ -22,6 +23,8 @@ class CoordinationSolverStrategy(Enum):
         return self.value
 
 class CoordinationSolver(Solver):
+    last_num_regex = python_regex.compile(r"-?\d*\s*[./]?\s*\d+")
+
     def __init__(self,
         tools: typing.Dict[str, Tool],
         strategy: CoordinationSolverStrategy,
@@ -83,7 +86,7 @@ class CoordinationSolver(Solver):
     #             self.logger.info(f"Could not parse {output} as sympy expression with exception {e}.")
     #             return float(output)
     
-    def _parse_float(self, input):
+    def _parse_float(self, input): # TODO: move to utils
         try:
             return float(input)
         except:
@@ -104,6 +107,7 @@ class CoordinationSolver(Solver):
         assert "llm_guesser" in self.tools, "LLM guesser tool not provided."
 
         llm_guesser: LLMGuesserTool = self.tools["llm_guesser"]
+        coordinator: CoordinatorTool = self.tools["coordinator"]
 
         global_answer_guess = None
 
@@ -113,8 +117,7 @@ class CoordinationSolver(Solver):
         while loops_left > 0 and not end_loop:
             loops_left -= 1
 
-            # TODO: prompt for guesser
-            tool_str = "llm_guesser"
+            tool_str = coordinator.solve_intermediate(problem_description)
             self._log_and_add_to_history(f"Coordinator chose tool: {tool_str}")
 
             if tool_str == "llm_guesser":
@@ -126,9 +129,9 @@ class CoordinationSolver(Solver):
                     self.logger.info(f"Exception encountered in LLM guesser: {e}.")
 
                 if not error_thrown:
-                    guess_float = self._parse_float(guess_str)
+                    guess_float = self._parse_float(guess_str) # TODO: move this block to within tool
                     if guess_float is None:
-                        guess_parse = re_findall("\d*\s*[/.]?\s*\d+", guess_str)
+                        guess_parse = self.last_num_regex.findall(guess_str)
                         if guess_parse:
                             guess_float = self._parse_float(guess_parse[-1])
 

@@ -4,6 +4,7 @@ from aimo_gaz.prompts.prompt import ConcatPrompt
 class CoTPrompt(ConcatPrompt):
     int_regex = re.compile(r"[-+]?\d+")
     box_regex = re.compile(r"\\boxed{([-+]?\d+)}")
+
     def __init__(self, system_prompt_path: str = None, example_prompt_path: str = None, system_prompt: str = None, example_prompt: str = None,  append_system_prompt_after_every_message: bool = False):
         super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt, append_system_prompt_after_every_message)
         self.system_prompt = """
@@ -13,6 +14,7 @@ Analyze this problem and think step by step to come to a solution with programs.
 Once you found the answer write [END] and stop the response.\n\n
 Please reason step by step, and put your final answer within \\boxed{}.\n\n
 """
+
     def get_prompt(self, messages: list[dict[str, str]]) -> str:
         # return self.translate_for_deepseek(messages)
         return messages
