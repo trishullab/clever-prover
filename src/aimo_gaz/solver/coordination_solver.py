@@ -4,11 +4,13 @@ import time
 import math
 import random
 import copy
+from re import findall as re_findall # TODO: this is a workaround for mysterious re error
 from sympy import *
 from aimo_gaz.solver.abs_solver_and_tool import Solver, Tool
 from aimo_gaz.solver.tools.planner_tool import PlannerTool
 from aimo_gaz.solver.tools.code_tool import CodeTool
 from aimo_gaz.solver.tools.execution_tool import ExecutionTool
+from aimo_gaz.solver.tools.llm_guesser_tool import LLMGuesserTool
 from enum import Enum
 from collections import Counter
 
@@ -84,7 +86,7 @@ class CoordinationSolver(Solver):
     def _parse_float(self, input):
         try:
             return float(input)
-        except ValueError:
+        except:
             pass
         try:
             return eval(input)
@@ -107,23 +109,40 @@ class CoordinationSolver(Solver):
 
         MAX_LOOPS = 5
         loops_left = MAX_LOOPS
-        while loops_left > 0: # TODO: maybe add boolean variable to replace breaks?
+        end_loop = False
+        while loops_left > 0 and not end_loop:
             loops_left -= 1
 
-            # TODO: prompt for tool
+            # TODO: prompt for guesser
             tool_str = "llm_guesser"
             self._log_and_add_to_history(f"Coordinator chose tool: {tool_str}")
 
             if tool_str == "llm_guesser":
-                guess_str = llm_guesser.solve_intermediate(problem_description)
-                guess_float = self._parse_float(guess_str)
-                if guess_float is not None:
-                    self._log_and_add_to_history(f"LLM guesser guessed: {guess_str}")
+                error_thrown = False
+                try:
+                    guess_str = llm_guesser.solve_intermediate(problem_description)
+                except Exception as e:
+                    error_thrown = True
+                    self.logger.info(f"Exception encountered in LLM guesser: {e}.")
 
-                    global_answer_guess = guess_float # TODO: delete and give coordinator option to break instead
-                    break
+                if not error_thrown:
+                    guess_float = self._parse_float(guess_str)
+                    if guess_float is None:
+                        guess_parse = re_findall("\d*\s*[/.]?\s*\d+", guess_str)
+                        if guess_parse:
+                            guess_float = self._parse_float(guess_parse[-1])
+
+                    if guess_float is not None:
+                        self._log_and_add_to_history(f"LLM guesser guessed: {guess_str}")
+
+                        global_answer_guess = guess_float
+                        end_loop = True # TODO: delete and give coordinator option to break instead
+                    else:
+                        self._log_and_add_to_history(f"LLM guesser output could not be parsed as a valid float: {guess_str}")
+            
+                llm_guesser.reset()
             else:
-                self._log_and_add_to_history(f"Coordinator chose invalid tool: {tool_str}")
+                self._log_and_add_to_history(f"Coordinator-chosen tool '{tool_str}' is invalid")
         
         self._log_and_add_to_history("Solver finished looping.")
         if global_answer_guess is None:
@@ -176,7 +195,6 @@ class CoordinationSolver(Solver):
                     codes.extend(codes_gen)
                 except Exception as e:
                     self.logger.info(f"Exception encountered in planning and coding phase: {e}.")
-                    pass
                 local_attempts += 1
                 global_attempts += 1
                 planner.reset()

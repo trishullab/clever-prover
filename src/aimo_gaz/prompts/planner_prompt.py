@@ -1,7 +1,6 @@
 from aimo_gaz.prompts.prompt import ConcatPrompt
 import copy
 
-
 class PlannerPrompt(ConcatPrompt):
     def __init__(self, system_prompt_path: str = None, example_prompt_path: str = None, system_prompt: str = None,
                  example_prompt: str = None, append_system_prompt_after_every_message: bool = False):
@@ -17,16 +16,16 @@ class PlannerPrompt(ConcatPrompt):
         # """Problem: {}
         # """
         #         ]
-        self.assistant_message_starts = [
-            """[SHORT PROCEDURE]
-            Procedure:
-            1. Solve for the solution set of $||x-1|-2|=m/100$ where $m$ is a positive integer.
-            2. Count the number of choices of $m$ where the solution set has 4 elements.
-            [END PROCEDURE]""",
-            """[SHORT PROCEDURE]
-            Procedure:
-            1."""
-        ]
+        # self.assistant_message_starts = [
+        #     """[SHORT PROCEDURE]
+        #     Procedure:
+        #     1. Solve for the solution set of $||x-1|-2|=m/100$ where $m$ is a positive integer.
+        #     2. Count the number of choices of $m$ where the solution set has 4 elements.
+        #     [END PROCEDURE]""",
+        #     """[SHORT PROCEDURE]
+        #     Procedure:
+        #     1."""
+        # ]
 
     def get_prompt(self, messages: list[dict[str, str]]) -> str:
         if messages[-1]['role'] == 'user':

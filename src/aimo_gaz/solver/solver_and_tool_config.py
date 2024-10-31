@@ -74,9 +74,11 @@ from aimo_gaz.solver.coordination_solver import CoordinationSolver, Coordination
 from aimo_gaz.solver.tools.code_tool import CodeTool
 from aimo_gaz.solver.tools.planner_tool import PlannerTool
 from aimo_gaz.solver.tools.execution_tool import ExecutionTool
+from aimo_gaz.solver.tools.llm_guesser_tool import LLMGuesserTool
 from aimo_gaz.models.gpt_model import GptModel
 from aimo_gaz.prompts.code_prompt import CodePrompt
 from aimo_gaz.prompts.planner_prompt import PlannerPrompt
+from aimo_gaz.prompts.llm_guesser_prompt import LLMGuesserPrompt
 
 GLOBAL_MODEL_CACHE = {}
 
@@ -85,6 +87,7 @@ class PromptType(Enum):
     CoTPrompt = "CoTPrompt"
     CodePrompt = "CodePrompt"
     PlannerPrompt = "PlannerPrompt"
+    LLMGuesserPrompt = "LLMGuesserPrompt"
 
     def __str__(self):
         return self.value
@@ -96,6 +99,7 @@ class SolverOrToolType(Enum):
     CodeTool = "CodeTool"
     PlannerTool = "PlannerTool"
     ExecutionTool = "ExecutionTool"
+    LLMGuesserTool = "LLMGuesserTool"
 
     def __str__(self):
         return self.value
@@ -116,6 +120,8 @@ class PromptConfig:
             return CodePrompt(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
         elif self.prompt_type == PromptType.PlannerPrompt:
             return PlannerPrompt(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
+        elif self.prompt_type == PromptType.LLMGuesserPrompt:
+            return LLMGuesserPrompt(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
         else:
             raise NotImplementedError(f"Prompt type {self.prompt_type} is not implemented.")
 
@@ -220,6 +226,14 @@ class SolverOrToolConfig:
             return PlannerTool(model, prompt, logger, **self.inference_settings.to_dict())
         elif self.solver_or_tool_type == SolverOrToolType.ExecutionTool:
             return ExecutionTool(logger, **self.solver_or_tool_args)
+        elif self.solver_or_tool_type == SolverOrToolType.LLMGuesserTool:
+            if self.model_settings.name_or_path not in GLOBAL_MODEL_CACHE:
+                model = GptModel(self.model_settings.name_or_path)
+                GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
+            else:
+                model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
+            prompt = self.prompt_config.get_prompt()
+            return LLMGuesserTool(model, prompt, logger, **self.inference_settings.to_dict())
         else:
             raise NotImplementedError(f"Solver type {self.solver_or_tool_type} is not implemented.")
 

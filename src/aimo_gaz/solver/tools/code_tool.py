@@ -14,7 +14,6 @@ class CodeTool(Tool):
         self.inference_kwargs = inference_kwargs
         self.logger = logger
         self.history = []
-        # self.inference_kwargs["return_full_text"] = False # We only need the generated text coz we have the history # TODO: Might need this later? For now, defaults to False.
         self.inference_kwargs["stop"] = ["[END CODE]", "```\n", "<｜end▁of▁sentence｜>"]
 
     def solve_intermediate(self, problem_description: str, plan: str = None) -> typing.Union[str, typing.List[str]]:
@@ -113,7 +112,7 @@ if __name__ == "__main__":
     #     "num_return_sequences": 1,
     #     "max_length": 2048,
     #     "return_full_text": True, # We want the problem description to be returned as well
-    #     "stop_tokens": ["[END]"] # TODO: Decide the stop token and probably mention it in the prompt class
+    #     "stop_tokens": ["[END]"]
     # }
     inference_args = {
         "max_tokens": 1024,

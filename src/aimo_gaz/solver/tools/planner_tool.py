@@ -14,7 +14,6 @@ class PlannerTool(Tool):
         self.inference_kwargs = inference_kwargs
         self.logger = logger
         self.inference_kwargs["n"] = 1 # Only one response is needed from planner agent
-        # self.inference_kwargs["return_full_text"] = False # We only need the generated text coz we have the history # TODO: Might need this later? For now, defaults to False.
         self.inference_kwargs["stop"] = ["[END PROCEDURE]", "7.", "the answer is", "<｜end▁of▁sentence｜>"]
         self.history = []
 
@@ -26,20 +25,23 @@ class PlannerTool(Tool):
         self.history.append(message)
         prompt = self.prompt.get_prompt(self.history)
         self.logger.info(f"[PLANNER] Raw prompt used:\n{prompt}")
-        # Get the moel response
-        response = None
-        try:
-            response = self.model.generate(prompt, **self.inference_kwargs)
-        except Exception as e:
-            raise(e)
-            response = None
-            self.logger.exception("Encountered exception.")
-        if response is None:
-            generated_text = "Could not generate a response from the model."
-            outs = [[generated_text]]
-        else:
-            outs = self.model.parse_out(response)
-            generated_text = outs[0][0]
+        # Get the model response
+        # response = None
+        # try:
+        #     response = self.model.generate(prompt, **self.inference_kwargs)
+        # except Exception as e:
+        #     raise(e)
+        #     # response = None
+        #     # self.logger.exception("Encountered exception.")
+        response = self.model.generate(prompt, **self.inference_kwargs)
+        # if response is None:
+        #     generated_text = "Could not generate a response from the model."
+        #     outs = [[generated_text]]
+        # else:
+        #     outs = self.model.parse_out(response)
+        #     generated_text = outs[0][0]
+        outs = self.model.parse_out(response)
+        generated_text = outs[0][0]
         if self.history[-1]['role'] == "assistant":
             self.history[-1]['content'] += generated_text
         else:
@@ -101,7 +103,7 @@ if __name__ == "__main__":
     #     "num_return_sequences": 1,
     #     "max_length": 2048,
     #     "return_full_text": True, # We want the problem description to be returned as well
-    #     "stop_tokens": ["[END PROCEDURE]", "\n\n"] # TODO: Decide the stop token and probably mention it in the prompt class
+    #     "stop_tokens": ["[END PROCEDURE]", "\n\n"]
     # }
     inference_args = {
         "max_tokens": 1024,
