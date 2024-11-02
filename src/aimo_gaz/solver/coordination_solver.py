@@ -117,7 +117,8 @@ class CoordinationSolver(Solver):
         while loops_left > 0 and not end_loop:
             loops_left -= 1
 
-            tool_str = coordinator.solve_intermediate(problem_description)
+            tool_str = coordinator.solve_intermediate(problem_description, global_history=self.history) # TODO: wrap in try-except
+            coordinator.reset()
             self._log_and_add_to_history(f"Coordinator chose tool: {tool_str}")
 
             if tool_str == "llm_guesser":
@@ -126,7 +127,7 @@ class CoordinationSolver(Solver):
                     guess_str = llm_guesser.solve_intermediate(problem_description)
                 except Exception as e:
                     error_thrown = True
-                    self.logger.info(f"Exception encountered in LLM guesser: {e}.")
+                    self._log_and_add_to_history(f"Exception encountered in LLM guesser: {e}.")
 
                 if not error_thrown:
                     guess_float = self._parse_float(guess_str) # TODO: move this block to within tool

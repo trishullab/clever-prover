@@ -10,15 +10,19 @@ class CoordinatorPrompt(ConcatPrompt):
 
 Problem Statement: {}
 
-You have several tools at your disposal to help you solve this problem. Your tools are:
+You are the coordinator in charge of solving this problem. You have several tools at your disposal to help you solve it. Your tools are:
 
 (1) llm_guesser: Query an LLM to guess the answer to the problem.
 
-Output which tool you would like to use next.""" # TODO: add history
+Here is the history of actions taken so far by the coordinator (you) and the tools to solve this problem:
 
-    def get_prompt(self, messages: list[dict[str, str]]) -> str:
+{}
+
+Please output which tool you would like to use next."""
+
+    def get_prompt(self, messages: list[dict[str, str]], history: list[str]) -> str:
         assert messages[-1]['role'] == 'user'
-        messages[-1]['content'] = self.user_message.format(messages[-1]['content'])
+        messages[-1]['content'] = self.user_message.format(messages[-1]['content'], history) # TODO: format history better
         return messages
 
     def parse_response(self, response: str) -> str:

@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import math
 from aimo_gaz.solver.abs_solver_and_tool import Solver
 from aimo_gaz.solver.test_solver import TestSolver
-from aimo_gaz.solver.vanilla_few_shot_solver import FewShotSolver
 
 
 def get_csv_data(path: str):

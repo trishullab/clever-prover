@@ -15,13 +15,13 @@ class CoordinatorTool(Tool):
         self.inference_kwargs["stop"] = []
         self.history = []
 
-    def solve_intermediate(self, problem_description: str) -> str:
+    def solve_intermediate(self, problem_description: str, global_history: str) -> str:
         if not self.model.is_loaded():
             self.model.__enter__()
         # Prompt the model for the plan
         message = {"role": "user", "content": problem_description}
         self.history.append(message)
-        prompt = self.prompt.get_prompt(self.history)
+        prompt = self.prompt.get_prompt(self.history, global_history)
         self.logger.info(f"[COORDINATOR] Raw prompt used:\n{prompt}")
         # Get the model response
         response = self.model.generate(prompt, **self.inference_kwargs)
