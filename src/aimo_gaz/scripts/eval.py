@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import math
 from aimo_gaz.solver.abs_solver_and_tool import Solver
 from aimo_gaz.solver.test_solver import TestSolver
+from aimo_gaz.utils import string_utils
 
 
 def get_csv_data(path: str):
@@ -29,16 +30,8 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger : logg
         answer = ex.get('answer', ex.get('Answer'))
         assert answer is not None, f'Answer not found in example: {ex}'
 
-        try:
-            answer = float(answer)
-        except:
-            pass
-        if not isinstance(answer, float):
-            try:
-                answer = eval(answer)
-            except:
-                pass
-        if not isinstance(answer, float):
+        answer = string_utils.parse_float(answer)
+        if answer is None:
             logger.error(f"ERROR: Answer '{answer}' is not a float or fraction for row {exidx}")
             continue
 
@@ -62,6 +55,7 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger : logg
             category_statistics.setdefault(category, {'correct': 0, 'total': 0})['total'] += 1
             category_statistics[category]['correct'] += solver_is_correct
         total_time_left -= math.ceil(time.time()-start_timer)
+
     return {
         'total': total,
         'correct': correct,

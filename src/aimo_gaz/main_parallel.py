@@ -4,7 +4,6 @@ import time
 from aimo_gaz.solver.solver_and_tool_config import parse_solver_or_tool_config, Solver
 from aimo_gaz.scripts.eval import evaluate_on_benchmarks
 from aimo_gaz.utils.log_utils import setup_logger
-from aimo_gaz.utils import distrib_util
 import torch.distributed as dist
 import pandas as pd
 import numpy as np

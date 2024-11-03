@@ -14,18 +14,25 @@ You are the coordinator in charge of solving this problem. You have several tool
 
 (1) llm_guesser: Query an LLM to guess the answer to the problem.
 
+If you think one of the previous tool outputs contains the correct answer, you also have the option to globally guess that answer. Simply output "[BEGIN GLOBAL GUESS]" before the numerical answer and "[END GLOBAL GUESS]" after it.
+
 Here is the history of actions taken so far by the coordinator (you) and the tools to solve this problem:
 
+[START HISTORY]
 {}
+[END HISTORY]
 
-Please output which tool you would like to use next."""
+Please output which tool you would like to use next or, if you believe the problem has been solved, output your global guess for an answer.""" # TODO: add more [START] and [END] scaffolding
 
     def get_prompt(self, messages: list[dict[str, str]], history: list[str]) -> str:
         assert messages[-1]['role'] == 'user'
-        messages[-1]['content'] = self.user_message.format(messages[-1]['content'], history) # TODO: format history better
+        messages[-1]['content'] = self.user_message.format(messages[-1]['content'], "\n".join(history))
         return messages
 
-    def parse_response(self, response: str) -> str:
+    def parse_response(self, response: str) -> str: # TODO: find a better way to do this and parse the guessed float within this method (maybe use enums with associated data)
+        if "[BEGIN GLOBAL GUESS]" in response and "[END GLOBAL GUESS]" in response:
+            # this does not include the '[END GLOBAL GUESS]'
+            return response[response.find("[BEGIN GLOBAL GUESS]"):response.find("[END GLOBAL GUESS]")]
         if "llm_guesser" in response:
             return "llm_guesser"
         if "1" in response:

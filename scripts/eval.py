@@ -107,4 +107,3 @@
 
 #         if len(stats['category_statistics']) != 0:
 #             plot_category_statistics(stats['category_statistics'])
-

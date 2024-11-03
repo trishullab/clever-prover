@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import sys
-
 import logging
 
 def setup_logger(name, log_file, level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'):

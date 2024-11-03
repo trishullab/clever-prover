@@ -61,7 +61,7 @@ class Prompt(ABC):
         pass
 
     @abstractmethod
-    def parse_response(self, response: str) -> str:
+    def parse_response(self, response: str):
         pass
 
     def reset_example_prompt(self, example_prompt: str = None, example_prompt_path: str = None):

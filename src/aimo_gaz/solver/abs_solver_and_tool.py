@@ -30,7 +30,7 @@ class Tool(ABC):
         pass
 
     @abstractmethod
-    def solve_intermediate(self, problem_description: str) -> typing.Union[str, typing.List[str]]:
+    def solve_intermediate(self, problem_description: str):
         pass
 
     @abstractmethod

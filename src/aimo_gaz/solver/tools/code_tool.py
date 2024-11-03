@@ -128,13 +128,14 @@ if __name__ == "__main__":
     with tool:
         is_solved = False
         while not is_solved:
-            if not os.path.exists(f".logs/{time_str}/temp/plan.md"):
-                with open(f".logs/{time_str}/temp/plan.md", "w") as f:
-                    f.write(problem_description)
-            input("Write the plan to solve the problem in file '.logs/temp/plan.md' and press enter.")
-            with open(f".logs/{time_str}/temp/plan.md", "r") as f:
-                plan = f.read()
-            code = tool.solve_intermediate(problem_description, plan) # TODO: This input repeats the problem description twice.
+            # if not os.path.exists(f".logs/{time_str}/temp/plan.md"):
+            #     with open(f".logs/{time_str}/temp/plan.md", "w") as f:
+            #         f.write(problem_description)
+            # input("Write the plan to solve the problem in file '.logs/temp/plan.md' and press enter.")
+            # with open(f".logs/{time_str}/temp/plan.md", "r") as f:
+            #     plan = f.read()
+            plan = problem_description
+            code = tool.solve_intermediate(problem_description, plan)
             # actual_code = code.find("```python code:")
             # actual_code = code[actual_code + len("```python code:"):].strip()
             # actual_code = actual_code[:-len("[END]")].strip() if actual_code.endswith("[END]") else actual_code

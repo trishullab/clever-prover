@@ -4,7 +4,6 @@ import time
 import math
 import random
 import copy
-import re as python_regex # 're' clashes with sympy type object
 from sympy import *
 from aimo_gaz.solver.abs_solver_and_tool import Solver, Tool
 from aimo_gaz.solver.tools.planner_tool import PlannerTool
@@ -12,6 +11,7 @@ from aimo_gaz.solver.tools.code_tool import CodeTool
 from aimo_gaz.solver.tools.execution_tool import ExecutionTool
 from aimo_gaz.solver.tools.coordinator_tool import CoordinatorTool
 from aimo_gaz.solver.tools.llm_guesser_tool import LLMGuesserTool
+from aimo_gaz.utils import string_utils
 from enum import Enum
 from collections import Counter
 
@@ -23,7 +23,6 @@ class CoordinationSolverStrategy(Enum):
         return self.value
 
 class CoordinationSolver(Solver):
-    last_num_regex = python_regex.compile(r"-?\d*\s*[./]?\s*\d+")
 
     def __init__(self,
         tools: typing.Dict[str, Tool],
@@ -73,7 +72,7 @@ class CoordinationSolver(Solver):
     #     try:
     #         return float(output)
     #     except Exception as e:
-    #         self.logger.info(f"Could not parse {output} as rational with exception {e}.")
+    #         self.logger.info(f"Could not parse {output} as rational with exception {e}")
     #         try:
     #             if self._cloned_exec_tool is None:
     #                 self._cloned_exec_tool = copy.deepcopy(self.tools["executor"])
@@ -83,19 +82,8 @@ class CoordinationSolver(Solver):
     #             self.logger.info(f"Sympy simplified output is {simpl_output}")
     #             return float(simpl_output)
     #         except Exception as e:
-    #             self.logger.info(f"Could not parse {output} as sympy expression with exception {e}.")
+    #             self.logger.info(f"Could not parse {output} as sympy expression with exception {e}")
     #             return float(output)
-    
-    def _parse_float(self, input): # TODO: move to utils
-        try:
-            return float(input)
-        except:
-            pass
-        try:
-            return eval(input)
-        except:
-            pass
-        return None
     
     def _log_and_add_to_history(self, message):
         self.logger.info(message)
@@ -109,7 +97,7 @@ class CoordinationSolver(Solver):
         llm_guesser: LLMGuesserTool = self.tools["llm_guesser"]
         coordinator: CoordinatorTool = self.tools["coordinator"]
 
-        global_answer_guess = None
+        global_guess_float = None
 
         MAX_LOOPS = 5
         loops_left = MAX_LOOPS
@@ -117,43 +105,47 @@ class CoordinationSolver(Solver):
         while loops_left > 0 and not end_loop:
             loops_left -= 1
 
-            tool_str = coordinator.solve_intermediate(problem_description, global_history=self.history) # TODO: wrap in try-except
+            coordinator_error = False
+            try:
+                tool_str = coordinator.solve_intermediate(problem_description, global_history=self.history)
+                self._log_and_add_to_history(f"Coordinator chose tool: {tool_str}")
+            except Exception as e:
+                self._log_and_add_to_history(f"Exception encountered in coordinator: {e}")
+                coordinator_error = True
+
             coordinator.reset()
-            self._log_and_add_to_history(f"Coordinator chose tool: {tool_str}")
 
-            if tool_str == "llm_guesser":
-                error_thrown = False
+            if coordinator_error:
+                pass
+            elif tool_str[:len("[BEGIN GLOBAL GUESS]")] == "[BEGIN GLOBAL GUESS]":
+                global_guess_float = string_utils.parse_float(tool_str[len("[BEGIN GLOBAL GUESS]"):])
+                if global_guess_float is not None:
+                    end_loop = True
+                else:
+                    self._log_and_add_to_history(f"Coordinator output global guess could not be parsed as float: {tool_str}")
+            elif tool_str == "llm_guesser":
                 try:
-                    guess_str = llm_guesser.solve_intermediate(problem_description)
-                except Exception as e:
-                    error_thrown = True
-                    self._log_and_add_to_history(f"Exception encountered in LLM guesser: {e}.")
-
-                if not error_thrown:
-                    guess_float = self._parse_float(guess_str) # TODO: move this block to within tool
-                    if guess_float is None:
-                        guess_parse = self.last_num_regex.findall(guess_str)
-                        if guess_parse:
-                            guess_float = self._parse_float(guess_parse[-1])
+                    guess_str, guess_float = llm_guesser.solve_intermediate(problem_description)
 
                     if guess_float is not None:
                         self._log_and_add_to_history(f"LLM guesser guessed: {guess_str}")
-
-                        global_answer_guess = guess_float
-                        end_loop = True # TODO: delete and give coordinator option to break instead
                     else:
-                        self._log_and_add_to_history(f"LLM guesser output could not be parsed as a valid float: {guess_str}")
-            
+                        self._log_and_add_to_history(f"LLM guesser output could not be parsed as float: {guess_str}")
+                except Exception as e:
+                    self._log_and_add_to_history(f"Exception encountered in LLM guesser: {e}")
+
                 llm_guesser.reset()
             else:
-                self._log_and_add_to_history(f"Coordinator-chosen tool '{tool_str}' is invalid")
+                self._log_and_add_to_history(f"Coordinator-chosen tool '{tool_str}' is invalid.")
+            
+            self._log_and_add_to_history(f"End of loop {MAX_LOOPS - loops_left}. Loops left: {loops_left}\n")
         
         self._log_and_add_to_history("Solver finished looping.")
-        if global_answer_guess is None:
-            self._log_and_add_to_history("No guess for answer found, returning 0.0.")
-            global_answer_guess = 0.0
-        self._log_and_add_to_history(f"Solver returning: {global_answer_guess}")
-        return global_answer_guess
+        if global_guess_float is None:
+            self._log_and_add_to_history("No global guess for answer found, returning 0.0")
+            global_guess_float = 0.0
+        self._log_and_add_to_history(f"Solver returning: {global_guess_float}")
+        return global_guess_float
 
 
     def _plan_code_exec_extract_last_maj_vote(self, problem_description: str, time_allowed: int) -> float:
@@ -198,7 +190,7 @@ class CoordinationSolver(Solver):
                         codes_gen = [codes_gen]
                     codes.extend(codes_gen)
                 except Exception as e:
-                    self.logger.info(f"Exception encountered in planning and coding phase: {e}.")
+                    self.logger.info(f"Exception encountered in planning and coding phase: {e}")
                 local_attempts += 1
                 global_attempts += 1
                 planner.reset()
@@ -223,8 +215,8 @@ class CoordinationSolver(Solver):
                 #     if abs(int(float_answers[i]) - float_answers[i]) > eps:
                 #         float_answers[i] = None
                 # except Exception as e:
-                #     self.logger.info(f"Could not parse {output}, with exception {e}.")
-                output = self._parse_float(output)
+                #     self.logger.info(f"Could not parse {output}, with exception {e}")
+                output = string_utils.parse_float(output)
                 if output is None:
                     self.logger.info(f"Could not parse '{output}' as a float or fraction.")
                     continue
@@ -280,7 +272,7 @@ class CoordinationSolver(Solver):
 #                                 #     fixed_codes.append(f"    {gen_text}")
 #                                 fixed_codes.append(f"    {gen_text}")
 #                     except Exception as e:
-#                         self.logger.info(f"Encountered exception during repair phase: {e}.")
+#                         self.logger.info(f"Encountered exception during repair phase: {e}")
 #                         pass
 #                     time_now = time.time()
 #                     CURR_TIME_LEFT = math.floor(CURR_TIME_LEFT - (time_now - curr_time))
@@ -301,7 +293,7 @@ class CoordinationSolver(Solver):
 #                     if abs(int(repaired_float_answers[i]) - repaired_float_answers[i]) > eps:
 #                         repaired_float_answers[i] = None
 #                 except Exception as e:
-#                     self.logger.info(f"Could not parse {output} after repair, with exception {e}.")
+#                     self.logger.info(f"Could not parse {output} after repair, with exception {e}")
 #                     pass
 #             global_float_answers += repaired_float_answers
             local_attempts = 0
@@ -312,7 +304,7 @@ class CoordinationSolver(Solver):
         self.logger.info(f"Taking the majority vote: global_float_answers: {global_float_answers}, answers: {answers}")
         self.logger.info(f"Model's generated answers are {answers}")
         if len(answers) == 0:
-            self.logger.info("No answers found, returning 0.0.")
+            self.logger.info("No answers found, returning 0.0")
             return 0.0
         else:
             self.logger.info("Answers found.")
@@ -332,7 +324,7 @@ class CoordinationSolver(Solver):
             try:
                 with self.tools['coder']:
                     model = self.tools['coder'].model
-                    choices = '\n'.join([f'( {chr(65 + i)} ) {answer}' for i, answer in enumerate(set(answers))]) # TODO: set may not work well with floats
+                    choices = '\n'.join([f'( {chr(65 + i)} ) {answer}' for i, answer in enumerate(set(answers))]) # TODO: set() may not work well with floats
                     prompt = f"""Below is a problem description. Which answer do you think is best?
 
 Problem Description: 

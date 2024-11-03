@@ -1,3 +1,4 @@
+import typing
 from aimo_gaz.solver.abs_solver_and_tool import Tool
 from aimo_gaz.models.abs_model import Model
 from aimo_gaz.prompts.prompt import Prompt
@@ -15,7 +16,7 @@ class LLMGuesserTool(Tool):
         self.inference_kwargs["stop"] = []
         self.history = []
 
-    def solve_intermediate(self, problem_description: str) -> str:
+    def solve_intermediate(self, problem_description: str) -> typing.Tuple[str, float]:
         if not self.model.is_loaded():
             self.model.__enter__()
         # Prompt the model for the plan
@@ -30,7 +31,7 @@ class LLMGuesserTool(Tool):
         generated_text = outs[0][0]
         self.history.append({"role": "assistant", "content": generated_text})
         self.logger.info(f"[LLM GUESSER] Guess generated: {generated_text}")
-        return f"{generated_text}"
+        return self.prompt.parse_response(f"{generated_text}")
 
     def reset(self):
         self.history = []
