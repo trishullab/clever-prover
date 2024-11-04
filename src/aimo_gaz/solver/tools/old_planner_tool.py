@@ -5,7 +5,7 @@ from aimo_gaz.models.gpt_model import GptModel
 from aimo_gaz.prompts.prompt import Prompt
 import logging
 
-class PlannerTool(Tool):
+class OldPlannerTool(Tool):
     def __init__(self, model: Model, prompt: Prompt, logger: logging.Logger = None, **inference_kwargs):
         assert model is not None, "model must be provided."
         assert prompt is not None, "prompt must be provided."
@@ -66,8 +66,8 @@ class PlannerTool(Tool):
         self.model.__exit__(exc_type, exc_val, exc_tb)
 
 if __name__ == "__main__":
-    # Test the PlannerTool class
-    from aimo_gaz.prompts.planner_prompt import PlannerPrompt
+    # Test the OldPlannerTool class
+    from aimo_gaz.prompts.old_planner_prompt import OldPlannerPrompt
     from aimo_gaz.utils.log_utils import setup_logger
     import time
     import os
@@ -117,16 +117,16 @@ if __name__ == "__main__":
         #     "speculative_model": "deepseek-ai/deepseek-coder-1.3b-instruct", "num_speculative_tokens": 5, "use_v2_block_manager": True
         # }
         # model = vLLMHarness.load_from_config(model_name_or_path, vllm_model_args, vllm_inference_args)
-        # prompt = PlannerPrompt(system_prompt="", example_prompt="")  # These are hard-coded in the class anyway
+        # prompt = OldPlannerPrompt(system_prompt="", example_prompt="")  # These are hard-coded in the class anyway
         # problem_description = "There exists a unique increasing geometric sequence of five 2-digit positive integers. What is their sum?"
-        # tool = PlannerTool(model, prompt)
+        # tool = OldPlannerTool(model, prompt)
         assert False
     else:
         # model = GptModel(model_name_or_path, model_logging_dir, **model_args)
         model = GptModel(model_name)
-        prompt = PlannerPrompt(system_prompt="", example_prompt="")  # These are hard-coded in the class anyway
+        prompt = OldPlannerPrompt(system_prompt="", example_prompt="")  # These are hard-coded in the class anyway
         problem_description = "There exists a unique increasing geometric sequence of five 2-digit positive integers. What is their sum?"
-        tool = PlannerTool(model, prompt, logger, **inference_args)
+        tool = OldPlannerTool(model, prompt, logger, **inference_args)
 
     with tool:
         is_solved = False

@@ -1,7 +1,7 @@
 tools:
-  planner: planner_tool_config.yaml
+  old_planner: old_planner_tool_config.yaml
   executor: execution_tool_config.yaml
-  coder: code_tool_config.yaml
+  old_coder: old_code_tool_config.yaml
 
 strategy: plan_code_exec_extract_last_maj_vote
 

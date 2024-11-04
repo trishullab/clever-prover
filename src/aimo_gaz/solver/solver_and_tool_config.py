@@ -71,14 +71,14 @@ from aimo_gaz.solver.test_solver import TestSolver
 from aimo_gaz.solver.abs_solver_and_tool import Solver, Tool
 from aimo_gaz.solver.vanilla_few_shot_solver import FewShotSolver as VanillaFewShotSolver
 from aimo_gaz.solver.coordination_solver import CoordinationSolver, CoordinationSolverStrategy
-from aimo_gaz.solver.tools.code_tool import CodeTool
-from aimo_gaz.solver.tools.planner_tool import PlannerTool
+from aimo_gaz.solver.tools.old_code_tool import OldCodeTool
+from aimo_gaz.solver.tools.old_planner_tool import OldPlannerTool
 from aimo_gaz.solver.tools.execution_tool import ExecutionTool
 from aimo_gaz.solver.tools.coordinator_tool import CoordinatorTool
 from aimo_gaz.solver.tools.llm_guesser_tool import LLMGuesserTool
 from aimo_gaz.models.gpt_model import GptModel
-from aimo_gaz.prompts.code_prompt import CodePrompt
-from aimo_gaz.prompts.planner_prompt import PlannerPrompt
+from aimo_gaz.prompts.old_code_prompt import OldCodePrompt
+from aimo_gaz.prompts.old_planner_prompt import OldPlannerPrompt
 from aimo_gaz.prompts.coordinator_prompt import CoordinatorPrompt
 from aimo_gaz.prompts.llm_guesser_prompt import LLMGuesserPrompt
 
@@ -87,8 +87,8 @@ GLOBAL_MODEL_CACHE = {}
 class PromptType(Enum):
     Concat = "Concat"
     CoTPrompt = "CoTPrompt"
-    CodePrompt = "CodePrompt"
-    PlannerPrompt = "PlannerPrompt"
+    OldCodePrompt = "OldCodePrompt"
+    OldPlannerPrompt = "OldPlannerPrompt"
     CoordinatorPrompt = "CoordinatorPrompt"
     LLMGuesserPrompt = "LLMGuesserPrompt"
 
@@ -99,8 +99,8 @@ class SolverOrToolType(Enum):
     TestSolver = "TestSolver"
     VanillaFewShotSolver = "VanillaFewShotSolver"
     CoordinationSolver = "CoordinationSolver"
-    CodeTool = "CodeTool"
-    PlannerTool = "PlannerTool"
+    OldCodeTool = "OldCodeTool"
+    OldPlannerTool = "OldPlannerTool"
     ExecutionTool = "ExecutionTool"
     CoordinatorTool = "CoordinatorTool"
     LLMGuesserTool = "LLMGuesserTool"
@@ -120,10 +120,10 @@ class PromptConfig:
             return ConcatPrompt(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
         elif self.prompt_type == PromptType.CoTPrompt:
             return CoTPrompt(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
-        elif self.prompt_type == PromptType.CodePrompt:
-            return CodePrompt(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
-        elif self.prompt_type == PromptType.PlannerPrompt:
-            return PlannerPrompt(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
+        elif self.prompt_type == PromptType.OldCodePrompt:
+            return OldCodePrompt(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
+        elif self.prompt_type == PromptType.OldPlannerPrompt:
+            return OldPlannerPrompt(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
         elif self.prompt_type == PromptType.CoordinatorPrompt:
             return CoordinatorPrompt(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
         elif self.prompt_type == PromptType.LLMGuesserPrompt:
@@ -194,7 +194,7 @@ class SolverOrToolConfig:
             prompt = self.prompt_config.get_prompt()
             inference_settings_dict = self.inference_settings.to_dict()
             return VanillaFewShotSolver(model, prompt, logger, **inference_settings_dict)
-        elif self.solver_or_tool_type == SolverOrToolType.CodeTool:
+        elif self.solver_or_tool_type == SolverOrToolType.OldCodeTool:
             if self.model_settings.name_or_path not in GLOBAL_MODEL_CACHE:
                 if self.model_settings.use_vllm:
                     vllm_model = LLM(self.model_settings.name_or_path, **self.model_settings.vllm_model_args)
@@ -211,8 +211,8 @@ class SolverOrToolConfig:
             else:
                 model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
             prompt = self.prompt_config.get_prompt()
-            return CodeTool(model, prompt, logger, **self.inference_settings.to_dict())
-        elif self.solver_or_tool_type == SolverOrToolType.PlannerTool:
+            return OldCodeTool(model, prompt, logger, **self.inference_settings.to_dict())
+        elif self.solver_or_tool_type == SolverOrToolType.OldPlannerTool:
             if self.model_settings.name_or_path not in GLOBAL_MODEL_CACHE:
                 if self.model_settings.use_vllm:
                     vllm_model = LLM(self.model_settings.name_or_path, **self.model_settings.vllm_model_args)
@@ -229,7 +229,7 @@ class SolverOrToolConfig:
             else:
                 model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
             prompt = self.prompt_config.get_prompt()
-            return PlannerTool(model, prompt, logger, **self.inference_settings.to_dict())
+            return OldPlannerTool(model, prompt, logger, **self.inference_settings.to_dict())
         elif self.solver_or_tool_type == SolverOrToolType.ExecutionTool:
             return ExecutionTool(logger, **self.solver_or_tool_args)
         elif self.solver_or_tool_type == SolverOrToolType.CoordinatorTool:

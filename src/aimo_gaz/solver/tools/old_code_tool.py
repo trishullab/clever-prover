@@ -5,7 +5,7 @@ from aimo_gaz.prompts.prompt import Prompt
 import logging
 import typing
 
-class CodeTool(Tool):
+class OldCodeTool(Tool):
     def __init__(self, model: Model, prompt: Prompt, logger: logging.Logger = None, **inference_kwargs):
         assert model is not None, "model must be provided."
         assert prompt is not None, "prompt must be provided."
@@ -75,10 +75,10 @@ class CodeTool(Tool):
         self.model.__exit__(exc_type, exc_val, exc_tb)
 
 if __name__ == "__main__":
-    # Test the PlannerTool class
+    # Test the OldCodeTool class
     import time
     import os
-    from aimo_gaz.prompts.code_prompt import CodePrompt
+    from aimo_gaz.prompts.old_code_prompt import OldCodePrompt
     from aimo_gaz.utils.log_utils import setup_logger
 
     time_str = time.strftime("%Y%m%d-%H%M%S")
@@ -122,8 +122,8 @@ if __name__ == "__main__":
     }
     # model = Model(model_name_or_path, model_logging_dir, **model_args)
     model = GptModel(model_name)
-    prompt = CodePrompt(system_prompt="", example_prompt="") # These are hard-coded in the class anyway
-    tool = CodeTool(model, prompt, logger, **inference_args)
+    prompt = OldCodePrompt(system_prompt="", example_prompt="") # These are hard-coded in the class anyway
+    tool = OldCodeTool(model, prompt, logger, **inference_args)
     problem_description = "Find the value of x in the equation 2x + 3 = 7."
     with tool:
         is_solved = False

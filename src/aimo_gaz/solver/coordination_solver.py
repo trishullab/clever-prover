@@ -6,8 +6,8 @@ import random
 import copy
 from sympy import *
 from aimo_gaz.solver.abs_solver_and_tool import Solver, Tool
-from aimo_gaz.solver.tools.planner_tool import PlannerTool
-from aimo_gaz.solver.tools.code_tool import CodeTool
+from aimo_gaz.solver.tools.old_planner_tool import OldPlannerTool
+from aimo_gaz.solver.tools.old_code_tool import OldCodeTool
 from aimo_gaz.solver.tools.execution_tool import ExecutionTool
 from aimo_gaz.solver.tools.coordinator_tool import CoordinatorTool
 from aimo_gaz.solver.tools.llm_guesser_tool import LLMGuesserTool
@@ -150,17 +150,17 @@ class CoordinationSolver(Solver):
 
     def _plan_code_exec_extract_last_maj_vote(self, problem_description: str, time_allowed: int) -> float:
         assert len(self.tools) > 0, "No tools provided."
-        assert "planner" in self.tools, "Planner tool not provided."
-        assert "coder" in self.tools, "Coder tool not provided."
+        assert "old_planner" in self.tools, "OldPlanner tool not provided."
+        assert "old_coder" in self.tools, "OldCoder tool not provided."
         assert "executor" in self.tools, "Executor tool not provided."
-        planner: PlannerTool = self.tools["planner"]
-        coder: CodeTool = self.tools["coder"]
+        old_planner: OldPlannerTool = self.tools["old_planner"]
+        old_coder: OldCodeTool = self.tools["old_coder"]
         executor: ExecutionTool = self.tools["executor"]
         global_attempts, local_attempts = 0, 0
         # total_repairs = 0
         codes = []
         global_float_answers = []
-        PROBLEM_STARTING_TIME, PLANNER_AVG_TIME, CODER_AVG_TIME, REPAIR_AVG_TIME = time.time(), 0, 0, 0
+        PROBLEM_STARTING_TIME, OLD_PLANNER_AVG_TIME, OLD_CODER_AVG_TIME, REPAIR_AVG_TIME = time.time(), 0, 0, 0
         ATTEMPTS_TO_TRY = self.num_attempts
         TIME_LEFT = True
         CURR_TIME_LEFT = time_allowed
@@ -169,9 +169,9 @@ class CoordinationSolver(Solver):
         while CURR_TIME_LEFT > 30 and TIME_LEFT and outer_attempts_to_try > 0:
             outer_attempts_to_try -= 1
             curr_time = time.time()
-            # ATTEMPTS_TO_TRY = math.floor(CURR_TIME_LEFT/(PLANNER_AVG_TIME + CODER_AVG_TIME + 10)) if global_attempts != 0 else min(self.num_attempts, math.floor(CURR_TIME_LEFT/(PLANNER_AVG_TIME + CODER_AVG_TIME + 5)))
+            # ATTEMPTS_TO_TRY = math.floor(CURR_TIME_LEFT/(OLD_PLANNER_AVG_TIME + OLD_CODER_AVG_TIME + 10)) if global_attempts != 0 else min(self.num_attempts, math.floor(CURR_TIME_LEFT/(OLD_PLANNER_AVG_TIME + OLD_CODER_AVG_TIME + 5)))
             ATTEMPTS_TO_TRY = 5
-            self.logger.info(f"Giving {ATTEMPTS_TO_TRY} attempts on current problem. Time left {CURR_TIME_LEFT} with average call times planner: {PLANNER_AVG_TIME}, coder: {CODER_AVG_TIME}, repairer: {REPAIR_AVG_TIME}")
+            self.logger.info(f"Giving {ATTEMPTS_TO_TRY} attempts on current problem. Time left {CURR_TIME_LEFT} with average call times old_planner: {OLD_PLANNER_AVG_TIME}, old_coder: {OLD_CODER_AVG_TIME}, repairer: {REPAIR_AVG_TIME}")
             if ATTEMPTS_TO_TRY <= 0:
                 TIME_LEFT = False
                 break
@@ -179,13 +179,13 @@ class CoordinationSolver(Solver):
                 try:
                     # Plan
                     plan_start_time = time.time()
-                    plan = planner.solve_intermediate(problem_description)
-                    PLANNER_AVG_TIME = (PLANNER_AVG_TIME + (time.time() - plan_start_time)) if global_attempts == 0 else (PLANNER_AVG_TIME * global_attempts + (time.time() - plan_start_time))/(global_attempts + 1)
+                    plan = old_planner.solve_intermediate(problem_description)
+                    OLD_PLANNER_AVG_TIME = (OLD_PLANNER_AVG_TIME + (time.time() - plan_start_time)) if global_attempts == 0 else (OLD_PLANNER_AVG_TIME * global_attempts + (time.time() - plan_start_time))/(global_attempts + 1)
                     # Code
-                    coder.inference_kwargs["n"] = self.num_code_gens
-                    coder_start_time = time.time()
-                    codes_gen = coder.solve_intermediate(problem_description=problem_description, plan=plan)
-                    CODER_AVG_TIME = (CODER_AVG_TIME + (time.time() - coder_start_time)) if global_attempts == 0 else (CODER_AVG_TIME * global_attempts + (time.time() - coder_start_time))/(global_attempts + 1)
+                    old_coder.inference_kwargs["n"] = self.num_code_gens
+                    old_coder_start_time = time.time()
+                    codes_gen = old_coder.solve_intermediate(problem_description=problem_description, plan=plan)
+                    OLD_CODER_AVG_TIME = (OLD_CODER_AVG_TIME + (time.time() - old_coder_start_time)) if global_attempts == 0 else (OLD_CODER_AVG_TIME * global_attempts + (time.time() - old_coder_start_time))/(global_attempts + 1)
                     if isinstance(codes_gen, str):
                         codes_gen = [codes_gen]
                     codes.extend(codes_gen)
@@ -193,15 +193,15 @@ class CoordinationSolver(Solver):
                     self.logger.info(f"Exception encountered in planning and coding phase: {e}")
                 local_attempts += 1
                 global_attempts += 1
-                planner.reset()
-                coder.reset()
+                old_planner.reset()
+                old_coder.reset()
                 time_now = time.time()
                 CURR_TIME_LEFT = math.floor(CURR_TIME_LEFT - (time_now - curr_time))
                 curr_time = time_now
                 self.logger.info(f"Time left after planning and coding is {CURR_TIME_LEFT}")
             
             # Execute
-            executor.history = copy.deepcopy(coder.history)
+            executor.history = copy.deepcopy(old_coder.history)
             outputs = executor.solve_intermediate_parallel(codes)
             # Extract the last output
             last_outputs = [executor.extract_last_output(output) for output in outputs]
@@ -227,10 +227,10 @@ class CoordinationSolver(Solver):
 #             invalid_idxs = [i for i, answer in enumerate(float_answers) if answer is None]
 #             fixed_codes = []
 #             self.logger.info(f"Running the repair model on {len(invalid_idxs)} bad codes, indices are {invalid_idxs} and number of outputs is {len(last_outputs)}")
-#             with self.tools['coder']: 
+#             with self.tools['old_coder']: 
 #                 for idx in invalid_idxs: 
 #                     try:
-#                         model = self.tools['coder'].model
+#                         model = self.tools['old_coder'].model
 #                         prompt = f"""User: Below is a math problem that has an integer solution and a python program which returns an output which is not the final solution. 
 # Solve the problem by writing a python program using sympy, you can use the result of the previous program. 
 # Make sure you code runs correctly! The answer to the problem should be an integer in range 0 to 999.
@@ -253,7 +253,7 @@ class CoordinationSolver(Solver):
 # """
 #                         repair_start_time = time.time()
 #                         self.logger.info(f"[REPAIR] Prompting the model with:\n{prompt}")
-#                         response = model.generate(prompt, **self.tools['coder'].inference_kwargs) # TODO: Does this augment the history?
+#                         response = model.generate(prompt, **self.tools['old_coder'].inference_kwargs) # TODO: Does this augment the history?
 #                         REPAIR_AVG_TIME =  (REPAIR_AVG_TIME + time.time() - repair_start_time) if total_repairs == 0 else (total_repairs * REPAIR_AVG_TIME + time.time() - repair_start_time) / (1 + total_repairs)
 #                         total_repairs += 1
 #                         # uses the same stop tokens so we should be good on that end
@@ -322,8 +322,8 @@ class CoordinationSolver(Solver):
                 self.logger.info(f"Will not run pick answer, as the majority vote is {answer}")
                 return answer
             try:
-                with self.tools['coder']:
-                    model = self.tools['coder'].model
+                with self.tools['old_coder']:
+                    model = self.tools['old_coder'].model
                     choices = '\n'.join([f'( {chr(65 + i)} ) {answer}' for i, answer in enumerate(set(answers))]) # TODO: set() may not work well with floats
                     prompt = f"""Below is a problem description. Which answer do you think is best?
 
@@ -340,7 +340,7 @@ Choices:
                         },
                     ]
                     self.logger.info(f"[PICK ANSWER] Prompting the model with:\n{prompt}")
-                    response = model.generate(prompt, **self.tools['coder'].inference_kwargs)
+                    response = model.generate(prompt, **self.tools['old_coder'].inference_kwargs)
                     outs = model.parse_out(response)
                     self.logger.info(f"Picked answer:\n {outs[0][0]}")
                     most_common_answer = outs[0][0].split("\\boxed{")

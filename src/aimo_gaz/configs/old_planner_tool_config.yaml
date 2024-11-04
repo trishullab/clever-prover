@@ -4,10 +4,10 @@ defaults:
   - prompt_config: cot_prompt_config # Name of training settings file
   - override hydra/job_logging: 'disabled'
 
-solver_or_tool_type: PlannerTool
+solver_or_tool_type: OldPlannerTool
 solver_or_tool_args:
 prompt_config:
-  prompt_type: PlannerPrompt
+  prompt_type: OldPlannerPrompt
 inference_settings:
   stop:
     - '[END PROCEDURE]'

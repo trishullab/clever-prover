@@ -1,7 +1,7 @@
 from aimo_gaz.prompts.prompt import ConcatPrompt
 import copy
 
-class PlannerPrompt(ConcatPrompt):
+class OldPlannerPrompt(ConcatPrompt):
     def __init__(self, system_prompt_path: str = None, example_prompt_path: str = None, system_prompt: str = None,
                  example_prompt: str = None, append_system_prompt_after_every_message: bool = False):
         super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt,
@@ -51,7 +51,7 @@ class PlannerPrompt(ConcatPrompt):
 
 
 if __name__ == "__main__":
-    prompter = PlannerPrompt()
+    prompter = OldPlannerPrompt()
     print(prompter.get_prompt([
         {"role": "user", "content": "What is the sum of 2 and 2?"},
         # {"role": "assistant", "content": "The sum of 2 and 2 is 4"},
