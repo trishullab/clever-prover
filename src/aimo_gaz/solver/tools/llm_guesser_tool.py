@@ -19,7 +19,7 @@ class LLMGuesserTool(Tool):
     def solve_intermediate(self, problem_description: str) -> typing.Tuple[str, float]:
         if not self.model.is_loaded():
             self.model.__enter__()
-        # Prompt the model for the plan
+        # Prompt the model for the guess
         message = {"role": "user", "content": problem_description}
         self.history.append(message)
         prompt = self.prompt.get_prompt(self.history)

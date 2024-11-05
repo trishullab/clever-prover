@@ -12,7 +12,8 @@ Problem Statement: {}
 
 You are the coordinator in charge of solving this problem. You have several tools at your disposal to help you solve it. Your tools are:
 
-(1) llm_guesser: Query an LLM to guess the answer to the problem.
+(1) planner: Query an LLM to generate the first few steps of a plan for solving the problem.
+(2) llm_guesser: Query an LLM to guess the answer to the problem.
 
 If you think one of the previous tool outputs contains the correct answer, you also have the option to globally guess that answer. Simply output "[BEGIN GLOBAL GUESS]" before the numerical answer and "[END GLOBAL GUESS]" after it.
 
@@ -32,11 +33,22 @@ Please output which tool you would like to use next or, if you believe the probl
     def parse_response(self, response: str) -> str: # TODO: find a better way to do this and parse the guessed float within this method (maybe use enums with associated data)
         if "[BEGIN GLOBAL GUESS]" in response and "[END GLOBAL GUESS]" in response:
             # this does not include the '[END GLOBAL GUESS]'
-            return response[response.find("[BEGIN GLOBAL GUESS]"):response.find("[END GLOBAL GUESS]")]
-        if "llm_guesser" in response:
-            return "llm_guesser"
-        if "1" in response:
-            return "llm_guesser"
+            return response[response.rfind("[BEGIN GLOBAL GUESS]"):response.rfind("[END GLOBAL GUESS]")]
+        
+        tools = ["planner", "llm_guesser"]
+
+        tool_rfinds = {}
+        for tool in tools:
+            tool_rfinds[tool] = response.rfind(tool)
+        if max(tool_rfinds.values()) > -1:
+            return max(tool_rfinds, key=tool_rfinds.get)
+        
+        ind_rfinds = {}
+        for ind in range(len(tools)):
+            ind_rfinds[tools[ind]] = response.rfind(str(ind+1))
+        if max(ind_rfinds.values()) > -1:
+            return max(ind_rfinds, key=ind_rfinds.get)
+        
         return None
 
 

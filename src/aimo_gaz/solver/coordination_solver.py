@@ -94,10 +94,12 @@ class CoordinationSolver(Solver):
         assert len(self.tools) > 0, "No tools provided."
         assert "llm_guesser" in self.tools, "LLM guesser tool not provided."
 
-        llm_guesser: LLMGuesserTool = self.tools["llm_guesser"]
         coordinator: CoordinatorTool = self.tools["coordinator"]
+        planner: LLMGuesserTool = self.tools["planner"]
+        llm_guesser: LLMGuesserTool = self.tools["llm_guesser"]
 
         global_guess_float = None
+        global_plan = None
 
         MAX_LOOPS = 5
         loops_left = MAX_LOOPS
@@ -123,6 +125,15 @@ class CoordinationSolver(Solver):
                     end_loop = True
                 else:
                     self._log_and_add_to_history(f"Coordinator output global guess could not be parsed as float: {tool_str}")
+            elif tool_str == "planner":
+                try:
+                    global_plan = planner.solve_intermediate(problem_description)
+
+                    self._log_and_add_to_history(f"Planner generated plan:\n{global_plan}")
+                except Exception as e:
+                    self._log_and_add_to_history(f"Exception encountered in planner: {e}")
+
+                planner.reset()
             elif tool_str == "llm_guesser":
                 try:
                     guess_str, guess_float = llm_guesser.solve_intermediate(problem_description)
