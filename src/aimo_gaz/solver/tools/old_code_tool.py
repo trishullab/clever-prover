@@ -19,9 +19,9 @@ class OldCodeTool(Tool):
     def solve_intermediate(self, problem_description: str, plan: str = None) -> typing.Union[str, typing.List[str]]:
         if not self.model.is_loaded():
             self.model.__enter__()
-        # Prompt the model for the plan
+        # Prompt the model for the code
         if problem_description is not None and plan is not None:
-            assert self.history == [], "History not empty (Code Solver)"
+            assert self.history == [], "History not empty (Code Tool)"
             message_problem = {"role": "user", "content": problem_description}
             message_plan = {"role": "user", "content": plan}
             self.history.append(message_problem)
@@ -53,16 +53,17 @@ class OldCodeTool(Tool):
                 #     generated_texts.append(f"{gen_text}")
                 actual_code_ind = gen_text.find("```python")
                 if actual_code_ind != -1:
-                    gen_text = gen_text[actual_code_ind + len("```python"):].strip()
+                    gen_text = gen_text[(actual_code_ind + len("```python")):]
+                gen_text = gen_text.strip()
                 generated_texts.append(f"{gen_text}")
-                self.logger.info(f"[CODE TOOL] Generated text:\n{gen_text}")
+                self.logger.info(f"[CODE TOOL] Generated code:\n{gen_text}")
         return generated_texts
 
-    def add_response_to_history(self, generated_text: str):
-        if self.history[-1]['role'] == "assistant":
-            self.history[-1]['content'] += generated_text
-        else:
-            self.history.append({"role": "assistant", "content": generated_text})
+    # def add_response_to_history(self, generated_text: str):
+    #     if self.history[-1]['role'] == "assistant":
+    #         self.history[-1]['content'] += generated_text
+    #     else:
+    #         self.history.append({"role": "assistant", "content": generated_text})
 
     def reset(self):
         self.history = []

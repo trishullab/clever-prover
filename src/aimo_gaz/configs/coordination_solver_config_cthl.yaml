@@ -1,6 +1,8 @@
 tools:
   coordinator: coordinator_tool_config.yaml
   planner: planner_tool_config.yaml
+  coder: code_tool_config.yaml
+  executor: execution_tool_config.yaml
   llm_guesser: llm_guesser_tool_config.yaml
 
 strategy: coordinator_tool_history_loop

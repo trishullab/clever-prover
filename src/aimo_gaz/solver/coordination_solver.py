@@ -10,6 +10,8 @@ from aimo_gaz.solver.tools.old_planner_tool import OldPlannerTool
 from aimo_gaz.solver.tools.old_code_tool import OldCodeTool
 from aimo_gaz.solver.tools.execution_tool import ExecutionTool
 from aimo_gaz.solver.tools.coordinator_tool import CoordinatorTool
+from aimo_gaz.solver.tools.planner_tool import PlannerTool
+from aimo_gaz.solver.tools.code_tool import CodeTool
 from aimo_gaz.solver.tools.llm_guesser_tool import LLMGuesserTool
 from aimo_gaz.utils import string_utils
 from enum import Enum
@@ -79,7 +81,7 @@ class CoordinationSolver(Solver):
     #             self._cloned_exec_tool.reset()
     #             outs = self._cloned_exec_tool.solve_intermediate_parallel([f"print(simplify('{output}'))"])
     #             simpl_output = self._cloned_exec_tool.extract_last_output(outs[0])
-    #             self.logger.info(f"Sympy simplified output is {simpl_output}")
+    #             self.logger.info(f"SymPy simplified output is {simpl_output}")
     #             return float(simpl_output)
     #         except Exception as e:
     #             self.logger.info(f"Could not parse {output} as sympy expression with exception {e}")
@@ -95,7 +97,9 @@ class CoordinationSolver(Solver):
         assert "llm_guesser" in self.tools, "LLM guesser tool not provided."
 
         coordinator: CoordinatorTool = self.tools["coordinator"]
-        planner: LLMGuesserTool = self.tools["planner"]
+        planner: PlannerTool = self.tools["planner"]
+        coder: CodeTool = self.tools["coder"]
+        executor: ExecutionTool = self.tools["executor"]
         llm_guesser: LLMGuesserTool = self.tools["llm_guesser"]
 
         global_guess_float = None
@@ -119,12 +123,15 @@ class CoordinationSolver(Solver):
 
             if coordinator_error:
                 pass
+
             elif tool_str[:len("[BEGIN GLOBAL GUESS]")] == "[BEGIN GLOBAL GUESS]":
-                global_guess_float = string_utils.parse_float(tool_str[len("[BEGIN GLOBAL GUESS]"):])
-                if global_guess_float is not None:
+                guess_float = string_utils.parse_float(tool_str[len("[BEGIN GLOBAL GUESS]"):])
+                if guess_float is not None:
+                    global_guess_float = guess_float
                     end_loop = True
                 else:
                     self._log_and_add_to_history(f"Coordinator output global guess could not be parsed as float: {tool_str}")
+
             elif tool_str == "planner":
                 try:
                     global_plan = planner.solve_intermediate(problem_description)
@@ -134,18 +141,45 @@ class CoordinationSolver(Solver):
                     self._log_and_add_to_history(f"Exception encountered in planner: {e}")
 
                 planner.reset()
+
+            elif tool_str == "coder":
+                code = None
+                try:
+                    code = coder.solve_intermediate(problem_description, plan=global_plan)
+                except Exception as e:
+                    self._log_and_add_to_history(f"Exception encountered in coder: {e}")
+                
+                if code is not None:
+                    try:
+                        output = executor.solve_intermediate(code) # TODO: maybe switch to multiple code generations and parallel execution
+
+                        last_output = executor.extract_last_output(output)
+                        output_float = string_utils.parse_float(last_output)
+                        if output_float is not None:
+                            self._log_and_add_to_history(f"Code executor guessed: {last_output}")
+                            global_guess_float = output_float
+                        else:
+                            self._log_and_add_to_history(f"Code executor could not be parsed as float: {last_output}")
+                    except Exception as e:
+                        self._log_and_add_to_history(f"Exception encountered in code executor: {e}")
+                
+                coder.reset()
+                executor.reset()
+
             elif tool_str == "llm_guesser":
                 try:
                     guess_str, guess_float = llm_guesser.solve_intermediate(problem_description)
 
                     if guess_float is not None:
                         self._log_and_add_to_history(f"LLM guesser guessed: {guess_str}")
+                        global_guess_float = guess_float
                     else:
                         self._log_and_add_to_history(f"LLM guesser output could not be parsed as float: {guess_str}")
                 except Exception as e:
                     self._log_and_add_to_history(f"Exception encountered in LLM guesser: {e}")
 
                 llm_guesser.reset()
+
             else:
                 self._log_and_add_to_history(f"Coordinator-chosen tool '{tool_str}' is invalid.")
             
@@ -171,7 +205,7 @@ class CoordinationSolver(Solver):
         # total_repairs = 0
         codes = []
         global_float_answers = []
-        PROBLEM_STARTING_TIME, OLD_PLANNER_AVG_TIME, OLD_CODER_AVG_TIME, REPAIR_AVG_TIME = time.time(), 0, 0, 0
+        OLD_PLANNER_AVG_TIME, OLD_CODER_AVG_TIME, REPAIR_AVG_TIME = 0, 0, 0
         ATTEMPTS_TO_TRY = self.num_attempts
         TIME_LEFT = True
         CURR_TIME_LEFT = time_allowed
@@ -238,14 +272,14 @@ class CoordinationSolver(Solver):
 #             invalid_idxs = [i for i, answer in enumerate(float_answers) if answer is None]
 #             fixed_codes = []
 #             self.logger.info(f"Running the repair model on {len(invalid_idxs)} bad codes, indices are {invalid_idxs} and number of outputs is {len(last_outputs)}")
-#             with self.tools['old_coder']: 
-#                 for idx in invalid_idxs: 
+#             with self.tools['old_coder']:
+#                 for idx in invalid_idxs:
 #                     try:
 #                         model = self.tools['old_coder'].model
 #                         prompt = f"""User: Below is a math problem that has an integer solution and a python program which returns an output which is not the final solution. 
 # Solve the problem by writing a python program using sympy, you can use the result of the previous program. 
 # Make sure you code runs correctly! The answer to the problem should be an integer in range 0 to 999.
-# Problem Description: 
+# Problem Description:
 # {problem_description}
 
 # ```python
@@ -338,7 +372,7 @@ class CoordinationSolver(Solver):
                     choices = '\n'.join([f'( {chr(65 + i)} ) {answer}' for i, answer in enumerate(set(answers))]) # TODO: set() may not work well with floats
                     prompt = f"""Below is a problem description. Which answer do you think is best?
 
-Problem Description: 
+Problem Description:
 {problem_description}
 
 Choices:

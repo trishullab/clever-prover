@@ -13,7 +13,8 @@ Problem Statement: {}
 You are the coordinator in charge of solving this problem. You have several tools at your disposal to help you solve it. Your tools are:
 
 (1) planner: Query an LLM to generate the first few steps of a plan for solving the problem.
-(2) llm_guesser: Query an LLM to guess the answer to the problem.
+(2) coder: Query an LLM to generate code to solve the problem and then run the code. The most recently generated plan, if one exists, will be passed to the LLM coder.
+(3) llm_guesser: Query an LLM to guess the answer to the problem.
 
 If you think one of the previous tool outputs contains the correct answer, you also have the option to globally guess that answer. Simply output "[BEGIN GLOBAL GUESS]" before the numerical answer and "[END GLOBAL GUESS]" after it.
 
@@ -35,7 +36,7 @@ Please output which tool you would like to use next or, if you believe the probl
             # this does not include the '[END GLOBAL GUESS]'
             return response[response.rfind("[BEGIN GLOBAL GUESS]"):response.rfind("[END GLOBAL GUESS]")]
         
-        tools = ["planner", "llm_guesser"]
+        tools = ["planner", "coder", "llm_guesser"]
 
         tool_rfinds = {}
         for tool in tools:
