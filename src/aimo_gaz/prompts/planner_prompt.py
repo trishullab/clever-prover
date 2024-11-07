@@ -11,7 +11,9 @@ class PlannerPrompt(ConcatPrompt):
 
 Problem Statement: {}
 
-Write for me the first couple steps you would do to solve this problem.  Only write the first couple steps please.""" # TODO: add [START] and [END] scaffolding
+Write for me the first couple steps you would do to solve this problem. Only write the first couple steps please.
+
+Please begin your response with: '0. I would break down the problem into simpler steps, this can be done by the following:'""" # TODO: add [START] and [END] scaffolding
 
     def get_prompt(self, messages: list[dict[str, str]]) -> str:
         assert messages[-1]['role'] == 'user'

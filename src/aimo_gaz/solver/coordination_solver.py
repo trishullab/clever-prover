@@ -105,7 +105,7 @@ class CoordinationSolver(Solver):
         global_guess_float = None
         global_plan = None
 
-        MAX_LOOPS = 5
+        MAX_LOOPS = 10
         loops_left = MAX_LOOPS
         end_loop = False
         while loops_left > 0 and not end_loop:

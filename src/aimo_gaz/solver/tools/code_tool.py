@@ -1,4 +1,3 @@
-import typing
 from aimo_gaz.solver.abs_solver_and_tool import Tool
 from aimo_gaz.models.abs_model import Model
 from aimo_gaz.prompts.prompt import Prompt
@@ -13,7 +12,7 @@ class CodeTool(Tool):
         self.inference_kwargs = inference_kwargs
         self.logger = logger
         self.inference_kwargs["n"] = 1 # Only one response is needed from code tool
-        self.inference_kwargs["stop"] = ["[END CODE]"]
+        self.inference_kwargs["stop"] = []
         self.history = []
 
     def solve_intermediate(self, problem_description: str, plan: str) -> str:
