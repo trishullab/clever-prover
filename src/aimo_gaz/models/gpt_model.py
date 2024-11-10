@@ -49,7 +49,7 @@ if __name__ == '__main__':
     import os
     import numpy as np
     import json
-    model_name = "gpt-4o"
+    model_name = "gpt-4o-mini"
     model = GptModel(model_name)
     main_prompt = "Do simple math problems (Answer only the number and use '[END]' to finish the response):\nQuestion: 2 + 2\nAnswer: 4\n[END]"
     with model:

@@ -159,7 +159,7 @@ class CoordinationSolver(Solver):
                             self._log_and_add_to_history(f"Code executor guessed: {last_output}")
                             global_guess_float = output_float
                         else:
-                            self._log_and_add_to_history(f"Code executor could not be parsed as float: {last_output}")
+                            self._log_and_add_to_history(f"Code executor could not be parsed as float: {last_output}") # TODO: output something different when there's a code error
                     except Exception as e:
                         self._log_and_add_to_history(f"Exception encountered in code executor: {e}")
                 

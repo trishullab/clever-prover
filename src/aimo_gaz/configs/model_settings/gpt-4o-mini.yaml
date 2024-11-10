@@ -1,0 +1,3 @@
+name_or_path: gpt-4o-mini
+logging_dir: <AIMO_GAZ_ROOT>/.logs/model
+use_vllm: False

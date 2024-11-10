@@ -89,7 +89,7 @@ if __name__ == "__main__":
     logger = setup_logger("aimo_gaz", f".logs/{time_str}/code_tool_test.log")
 
     # model_name_or_path = "deepseek-ai/deepseek-coder-1.3b-instruct"
-    model_name = "gpt-4o"
+    model_name = "gpt-4o-mini"
     # model_logging_dir = ".logs/model"
     # model_args = {
     #     "no_init_eval": True,

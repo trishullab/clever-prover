@@ -78,7 +78,7 @@ if __name__ == "__main__":
     logger = setup_logger("aimo_gaz", f".logs/{time_str}/planner_tool_test.log")
 
     # model_name_or_path = "deepseek-ai/deepseek-math-7b-rl" # "deepseek-ai/deepseek-math-7b-rl" #"deepseek-ai/deepseek-coder-1.3b-instruct"
-    model_name = "gpt-4o"
+    model_name = "gpt-4o-mini"
     # model_logging_dir = ".logs/model"
 
     # model_args = {
