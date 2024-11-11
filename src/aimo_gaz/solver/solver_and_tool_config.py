@@ -3,8 +3,8 @@ import os
 import logging
 import typing
 import hydra
-from aimo_gaz.prompts.prompt import Prompt, ConcatPrompt
-from aimo_gaz.prompts.cot_prompt import CoTPrompt
+from aimo_gaz.prompters.prompter import Prompter, ConcatPrompter
+from aimo_gaz.prompters.cot_prompter import CoTPrompter
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
 from enum import Enum
@@ -48,7 +48,7 @@ class vLLMHarness(Model):
             elif k == 'num_return_sequences':
                 safe_sampling_params['n'] = v
             elif k == 'stop_tokens':
-                safe_sampling_params['stop'] = v#[model.get_tokenizer().convert_tokens_to_ids(x) for x in v if model.get_tokenizer().convert_tokens_to_ids(x) is not None]
+                safe_sampling_params['stop'] = v # [model.get_tokenizer().convert_tokens_to_ids(x) for x in v if model.get_tokenizer().convert_tokens_to_ids(x) is not None]
             else:
                 continue
 
@@ -79,24 +79,24 @@ from aimo_gaz.solver.tools.planner_tool import PlannerTool
 from aimo_gaz.solver.tools.code_tool import CodeTool
 from aimo_gaz.solver.tools.llm_guesser_tool import LLMGuesserTool
 from aimo_gaz.models.gpt_model import GptModel
-from aimo_gaz.prompts.old_code_prompt import OldCodePrompt
-from aimo_gaz.prompts.old_planner_prompt import OldPlannerPrompt
-from aimo_gaz.prompts.coordinator_prompt import CoordinatorPrompt
-from aimo_gaz.prompts.planner_prompt import PlannerPrompt
-from aimo_gaz.prompts.code_prompt import CodePrompt
-from aimo_gaz.prompts.llm_guesser_prompt import LLMGuesserPrompt
+from aimo_gaz.prompters.old_code_prompter import OldCodePrompter
+from aimo_gaz.prompters.old_planner_prompter import OldPlannerPrompter
+from aimo_gaz.prompters.coordinator_prompter import CoordinatorPrompter
+from aimo_gaz.prompters.planner_prompter import PlannerPrompter
+from aimo_gaz.prompters.code_prompter import CodePrompter
+from aimo_gaz.prompters.llm_guesser_prompter import LLMGuesserPrompter
 
 GLOBAL_MODEL_CACHE = {}
 
-class PromptType(Enum):
-    Concat = "Concat"
-    CoTPrompt = "CoTPrompt"
-    OldCodePrompt = "OldCodePrompt"
-    OldPlannerPrompt = "OldPlannerPrompt"
-    CoordinatorPrompt = "CoordinatorPrompt"
-    PlannerPrompt = "PlannerPrompt"
-    CodePrompt = "CodePrompt"
-    LLMGuesserPrompt = "LLMGuesserPrompt"
+class PrompterType(Enum):
+    ConcatPrompter = "ConcatPrompter"
+    CoTPrompter = "CoTPrompter"
+    OldCodePrompter = "OldCodePrompter"
+    OldPlannerPrompter = "OldPlannerPrompter"
+    CoordinatorPrompter = "CoordinatorPrompter"
+    PlannerPrompter = "PlannerPrompter"
+    CodePrompter = "CodePrompter"
+    LLMGuesserPrompter = "LLMGuesserPrompter"
 
     def __str__(self):
         return self.value
@@ -118,30 +118,30 @@ class SolverOrToolType(Enum):
 
 @dataclass_json
 @dataclass
-class PromptConfig:
-    prompt_type: PromptType
+class PrompterConfig:
+    prompter_type: PrompterType
     system_prompt_path: str
     example_prompt_path: str
     
-    def get_prompt(self) -> Prompt:
-        if self.prompt_type == PromptType.Concat:
-            return ConcatPrompt(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
-        elif self.prompt_type == PromptType.CoTPrompt:
-            return CoTPrompt(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
-        elif self.prompt_type == PromptType.OldCodePrompt:
-            return OldCodePrompt(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
-        elif self.prompt_type == PromptType.OldPlannerPrompt:
-            return OldPlannerPrompt(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
-        elif self.prompt_type == PromptType.CoordinatorPrompt:
-            return CoordinatorPrompt(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
-        elif self.prompt_type == PromptType.PlannerPrompt:
-            return PlannerPrompt(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
-        elif self.prompt_type == PromptType.CodePrompt:
-            return CodePrompt(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
-        elif self.prompt_type == PromptType.LLMGuesserPrompt:
-            return LLMGuesserPrompt(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
+    def get_prompter(self) -> Prompter:
+        if self.prompter_type == PrompterType.ConcatPrompter:
+            return ConcatPrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
+        elif self.prompter_type == PrompterType.CoTPrompter:
+            return CoTPrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
+        elif self.prompter_type == PrompterType.OldCodePrompter:
+            return OldCodePrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
+        elif self.prompter_type == PrompterType.OldPlannerPrompter:
+            return OldPlannerPrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
+        elif self.prompter_type == PrompterType.CoordinatorPrompter:
+            return CoordinatorPrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
+        elif self.prompter_type == PrompterType.PlannerPrompter:
+            return PlannerPrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
+        elif self.prompter_type == PrompterType.CodePrompter:
+            return CodePrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
+        elif self.prompter_type == PrompterType.LLMGuesserPrompter:
+            return LLMGuesserPrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
         else:
-            raise NotImplementedError(f"Prompt type {self.prompt_type} is not implemented.")
+            raise NotImplementedError(f"Prompter type {self.prompter_type} is not implemented.")
 
 @dataclass_json
 @dataclass
@@ -181,7 +181,7 @@ class InferenceSettings:
 class SolverOrToolConfig:
     model_settings: ModelSettings
     inference_settings: InferenceSettings
-    prompt_config: PromptConfig
+    prompter_config: PrompterConfig
     solver_or_tool_type: SolverOrToolType
     solver_or_tool_args: dict = field(default_factory=dict)
 
@@ -203,9 +203,9 @@ class SolverOrToolConfig:
             else:
                 model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
 
-            prompt = self.prompt_config.get_prompt()
+            prompter = self.prompter_config.get_prompter()
             inference_settings_dict = self.inference_settings.to_dict()
-            return VanillaFewShotSolver(model, prompt, logger, **inference_settings_dict)
+            return VanillaFewShotSolver(model, prompter, logger, **inference_settings_dict)
         elif self.solver_or_tool_type == SolverOrToolType.OldCodeTool:
             if self.model_settings.name_or_path not in GLOBAL_MODEL_CACHE:
                 if self.model_settings.use_vllm:
@@ -222,8 +222,8 @@ class SolverOrToolConfig:
                     GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
             else:
                 model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
-            prompt = self.prompt_config.get_prompt()
-            return OldCodeTool(model, prompt, logger, **self.inference_settings.to_dict())
+            prompter = self.prompter_config.get_prompter()
+            return OldCodeTool(model, prompter, logger, **self.inference_settings.to_dict())
         elif self.solver_or_tool_type == SolverOrToolType.OldPlannerTool:
             if self.model_settings.name_or_path not in GLOBAL_MODEL_CACHE:
                 if self.model_settings.use_vllm:
@@ -240,8 +240,8 @@ class SolverOrToolConfig:
                     GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
             else:
                 model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
-            prompt = self.prompt_config.get_prompt()
-            return OldPlannerTool(model, prompt, logger, **self.inference_settings.to_dict())
+            prompter = self.prompter_config.get_prompter()
+            return OldPlannerTool(model, prompter, logger, **self.inference_settings.to_dict())
         elif self.solver_or_tool_type == SolverOrToolType.ExecutionTool:
             return ExecutionTool(logger, **self.solver_or_tool_args)
         elif self.solver_or_tool_type == SolverOrToolType.CoordinatorTool:
@@ -250,32 +250,32 @@ class SolverOrToolConfig:
                 GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
             else:
                 model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
-            prompt = self.prompt_config.get_prompt()
-            return CoordinatorTool(model, prompt, logger, **self.inference_settings.to_dict())
+            prompter = self.prompter_config.get_prompter()
+            return CoordinatorTool(model, prompter, logger, **self.inference_settings.to_dict())
         elif self.solver_or_tool_type == SolverOrToolType.PlannerTool:
             if self.model_settings.name_or_path not in GLOBAL_MODEL_CACHE:
                 model = GptModel(self.model_settings.name_or_path)
                 GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
             else:
                 model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
-            prompt = self.prompt_config.get_prompt()
-            return PlannerTool(model, prompt, logger, **self.inference_settings.to_dict())
+            prompter = self.prompter_config.get_prompter()
+            return PlannerTool(model, prompter, logger, **self.inference_settings.to_dict())
         elif self.solver_or_tool_type == SolverOrToolType.CodeTool:
             if self.model_settings.name_or_path not in GLOBAL_MODEL_CACHE:
                 model = GptModel(self.model_settings.name_or_path)
                 GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
             else:
                 model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
-            prompt = self.prompt_config.get_prompt()
-            return CodeTool(model, prompt, logger, **self.inference_settings.to_dict())
+            prompter = self.prompter_config.get_prompter()
+            return CodeTool(model, prompter, logger, **self.inference_settings.to_dict())
         elif self.solver_or_tool_type == SolverOrToolType.LLMGuesserTool:
             if self.model_settings.name_or_path not in GLOBAL_MODEL_CACHE:
                 model = GptModel(self.model_settings.name_or_path)
                 GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
             else:
                 model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
-            prompt = self.prompt_config.get_prompt()
-            return LLMGuesserTool(model, prompt, logger, **self.inference_settings.to_dict())
+            prompter = self.prompter_config.get_prompter()
+            return LLMGuesserTool(model, prompter, logger, **self.inference_settings.to_dict())
         else:
             raise NotImplementedError(f"Solver type {self.solver_or_tool_type} is not implemented.")
 
@@ -340,12 +340,12 @@ def parse_solver_or_tool_config(cfg) -> typing.Union[SolverOrToolConfig, Coordin
         model_settings = ModelSettings(**cfg["model_settings"])
         inference_settings = InferenceSettings(**cfg["inference_settings"])
 
-        prompt_config = PromptConfig(**cfg["prompt_config"])
-        prompt_config.prompt_type = PromptType(cfg["prompt_config"]["prompt_type"])
+        prompter_config = PrompterConfig(**cfg["prompter_config"])
+        prompter_config.prompter_type = PrompterType(cfg["prompter_config"]["prompter_type"])
         solver_or_tool_config = SolverOrToolConfig(
             model_settings=model_settings,
             inference_settings=inference_settings,
-            prompt_config=prompt_config,
+            prompter_config=prompter_config,
             solver_or_tool_type=SolverOrToolType(cfg["solver_or_tool_type"]),
             solver_or_tool_args=cfg["solver_or_tool_args"])
         return solver_or_tool_config

@@ -1,7 +1,7 @@
-from aimo_gaz.prompts.prompt import ConcatPrompt
+from aimo_gaz.prompters.prompter import ConcatPrompter
 import copy
 
-class CodePrompt(ConcatPrompt):
+class CodePrompter(ConcatPrompter):
 
     def __init__(self, system_prompt_path: str = None, example_prompt_path: str = None, system_prompt: str = None,
                  example_prompt: str = None, append_system_prompt_after_every_message: bool = False):

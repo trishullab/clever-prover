@@ -1,6 +1,6 @@
-from aimo_gaz.prompts.prompt import ConcatPrompt
+from aimo_gaz.prompters.prompter import ConcatPrompter
 
-class CoordinatorPrompt(ConcatPrompt):
+class CoordinatorPrompter(ConcatPrompter):
     def __init__(self, system_prompt_path: str = None, example_prompt_path: str = None, system_prompt: str = None,
                  example_prompt: str = None, append_system_prompt_after_every_message: bool = False):
         super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt,

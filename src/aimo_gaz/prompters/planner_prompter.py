@@ -1,6 +1,6 @@
-from aimo_gaz.prompts.prompt import ConcatPrompt
+from aimo_gaz.prompters.prompter import ConcatPrompter
 
-class PlannerPrompt(ConcatPrompt):
+class PlannerPrompter(ConcatPrompter): # TODO: get rid of all ConcatPrompters?
 
     def __init__(self, system_prompt_path: str = None, example_prompt_path: str = None, system_prompt: str = None,
                  example_prompt: str = None, append_system_prompt_after_every_message: bool = False):
@@ -25,7 +25,7 @@ Please begin your response with: '0. I would break down the problem into simpler
 
 
 if __name__ == "__main__":
-    prompter = PlannerPrompt()
+    prompter = PlannerPrompter()
     print(prompter.get_prompt([
         {"role": "user", "content": "What is the sum of 2 and 2?"}
     ]))

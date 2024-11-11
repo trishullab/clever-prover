@@ -1,7 +1,7 @@
 import typing
 from abc import ABC, abstractmethod
 
-class Prompt(ABC):
+class Prompter(ABC):
     def __init__(self, 
         system_prompt_path: str = None, 
         example_prompt_path: str = None, 
@@ -80,7 +80,7 @@ class Prompt(ABC):
             with open(self.system_prompt_path, "r") as f:
                 self.system_prompt = f.read()
 
-class ConcatPrompt(Prompt):
+class ConcatPrompter(Prompter):
     def get_prompt(self, messages: typing.List[typing.Dict[str, str]]) -> str:
         full_prompt = self.system_prompt + "\n" + self.example_prompt
         for msg in messages:

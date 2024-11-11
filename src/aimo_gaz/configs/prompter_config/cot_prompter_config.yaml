@@ -1,0 +1,3 @@
+prompter_type: CoTPrompter
+system_prompt_path: <AIMO_GAZ_ROOT>/prompters/system_prompts/cot_system_prompt.md
+example_prompt_path: <AIMO_GAZ_ROOT>/prompters/example_prompts/cot_example_prompt.md

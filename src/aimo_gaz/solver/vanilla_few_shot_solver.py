@@ -1,15 +1,15 @@
 from aimo_gaz.solver.abs_solver_and_tool import Solver
 from aimo_gaz.models.abs_model import Model
-from aimo_gaz.prompts.prompt import Prompt
+from aimo_gaz.prompters.prompter import Prompter
 from collections import Counter
 import logging
 
 class FewShotSolver(Solver):
-    def __init__(self, model: Model, prompt: Prompt, logger: logging.Logger = None, **inference_kwargs):
+    def __init__(self, model: Model, prompter: Prompter, logger: logging.Logger = None, **inference_kwargs):
         assert model is not None, "model must be provided."
-        assert prompt is not None, "prompt must be provided."
+        assert prompter is not None, "prompt must be provided."
         self.model = model
-        self.prompt = prompt
+        self.prompter = prompter
         self.inference_kwargs = inference_kwargs
         self.logger = logger
         self.history = []
@@ -22,7 +22,7 @@ class FewShotSolver(Solver):
         # Prompt the model with the problem description
         message = {"role": "user", "content": problem_description}
         self.history.append(message)
-        prompt = self.prompt.get_prompt(self.history)
+        prompt = self.prompter.get_prompt(self.history)
         # Get the model's response
         response = None
         retry_count = 0
@@ -50,7 +50,7 @@ class FewShotSolver(Solver):
                 try:
                     self.logger.info(f"Generated text:\n{gen_text}")
                     self.logger.info(f"="*50)
-                    answer = self.prompt.parse_response(gen_text)
+                    answer = self.prompter.parse_response(gen_text)
                     try:
                         answer = float(answer)
                     except:

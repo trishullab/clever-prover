@@ -1,16 +1,16 @@
 from aimo_gaz.solver.abs_solver_and_tool import Tool
 from aimo_gaz.models.abs_model import Model
 from aimo_gaz.models.gpt_model import GptModel
-from aimo_gaz.prompts.prompt import Prompt
+from aimo_gaz.prompters.prompter import Prompter
 import logging
 import typing
 
 class OldCodeTool(Tool):
-    def __init__(self, model: Model, prompt: Prompt, logger: logging.Logger = None, **inference_kwargs):
+    def __init__(self, model: Model, prompter: Prompter, logger: logging.Logger = None, **inference_kwargs):
         assert model is not None, "model must be provided."
-        assert prompt is not None, "prompt must be provided."
+        assert prompter is not None, "prompt must be provided."
         self.model = model
-        self.prompt = prompt
+        self.prompter = prompter
         self.inference_kwargs = inference_kwargs
         self.logger = logger
         self.history = []
@@ -26,7 +26,7 @@ class OldCodeTool(Tool):
             message_plan = {"role": "user", "content": plan}
             self.history.append(message_problem)
             self.history.append(message_plan)
-        prompt = self.prompt.get_prompt(self.history)
+        prompt = self.prompter.get_prompt(self.history)
         self.logger.info(f"[CODE TOOL] Raw prompt used:\n{prompt}")
         # Get the model response
         response = None
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     # Test the OldCodeTool class
     import time
     import os
-    from aimo_gaz.prompts.old_code_prompt import OldCodePrompt
+    from aimo_gaz.prompters.old_code_prompter import OldCodePrompter
     from aimo_gaz.utils.log_utils import setup_logger
 
     time_str = time.strftime("%Y%m%d-%H%M%S")
@@ -123,7 +123,7 @@ if __name__ == "__main__":
     }
     # model = Model(model_name_or_path, model_logging_dir, **model_args)
     model = GptModel(model_name)
-    prompt = OldCodePrompt(system_prompt="", example_prompt="") # These are hard-coded in the class anyway
+    prompt = OldCodePrompter(system_prompt="", example_prompt="") # These are hard-coded in the class anyway
     tool = OldCodeTool(model, prompt, logger, **inference_args)
     problem_description = "Find the value of x in the equation 2x + 3 = 7."
     with tool:

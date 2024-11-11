@@ -35,7 +35,7 @@ class CoordinationSolver(Solver):
         self.tools = tools
         self.strategy = strategy
         self.coordination_kwargs = coordination_kwargs
-        self.history = []
+        self.history = [] # TODO: comment out eventually?
         self._init_hyperparameters()
         self._cloned_exec_tool : ExecutionTool = None
     

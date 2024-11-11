@@ -1,14 +1,14 @@
 from aimo_gaz.solver.abs_solver_and_tool import Tool
 from aimo_gaz.models.abs_model import Model
-from aimo_gaz.prompts.prompt import Prompt
+from aimo_gaz.prompters.prompter import Prompter
 import logging
 
 class CoordinatorTool(Tool):
-    def __init__(self, model: Model, prompt: Prompt, logger: logging.Logger = None, **inference_kwargs):
+    def __init__(self, model: Model, prompter: Prompter, logger: logging.Logger = None, **inference_kwargs):
         assert model is not None, "model must be provided."
-        assert prompt is not None, "prompt must be provided."
+        assert prompter is not None, "prompt must be provided."
         self.model = model
-        self.prompt = prompt
+        self.prompter = prompter
         self.inference_kwargs = inference_kwargs
         self.logger = logger
         self.inference_kwargs["n"] = 1 # Only one response is needed from coordinator agent
@@ -21,7 +21,7 @@ class CoordinatorTool(Tool):
         # Prompt the model for the tool
         message = {"role": "user", "content": problem_description}
         self.history.append(message)
-        prompt = self.prompt.get_prompt(self.history, global_history)
+        prompt = self.prompter.get_prompt(self.history, global_history)
         self.logger.info(f"[COORDINATOR] Raw prompt used:\n{prompt}")
         # Get the model response
         response = self.model.generate(prompt, **self.inference_kwargs)
@@ -30,7 +30,7 @@ class CoordinatorTool(Tool):
         generated_text = outs[0][0]
         self.history.append({"role": "assistant", "content": generated_text})
         self.logger.info(f"[COORDINATOR] Output generated: {generated_text}")
-        return self.prompt.parse_response(f"{generated_text}")
+        return self.prompter.parse_response(f"{generated_text}")
 
     def reset(self):
         self.history = []
