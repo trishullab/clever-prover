@@ -54,7 +54,7 @@ Please output which tool you would like to use next or, if you believe the probl
 
 
 if __name__ == "__main__":
-    prompter = CoordinatorPrompt()
+    prompter = CoordinatorPrompter()
     print(prompter.get_prompt([
         {"role": "user", "content": "What is the sum of 2 and 2?"}
     ]))

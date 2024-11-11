@@ -36,7 +36,7 @@ Write for me a guess for the numerical answer to this problem. Only output the g
 
 
 if __name__ == "__main__":
-    prompter = LLMGuesserPrompt()
+    prompter = LLMGuesserPrompter()
     print(prompter.get_prompt([
         {"role": "user", "content": "What is the sum of 2 and 2?"}
     ]))

@@ -8,7 +8,7 @@ import logging
 class OldPlannerTool(Tool):
     def __init__(self, model: Model, prompter: Prompter, logger: logging.Logger = None, **inference_kwargs):
         assert model is not None, "model must be provided."
-        assert prompt is not None, "prompt must be provided."
+        assert prompter is not None, "prompter must be provided."
         self.model = model
         self.prompter = prompter
         self.inference_kwargs = inference_kwargs

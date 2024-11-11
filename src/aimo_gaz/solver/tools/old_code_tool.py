@@ -14,7 +14,7 @@ class OldCodeTool(Tool):
         self.inference_kwargs = inference_kwargs
         self.logger = logger
         self.history = []
-        self.inference_kwargs["stop"] = ["[END CODE]", "```\n", "<｜end▁of▁sentence｜>"]
+        self.inference_kwargs["stop"] = ["[END CODE]", "<｜end▁of▁sentence｜>"]
 
     def solve_intermediate(self, problem_description: str, plan: str = None) -> typing.Union[str, typing.List[str]]:
         if not self.model.is_loaded():
@@ -54,6 +54,9 @@ class OldCodeTool(Tool):
                 actual_code_ind = gen_text.find("```python")
                 if actual_code_ind != -1:
                     gen_text = gen_text[(actual_code_ind + len("```python")):]
+                actual_code_ind = gen_text.rfind("```")
+                if actual_code_ind != -1:
+                    gen_text = gen_text[:actual_code_ind]
                 gen_text = gen_text.strip()
                 generated_texts.append(f"{gen_text}")
                 self.logger.info(f"[CODE TOOL] Generated code:\n{gen_text}")
