@@ -7,7 +7,7 @@ import logging
 class PlannerTool(Tool):
     def __init__(self, model: Model, prompter: Prompter, logger: logging.Logger = None, **inference_kwargs):
         assert model is not None, "model must be provided."
-        assert prompter is not None, "prompt must be provided."
+        assert prompter is not None, "prompter must be provided."
         self.model = model
         self.prompter = prompter
         self.inference_kwargs = inference_kwargs
@@ -20,12 +20,10 @@ class PlannerTool(Tool):
         if not self.model.is_loaded():
             self.model.__enter__()
         # Prompt the model for the plan
-        message = {"role": "user", "content": problem_description}
-        self.history.append(message)
-        prompt = self.prompter.get_prompt(self.history)
-        self.logger.info(f"[PLANNER] Raw prompt used:\n{prompt}")
+        self.history = self.prompter.get_prompt(self.history, problem_description)
+        self.logger.info(f"[PLANNER] Raw prompt used:\n{self.history}")
         # Get the model response
-        response = self.model.generate(prompt, **self.inference_kwargs)
+        response = self.model.generate(self.history, **self.inference_kwargs)
         outs = self.model.parse_out(response)
         assert len(outs) == 1, "No response (or too many responses) from the model."
         generated_text = outs[0][0]

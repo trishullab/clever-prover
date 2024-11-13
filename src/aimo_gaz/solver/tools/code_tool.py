@@ -6,7 +6,7 @@ import logging
 class CodeTool(Tool):
     def __init__(self, model: Model, prompter: Prompter, logger: logging.Logger = None, **inference_kwargs):
         assert model is not None, "model must be provided."
-        assert prompter is not None, "prompt must be provided."
+        assert prompter is not None, "prompter must be provided."
         self.model = model
         self.prompter = prompter
         self.inference_kwargs = inference_kwargs
@@ -20,14 +20,10 @@ class CodeTool(Tool):
             self.model.__enter__()
         # Prompt the model for the code
         assert self.history == [], "History not empty (Code Tool)"
-        message_problem = {"role": "user", "content": problem_description}
-        message_plan = {"role": "user", "content": plan}
-        self.history.append(message_problem)
-        self.history.append(message_plan)
-        prompt = self.prompter.get_prompt(self.history)
-        self.logger.info(f"[CODE TOOL] Raw prompt used:\n{prompt}")
+        self.history = self.prompter.get_prompt(self.history, problem_description, plan)
+        self.logger.info(f"[CODE TOOL] Raw prompt used:\n{self.history}")
         # Get the model response
-        response = self.model.generate(prompt, **self.inference_kwargs)
+        response = self.model.generate(self.history, **self.inference_kwargs)
         outs = self.model.parse_out(response)
         assert len(outs) == 1, "No response (or too many responses) from the model."
         generated_text = outs[0][0]

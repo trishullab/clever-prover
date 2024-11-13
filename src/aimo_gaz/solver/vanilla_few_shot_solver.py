@@ -7,7 +7,7 @@ import logging
 class FewShotSolver(Solver):
     def __init__(self, model: Model, prompter: Prompter, logger: logging.Logger = None, **inference_kwargs):
         assert model is not None, "model must be provided."
-        assert prompter is not None, "prompt must be provided."
+        assert prompter is not None, "prompter must be provided."
         self.model = model
         self.prompter = prompter
         self.inference_kwargs = inference_kwargs
@@ -22,7 +22,7 @@ class FewShotSolver(Solver):
         # Prompt the model with the problem description
         message = {"role": "user", "content": problem_description}
         self.history.append(message)
-        prompt = self.prompter.get_prompt(self.history)
+        self.history = self.prompter.get_prompt(self.history)
         # Get the model's response
         response = None
         retry_count = 0
@@ -31,7 +31,7 @@ class FewShotSolver(Solver):
         inference_num_return_sequences = orig_num_return_sequences
         while retry_count < 3 and response is None:
             try:
-                response = self.model.generate(prompt, **inference_kwargs)
+                response = self.model.generate(self.history, **inference_kwargs)
             except:
                 response = None
                 inference_kwargs["num_return_sequences"] = 1
@@ -44,7 +44,7 @@ class FewShotSolver(Solver):
         assert len(response) > 0, "No response from the model."
         responses = response
         answers = []
-        self.logger.info(f"Prompt:\n{prompt}")
+        self.logger.info(f"Prompt:\n{self.history}")
         for resp in responses:
             for gen_text in resp:
                 try:

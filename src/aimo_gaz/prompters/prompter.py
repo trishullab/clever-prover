@@ -23,16 +23,16 @@ class Prompter(ABC):
                 self.example_prompt = f.read()
 
 
-    # def translate_for_deepseek(self, messages, no_newline_after_assistant=False):
+    # def translate_for_deepseek(self, history, no_newline_after_assistant=False):
     #     last_role = None
     #     seen_user_role_before = False
 
     #     prompt = ''
     #     is_last_message = False
     #     msg_count = 0
-    #     for message in messages:
+    #     for message in history:
     #         msg_count += 1
-    #         is_last_message = msg_count == len(messages)
+    #         is_last_message = msg_count == len(history)
     #         if message['role'] == 'user':
 
     #             if last_role == 'assistant':
@@ -57,7 +57,7 @@ class Prompter(ABC):
 
 
     @abstractmethod
-    def get_prompt(self, messages: typing.List[typing.Dict[str, str]]) -> str:
+    def get_prompt(self, history: typing.List[typing.Dict[str, str]], *args, **kwargs) -> str:
         pass
 
     @abstractmethod
@@ -81,9 +81,9 @@ class Prompter(ABC):
                 self.system_prompt = f.read()
 
 class ConcatPrompter(Prompter):
-    def get_prompt(self, messages: typing.List[typing.Dict[str, str]]) -> str:
+    def get_prompt(self, history: typing.List[typing.Dict[str, str]]) -> str:
         full_prompt = self.system_prompt + "\n" + self.example_prompt
-        for msg in messages:
+        for msg in history:
             for k, v in msg.items():
                 full_prompt += f"\n{k}\n{v}"
         return full_prompt + "\n"

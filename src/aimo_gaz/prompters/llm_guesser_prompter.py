@@ -10,17 +10,18 @@ class LLMGuesserPrompter(ConcatPrompter):
                  example_prompt: str = None, append_system_prompt_after_every_message: bool = False):
         super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt,
                          append_system_prompt_after_every_message)
-        self.system_prompt = None
-        self.user_message = """Below is a math problem statement.
+        self.system_prompt = """Below is a math problem statement.
 
 Problem Statement: {}
 
-Write for me a guess for the numerical answer to this problem. Only output the guessed number, as an integer or a fraction.""" # TODO: add [START] and [END] scaffolding
+Write for me a guess for the numerical answer to this problem. Only output the guessed number, as an integer or a fraction."""
+        self.user_message = """Please write your guess now.""" # TODO: add [START] and [END] scaffolding
 
-    def get_prompt(self, messages: list[dict[str, str]]) -> str:
-        assert messages[-1]['role'] == 'user'
-        messages[-1]['content'] = self.user_message.format(messages[-1]['content'])
-        return messages
+    def get_prompt(self, history: list[dict[str, str]], problem_description: str) -> str:
+        if not history or history[0]["role"] != "system":
+            history.insert(0, {"role": "system", "content": self.system_prompt.format(problem_description)})
+        history.append({"role": "user", "content": self.user_message})
+        return history
 
     def parse_response(self, response: str) -> typing.Tuple[str, float]:
         guess_float = string_utils.parse_float(response)

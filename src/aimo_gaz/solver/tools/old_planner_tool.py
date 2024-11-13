@@ -23,8 +23,8 @@ class OldPlannerTool(Tool):
         # Prompt the model for the plan
         message = {"role": "user", "content": problem_description}
         self.history.append(message)
-        prompt = self.prompter.get_prompt(self.history)
-        self.logger.info(f"[PLANNER] Raw prompt used:\n{prompt}")
+        self.history = self.prompter.get_prompt(self.history)
+        self.logger.info(f"[PLANNER] Raw prompt used:\n{self.history}")
         # Get the model response
         # response = None
         # try:
@@ -33,7 +33,7 @@ class OldPlannerTool(Tool):
         #     raise(e)
         #     # response = None
         #     # self.logger.exception("Encountered exception.")
-        response = self.model.generate(prompt, **self.inference_kwargs)
+        response = self.model.generate(self.history, **self.inference_kwargs)
         # if response is None:
         #     generated_text = "Could not generate a response from the model."
         #     outs = [[generated_text]]
@@ -124,9 +124,9 @@ if __name__ == "__main__":
     else:
         # model = GptModel(model_name_or_path, model_logging_dir, **model_args)
         model = GptModel(model_name)
-        prompt = OldPlannerPrompter(system_prompt="", example_prompt="")  # These are hard-coded in the class anyway
+        prompter = OldPlannerPrompter(system_prompt="", example_prompt="")  # These are hard-coded in the class anyway
         problem_description = "There exists a unique increasing geometric sequence of five 2-digit positive integers. What is their sum?"
-        tool = OldPlannerTool(model, prompt, logger, **inference_args)
+        tool = OldPlannerTool(model, prompter, logger, **inference_args)
 
     with tool:
         is_solved = False

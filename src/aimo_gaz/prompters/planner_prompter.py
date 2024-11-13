@@ -3,22 +3,23 @@ from aimo_gaz.prompters.prompter import ConcatPrompter
 class PlannerPrompter(ConcatPrompter): # TODO: get rid of all ConcatPrompters?
 
     def __init__(self, system_prompt_path: str = None, example_prompt_path: str = None, system_prompt: str = None,
-                 example_prompt: str = None, append_system_prompt_after_every_message: bool = False):
+                 example_prompt: str = None, append_system_prompt_after_every_message: bool = False): # TODO: try passing problem statement here for all prompters?
         super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt,
                          append_system_prompt_after_every_message)
-        self.system_prompt = None
-        self.user_message = """Below is a math problem statement.
+        self.system_prompt = """Below is a math problem statement.
 
 Problem Statement: {}
 
 Write for me the first couple steps you would do to solve this problem. Only write the first couple steps please.
 
-Please begin your response with: '0. I would break down the problem into simpler steps, this can be done by the following:'""" # TODO: add [START] and [END] scaffolding
+Please begin your response with: '0. I would break down the problem into simpler steps, this can be done by the following:'"""
+        self.user_message = "Please write the steps now." # TODO: add [START] and [END] scaffolding
 
-    def get_prompt(self, messages: list[dict[str, str]]) -> str:
-        assert messages[-1]['role'] == 'user'
-        messages[-1]['content'] = self.user_message.format(messages[-1]['content'])
-        return messages
+    def get_prompt(self, history: list[dict[str, str]], problem_description: str) -> str:
+        if not history or history[0]["role"] != "system":
+            history.insert(0, {"role": "system", "content": self.system_prompt.format(problem_description)})
+        history.append({"role": "user", "content": self.user_message})
+        return history
 
     def parse_response(self, response: str) -> str:
         return response

@@ -27,24 +27,24 @@ class OldPlannerPrompter(ConcatPrompter):
         #     1."""
         # ]
 
-    def get_prompt(self, messages: list[dict[str, str]]) -> str:
-        if messages[-1]['role'] == 'user':
+    def get_prompt(self, history: list[dict[str, str]]) -> str:
+        if history[-1]['role'] == 'user':
             main_message_added = False
-            for msg in messages:
+            for msg in history:
                 if msg['role'] == 'user' and msg['content'] == self.user_messages[0]:
                     main_message_added = True
                     break
             if not main_message_added:
-                messages_copy = copy.deepcopy(messages)
-                messages.clear()
-                # messages.append({'role': 'user', 'content': self.user_messages[0]})
-                # messages.append({'role': 'assistant', 'content': self.assistant_message_starts[0]})
-                messages += messages_copy  # This is to ensure that the user message is not lost
-            messages[-1]['content'] = self.user_messages[1].format(messages[-1]['content'])
+                history_copy = copy.deepcopy(history)
+                history.clear()
+                # history.append({'role': 'user', 'content': self.user_messages[0]})
+                # history.append({'role': 'assistant', 'content': self.assistant_message_starts[0]})
+                history += history_copy  # This is to ensure that the user message is not lost
+            history[-1]['content'] = self.user_messages[1].format(history[-1]['content'])
             # messages.append({'role': 'assistant', 'content': self.assistant_message_starts[1]})
-            messages.append({'role': 'assistant', 'content': "Sure I'll list the first couple steps.\n0. I would break down the problem into simpler steps, this can be done by the following\n1."})
-        # return self.translate_for_deepseek(messages, no_newline_after_assistant=True)
-        return messages
+            history.append({'role': 'assistant', 'content': "Sure I'll list the first couple steps.\n0. I would break down the problem into simpler steps, this can be done by the following\n1."})
+        # return self.translate_for_deepseek(history, no_newline_after_assistant=True)
+        return history
 
     def parse_response(self, response: str) -> str:
         return response

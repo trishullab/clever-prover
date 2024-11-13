@@ -123,7 +123,6 @@ class CoordinationSolver(Solver):
 
             if coordinator_error:
                 pass
-
             elif tool_str[:len("[BEGIN GLOBAL GUESS]")] == "[BEGIN GLOBAL GUESS]":
                 guess_float = string_utils.parse_float(tool_str[len("[BEGIN GLOBAL GUESS]"):])
                 if guess_float is not None:
@@ -131,7 +130,6 @@ class CoordinationSolver(Solver):
                     end_loop = True
                 else:
                     self._log_and_add_to_history(f"Coordinator output global guess could not be parsed as float: {tool_str}")
-
             elif tool_str == "planner":
                 try:
                     global_plan = planner.solve_intermediate(problem_description)
@@ -141,7 +139,6 @@ class CoordinationSolver(Solver):
                     self._log_and_add_to_history(f"Exception encountered in planner: {e}")
 
                 planner.reset()
-
             elif tool_str == "coder":
                 code = None
                 try:
@@ -165,7 +162,6 @@ class CoordinationSolver(Solver):
                 
                 coder.reset()
                 executor.reset()
-
             elif tool_str == "llm_guesser":
                 try:
                     guess_str, guess_float = llm_guesser.solve_intermediate(problem_description)
@@ -179,7 +175,6 @@ class CoordinationSolver(Solver):
                     self._log_and_add_to_history(f"Exception encountered in LLM guesser: {e}")
 
                 llm_guesser.reset()
-
             else:
                 self._log_and_add_to_history(f"Coordinator-chosen tool '{tool_str}' is invalid.")
             

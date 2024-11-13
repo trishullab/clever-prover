@@ -8,7 +8,7 @@ import typing
 class OldCodeTool(Tool):
     def __init__(self, model: Model, prompter: Prompter, logger: logging.Logger = None, **inference_kwargs):
         assert model is not None, "model must be provided."
-        assert prompter is not None, "prompt must be provided."
+        assert prompter is not None, "prompter must be provided."
         self.model = model
         self.prompter = prompter
         self.inference_kwargs = inference_kwargs
@@ -26,12 +26,12 @@ class OldCodeTool(Tool):
             message_plan = {"role": "user", "content": plan}
             self.history.append(message_problem)
             self.history.append(message_plan)
-        prompt = self.prompter.get_prompt(self.history)
-        self.logger.info(f"[CODE TOOL] Raw prompt used:\n{prompt}")
+        self.history = self.prompter.get_prompt(self.history)
+        self.logger.info(f"[CODE TOOL] Raw prompt used:\n{self.history}")
         # Get the model response
         response = None
         try:
-            response = self.model.generate(prompt, **self.inference_kwargs)
+            response = self.model.generate(self.history, **self.inference_kwargs)
         except Exception as e:
             raise(e)
             # response = None
@@ -126,8 +126,8 @@ if __name__ == "__main__":
     }
     # model = Model(model_name_or_path, model_logging_dir, **model_args)
     model = GptModel(model_name)
-    prompt = OldCodePrompter(system_prompt="", example_prompt="") # These are hard-coded in the class anyway
-    tool = OldCodeTool(model, prompt, logger, **inference_args)
+    prompter = OldCodePrompter(system_prompt="", example_prompt="") # These are hard-coded in the class anyway
+    tool = OldCodeTool(model, prompter, logger, **inference_args)
     problem_description = "Find the value of x in the equation 2x + 3 = 7."
     with tool:
         is_solved = False

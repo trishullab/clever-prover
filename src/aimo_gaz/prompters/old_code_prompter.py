@@ -24,20 +24,20 @@ First Couple Steps:
 # Make sure to print the final answer on a new line using print command. End the code by writing [END CODE]."""
         self.assistant_message_start = """```python
 """
-    def get_prompt(self, messages: list[dict[str, str]]) -> str:
-        if messages[-1]['role'] == 'assistant': # already have information produced
-            messages.append({'role': 'user', 'content': self.user_message})
-            messages.append({'role': 'assistant', 'content': self.assistant_message_start}) # TODO: Do this in a more natural way?
-        if messages[-1]['role'] == 'user': # fresh sample, not using history from other solvers
-            messages_copy = copy.deepcopy(messages)
-            messages.clear()
-            messages.append({
+    def get_prompt(self, history: list[dict[str, str]]) -> str:
+        if history[-1]['role'] == 'assistant': # already have information produced
+            history.append({'role': 'user', 'content': self.user_message})
+            history.append({'role': 'assistant', 'content': self.assistant_message_start}) # TODO: Do this in a more natural way?
+        if history[-1]['role'] == 'user': # fresh sample, not using history from other solvers
+            history_copy = copy.deepcopy(history)
+            history.clear()
+            history.append({
                 'role': 'user',
-                'content': self.user_message.format(messages_copy[-2]['content'], messages_copy[-1]['content'])
+                'content': self.user_message.format(history_copy[-2]['content'], history_copy[-1]['content'])
             })
-            messages.append({'role': 'assistant', 'content': self.assistant_message_start})
-        # return self.translate_for_deepseek(messages, no_newline_after_assistant=True)
-        return messages
+            history.append({'role': 'assistant', 'content': self.assistant_message_start})
+        # return self.translate_for_deepseek(history, no_newline_after_assistant=True)
+        return history
 
     def parse_response(self, response: str) -> str:
         return response

@@ -7,41 +7,29 @@ class CodePrompter(ConcatPrompter):
                  example_prompt: str = None, append_system_prompt_after_every_message: bool = False):
         super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt,
                          append_system_prompt_after_every_message)
-        self.system_prompt = None
-        self.user_message_with_plan = """Below is a math problem statement and the first couple steps in trying to solve it.
+        self.system_prompt = """Below is a math problem statement.
 
 Problem Statement: {}
+
+Can you write a python program that tries to solve the problem statement using SymPy? The code should always answer by printing only a number (integer or fraction) and nothing else. Make sure it runs correctly!
+
+Start the code with '```python' and end the code with '```'."""
+        self.user_message_with_plan = """Here are the first couple steps in trying to solve the problem:
 
 First Couple Steps:
 {}
 
-Can you write a python program that tries to solve the problem statement using SymPy? The code should always answer by printing only a number (integer or fraction) and nothing else. Make sure it runs correctly!
+Please write the code now.""" # TODO: maybe find a better way to handle presence/absence of plan
+        self.user_message_without_plan = """Please write the code now.""" # TODO: maybe adjust '```python' and '```' scaffolding
 
-Start the code with '```python' and end the code with '```'.""" # TODO: maybe find a better way to handle presence/absence of plan
-        self.user_message_without_plan = """Below is a math problem statement.
-
-Problem Statement: {}
-
-Can you write a python program that tries to solve the problem statement using SymPy? The code should always answer by printing only a number (integer or fraction) and nothing else. Make sure it runs correctly!
-
-Start the code with '```python' and end the code with '```'.""" # TODO: maybe adjust '```python' and '```' scaffolding
-
-    def get_prompt(self, messages: list[dict[str, str]]) -> str:
-        assert messages[-2]['role'] == 'user'
-        assert messages[-1]['role'] == 'user'
-        messages_copy = copy.deepcopy(messages)
-        messages.clear()
-        if messages_copy[-1]["content"] is not None:
-            messages.append({
-                "role": "user",
-                "content": self.user_message_with_plan.format(messages_copy[-2]['content'], messages_copy[-1]['content'])
-            })
+    def get_prompt(self, history: list[dict[str, str]], problem_description: str, plan: str) -> str:
+        if not history or history[0]["role"] != "system":
+            history.insert(0, {"role": "system", "content": self.system_prompt.format(problem_description)})
+        if plan is not None:
+            history.append({"role": "user", "content": self.user_message_with_plan.format(plan)})
         else:
-            messages.append({
-                "role": "user",
-                "content": self.user_message_without_plan.format(messages_copy[-2]['content'])
-            })
-        return messages
+            history.append({"role": "user", "content": self.user_message_without_plan})
+        return history
 
     def parse_response(self, response: str) -> str:
         actual_code_ind = response.find("```python")
