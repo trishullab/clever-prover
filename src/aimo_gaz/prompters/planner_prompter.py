@@ -12,7 +12,7 @@ Problem Statement: {}
 
 Write for me the first couple steps you would do to solve this problem. Only write the first couple steps please.
 
-Please begin your response with: '0. I would break down the problem into simpler steps, this can be done by the following:'"""
+Please begin your response with: '0. I would break down the problem into simpler steps, this can be done by the following:'""" # TODO: add examples
         self.user_message = "Please write the steps now." # TODO: add [START] and [END] scaffolding
 
     def get_prompt(self, history: list[dict[str, str]], problem_description: str) -> list[dict[str, str]]:

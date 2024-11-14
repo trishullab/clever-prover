@@ -14,7 +14,7 @@ class LLMGuesserPrompter(ConcatPrompter):
 
 Problem Statement: {}
 
-Write for me a guess for the numerical answer to this problem. Only output the guessed number, as an integer or a fraction."""
+Write for me a guess for the numerical answer to this problem. Only output the guessed number, as an integer or a fraction.""" # TODO: add examples
         self.user_message = """Please write your guess now.""" # TODO: add [START] and [END] scaffolding
 
     def get_prompt(self, history: list[dict[str, str]], problem_description: str) -> list[dict[str, str]]:

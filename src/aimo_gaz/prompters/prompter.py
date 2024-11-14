@@ -2,10 +2,10 @@ import typing
 from abc import ABC, abstractmethod
 
 class Prompter(ABC):
-    def __init__(self, 
-        system_prompt_path: str = None, 
-        example_prompt_path: str = None, 
-        system_prompt: str = None, 
+    def __init__(self,
+        system_prompt_path: str = None,
+        example_prompt_path: str = None,
+        system_prompt: str = None,
         example_prompt: str = None,
         append_system_prompt_after_every_message: bool = False
     ):

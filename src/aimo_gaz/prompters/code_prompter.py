@@ -13,7 +13,7 @@ Problem Statement: {}
 
 Can you write a python program that tries to solve the problem statement using SymPy? The code should always answer by printing only a number (integer or fraction) and nothing else. Make sure it runs correctly!
 
-Start the code with '```python' and end the code with '```'."""
+Start the code with '```python' and end the code with '```'.""" # TODO: add examples
         self.user_message_with_plan = """Here are the first couple steps in trying to solve the problem:
 
 First Couple Steps:

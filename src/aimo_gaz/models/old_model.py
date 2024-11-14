@@ -295,7 +295,7 @@
 #         tokenizer_args = {k: v for k, v in kwargs.items() if k in
 #         ["max_length", "padding", "truncation"]}
 #         tokenized_input = self._tokenizer(
-#             inputs, 
+#             inputs,
 #             return_tensors="pt",
 #             **tokenizer_args)
 #         input_ids=self.cuda_context.try_get_gpu(tokenized_input['input_ids'])
@@ -319,7 +319,7 @@
 #         num_return_sequences = generate_args["num_return_sequences"]
 #         if "llama-2" in self.name.lower() or "deepseek" in self.name.lower():
 #             generated_output = self._model.generate(
-#                 input_ids=input_ids, 
+#                 input_ids=input_ids,
 #                 attention_mask=attention_mask,
 #                 stopping_criteria=stopping_criteria,
 #                 eos_token_id=self._tokenizer.eos_token_id,
@@ -327,7 +327,7 @@
 #                 **generate_args)
 #         else:
 #             generated_output = self._model.generate(
-#                 input_ids=input_ids, 
+#                 input_ids=input_ids,
 #                 attention_mask=attention_mask,
 #                 stopping_criteria=stopping_criteria,
 #                 return_dict_in_generate=True,
@@ -405,7 +405,7 @@
 #         return _callback
 
 #     def _exact_match_metric_callback(self, datasets, formatter_callback: TrainingDataFormatterCallback, completion_callback: typing.Callable[[Dataset], typing.Tuple[typing.List[str], typing.List[str], typing.List[str]]]):
-#         actual_eval_datasets = datasets 
+#         actual_eval_datasets = datasets
 #         def _callback(batch_size: int, trainer_state: TrainerState):
 #             nonlocal actual_eval_datasets
 #             if actual_eval_datasets is None:
@@ -482,8 +482,8 @@
 #         def _compute_metrics_callback(
 #                 eval_dataset_name: str,
 #                 trainer_state: TrainerState,
-#                 prompts: typing.List[str], 
-#                 labels: typing.List[str], 
+#                 prompts: typing.List[str],
+#                 labels: typing.List[str],
 #                 completions: typing.List[typing.List[str]]):
 #                 avg = {'exact_match': 0.0}
 #                 correct_pred_idx = []
@@ -525,7 +525,7 @@
 #         prompts_and_completions = training_data_formatter_callback.get_prompt_and_completion(dataset)
 #         inputs = [x[0] for x in prompts_and_completions]
 #         labels = [x[1] for x in prompts_and_completions]
-#         tokenizer_args = {k: v for k, v in self._tokenizer_args.items() if k in 
+#         tokenizer_args = {k: v for k, v in self._tokenizer_args.items() if k in
 #         ["max_length", "padding", "truncation"]}
 #         model_inputs = self._tokenizer(inputs, return_tensors="pt", **tokenizer_args)
 #         label_args = {k: v for k, v in self._tokenizer_args.items() if k in
@@ -538,8 +538,8 @@
 #     def train(self,
 #             time_str: str,
 #             training_data_formatter_callback: TrainingDataFormatterCallback,
-#             train_dataset: Dataset, 
-#             eval_dataset: typing.Union[Dataset, typing.Dict[str, Dataset]] = None, 
+#             train_dataset: Dataset,
+#             eval_dataset: typing.Union[Dataset, typing.Dict[str, Dataset]] = None,
 #             compute_metrics: typing.Optional[typing.Callable[[str, TrainerState, typing.List[str], typing.List[str], typing.List[typing.List[str]]], typing.Dict]] = None,
 #             callbacks: typing.List[TrainerCallback] = None):
 #         assert self._is_loaded, "Model or tokenizer is not loaded"
@@ -628,7 +628,7 @@
 #             best_model_path = trainer.state.best_model_checkpoint
 #             # Recursively copy the best model
 #             self.code_logger.info(f"Copying the best model from {best_model_path} to {new_model_name}")
-#             shutil.copytree(best_model_path, new_model_name, dirs_exist_ok=True)    
+#             shutil.copytree(best_model_path, new_model_name, dirs_exist_ok=True)
 #         else:
 #             best_model_path = None
 #         if best_model_path is None and self.training_args.do_train:

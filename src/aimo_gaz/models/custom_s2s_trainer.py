@@ -77,11 +77,11 @@ class GenerateEvalS2STrainer(Seq2SeqTrainer):
     def get_eval_dataloader(self, eval_dataset: Dataset | None = None) -> DataLoader:
         return None
 
-    def evaluation_loop(self, 
-            dataloader: DataLoader, 
-            description: str, 
-            prediction_loss_only: bool | None = None, 
-            ignore_keys: List[str] | None = None, 
+    def evaluation_loop(self,
+            dataloader: DataLoader,
+            description: str,
+            prediction_loss_only: bool | None = None,
+            ignore_keys: List[str] | None = None,
             metric_key_prefix: str = "eval") -> EvalLoopOutput:
         """
         Prediction/evaluation loop, shared by `Trainer.evaluate()` and `Trainer.predict()`.

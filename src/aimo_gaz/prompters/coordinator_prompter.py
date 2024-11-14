@@ -19,7 +19,7 @@ If you think one of the previous tool outputs contains the correct answer, you a
 
 Please output which tool you would like to use next or, if you believe the problem has been solved, output your global guess for an answer.
 
-Below is the history of actions taken so far by the coordinator (you) and the tools to solve this problem."""
+Below is the history of actions taken so far by the coordinator (you) and the tools to solve this problem.""" # TODO: add examples
         self.user_message = "Please output your chosen tool or global guess now." # TODO: add more [START] and [END] scaffolding
 
     def get_prompt(self, history: list[dict[str, str]], problem_description: str) -> list[dict[str, str]]:

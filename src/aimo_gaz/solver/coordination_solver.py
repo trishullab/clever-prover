@@ -178,6 +178,8 @@ class CoordinationSolver(Solver):
             
             self.logger.info(f"End of loop {MAX_LOOPS - loops_left}. Loops left: {loops_left}\n")
         
+        coordinator.reset()
+
         self.logger.info("Solver finished looping.")
         if global_guess_float is None:
             self.logger.info("No global guess for answer found, returning 0.0")
@@ -269,8 +271,8 @@ class CoordinationSolver(Solver):
 #                 for idx in invalid_idxs:
 #                     try:
 #                         model = self.tools['old_coder'].model
-#                         prompt = f"""User: Below is a math problem that has an integer solution and a python program which returns an output which is not the final solution. 
-# Solve the problem by writing a python program using sympy, you can use the result of the previous program. 
+#                         prompt = f"""User: Below is a math problem that has an integer solution and a python program which returns an output which is not the final solution.
+# Solve the problem by writing a python program using sympy, you can use the result of the previous program.
 # Make sure you code runs correctly! The answer to the problem should be an integer in range 0 to 999.
 # Problem Description:
 # {problem_description}
@@ -282,9 +284,9 @@ class CoordinationSolver(Solver):
 # {last_outputs[idx]}
 # ```
 
-# Write python code using sympy which solves the problem. 
-# Think step by step, make sure the code runs correctly and that the final solution is an integer! 
-# Do not copy the above code, instead fix it up so that it finishes by printing the final answer. 
+# Write python code using sympy which solves the problem.
+# Think step by step, make sure the code runs correctly and that the final solution is an integer!
+# Do not copy the above code, instead fix it up so that it finishes by printing the final answer.
 # Your code should finish by printing the final answer. The answer to the problem should be an integer in range 0 to 999.
 # Assistant:
 # ```python code:

@@ -16,10 +16,10 @@ class ExecutionTool(Tool):
         assert os.path.isfile(filepath), f"filepath must be a valid file: {filepath}"
         process = Popen(
             ['python', filepath],
-            stdin = PIPE, 
-            stdout = PIPE, 
+            stdin = PIPE,
+            stdout = PIPE,
             stderr = STDOUT,
-            bufsize = 1, 
+            bufsize = 1,
             universal_newlines = True)
         # Start the process, and wait for it to finish
         try:
@@ -42,10 +42,10 @@ class ExecutionTool(Tool):
             assert os.path.isfile(filepath), f"filepath must be a valid file: {filepath}"
             process = Popen(
                 ['python', filepath],
-                stdin = PIPE, 
-                stdout = PIPE, 
+                stdin = PIPE,
+                stdout = PIPE,
                 stderr = STDOUT,
-                bufsize = 1, 
+                bufsize = 1,
                 universal_newlines = True)
             processes.append(process)
         for process in processes:

@@ -167,7 +167,7 @@ if __name__ == "__main__":
         },
         {
             "role": "system",
-            "name": "example_assistant", 
+            "name": "example_assistant",
             "content": "Our idea seems to be scooped, don't know how to change direction now."
         },
         {
@@ -221,7 +221,7 @@ if __name__ == "__main__":
         },
         {
             "role": "system",
-            "name": "example_assistant", 
+            "name": "example_assistant",
             "content": "Our idea seems to be scooped, don't know how to change direction now."
         },
         {
@@ -266,7 +266,7 @@ if __name__ == "__main__":
         },
         {
             "role": "system",
-            "name": "example_assistant", 
+            "name": "example_assistant",
             "content": "Our idea seems to be scooped, don't know how to change direction now."
         },
         {
@@ -274,7 +274,7 @@ if __name__ == "__main__":
             "content": "We changed the direction of the project, but we don't have time to do it.",
         },
         {
-            "role": "assistant", 
+            "role": "assistant",
             "content": "Our idea seems to be scooped, don't know how to change direction now."
         }
     ]
