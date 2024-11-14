@@ -3,6 +3,7 @@ defaults:
   - inference_settings: 1024_1.yaml # Name of training data settings file
   - prompter_config: cot_prompter_config # Name of training settings file
   - override hydra/job_logging: 'disabled'
+  - _self_
 
 solver_or_tool_type: OldCodeTool
 solver_or_tool_args:
