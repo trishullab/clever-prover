@@ -35,7 +35,7 @@ class CoordinationSolver(Solver):
         self.tools = tools
         self.strategy = strategy
         self.coordination_kwargs = coordination_kwargs
-        self.history = [] # TODO: comment out eventually?
+        # self.history = []
         self._init_hyperparameters()
         self._cloned_exec_tool : ExecutionTool = None
     
@@ -62,7 +62,7 @@ class CoordinationSolver(Solver):
     def reset(self):
         for tool in self.tools.values():
             tool.reset()
-        self.history = []
+        # self.history = []
     
     def _convert_float_to_rational(self, float_num: float) -> Rational:
         return Rational(float_num).limit_denominator()
@@ -87,9 +87,9 @@ class CoordinationSolver(Solver):
     #             self.logger.info(f"Could not parse {output} as sympy expression with exception {e}")
     #             return float(output)
     
-    def _log_and_add_to_history(self, message):
+    def _log_and_add_to_history(self, history, message):
         self.logger.info(message)
-        self.history.append(message)
+        history.append({"role": "user", "content": message})
 
 
     def _coordinator_tool_history_loop(self, problem_description: str, time_allowed: int) -> float:
@@ -113,13 +113,11 @@ class CoordinationSolver(Solver):
 
             coordinator_error = False
             try:
-                tool_str = coordinator.solve_intermediate(problem_description, global_history=self.history)
-                self._log_and_add_to_history(f"Coordinator chose tool: {tool_str}")
+                tool_str = coordinator.solve_intermediate(problem_description)
+                self._log_and_add_to_history(coordinator.history, f"Loop {MAX_LOOPS - loops_left} / {MAX_LOOPS}: Coordinator chose tool: {tool_str}")
             except Exception as e:
-                self._log_and_add_to_history(f"Exception encountered in coordinator: {e}")
+                self._log_and_add_to_history(coordinator.history, f"Exception encountered in coordinator: {e}")
                 coordinator_error = True
-
-            coordinator.reset()
 
             if coordinator_error:
                 pass
@@ -129,14 +127,14 @@ class CoordinationSolver(Solver):
                     global_guess_float = guess_float
                     end_loop = True
                 else:
-                    self._log_and_add_to_history(f"Coordinator output global guess could not be parsed as float: {tool_str}")
+                    self._log_and_add_to_history(coordinator.history, f"Coordinator output global guess could not be parsed as float: {tool_str}")
             elif tool_str == "planner":
                 try:
                     global_plan = planner.solve_intermediate(problem_description)
 
-                    self._log_and_add_to_history(f"Planner generated plan:\n{global_plan}")
+                    self._log_and_add_to_history(coordinator.history, f"Planner generated plan:\n{global_plan}")
                 except Exception as e:
-                    self._log_and_add_to_history(f"Exception encountered in planner: {e}")
+                    self._log_and_add_to_history(coordinator.history, f"Exception encountered in planner: {e}")
 
                 planner.reset()
             elif tool_str == "coder":
@@ -144,7 +142,7 @@ class CoordinationSolver(Solver):
                 try:
                     code = coder.solve_intermediate(problem_description, plan=global_plan)
                 except Exception as e:
-                    self._log_and_add_to_history(f"Exception encountered in coder: {e}")
+                    self._log_and_add_to_history(coordinator.history, f"Exception encountered in coder: {e}")
                 
                 if code is not None:
                     try:
@@ -153,12 +151,12 @@ class CoordinationSolver(Solver):
                         last_output = executor.extract_last_output(output)
                         output_float = string_utils.parse_float(last_output)
                         if output_float is not None:
-                            self._log_and_add_to_history(f"Code executor guessed: {last_output}")
+                            self._log_and_add_to_history(coordinator.history, f"Code executor guessed: {last_output}")
                             global_guess_float = output_float
                         else:
-                            self._log_and_add_to_history(f"Code executor could not be parsed as float: {last_output}") # TODO: output something different when there's a code error
+                            self._log_and_add_to_history(coordinator.history, f"Code executor could not be parsed as float: {last_output}") # TODO: output something different when there's a code error
                     except Exception as e:
-                        self._log_and_add_to_history(f"Exception encountered in code executor: {e}")
+                        self._log_and_add_to_history(coordinator.history, f"Exception encountered in code executor: {e}")
                 
                 coder.reset()
                 executor.reset()
@@ -167,24 +165,24 @@ class CoordinationSolver(Solver):
                     guess_str, guess_float = llm_guesser.solve_intermediate(problem_description)
 
                     if guess_float is not None:
-                        self._log_and_add_to_history(f"LLM guesser guessed: {guess_str}")
+                        self._log_and_add_to_history(coordinator.history, f"LLM guesser guessed: {guess_str}")
                         global_guess_float = guess_float
                     else:
-                        self._log_and_add_to_history(f"LLM guesser output could not be parsed as float: {guess_str}")
+                        self._log_and_add_to_history(coordinator.history, f"LLM guesser output could not be parsed as float: {guess_str}")
                 except Exception as e:
-                    self._log_and_add_to_history(f"Exception encountered in LLM guesser: {e}")
+                    self._log_and_add_to_history(coordinator.history, f"Exception encountered in LLM guesser: {e}")
 
                 llm_guesser.reset()
             else:
-                self._log_and_add_to_history(f"Coordinator-chosen tool '{tool_str}' is invalid.")
+                self._log_and_add_to_history(coordinator.history, f"Coordinator-chosen tool '{tool_str}' is invalid.")
             
-            self._log_and_add_to_history(f"End of loop {MAX_LOOPS - loops_left}. Loops left: {loops_left}\n")
+            self.logger.info(f"End of loop {MAX_LOOPS - loops_left}. Loops left: {loops_left}\n")
         
-        self._log_and_add_to_history("Solver finished looping.")
+        self.logger.info("Solver finished looping.")
         if global_guess_float is None:
-            self._log_and_add_to_history("No global guess for answer found, returning 0.0")
+            self.logger.info("No global guess for answer found, returning 0.0")
             global_guess_float = 0.0
-        self._log_and_add_to_history(f"Solver returning: {global_guess_float}")
+        self.logger.info(f"Solver returning: {global_guess_float}")
         return global_guess_float
 
 

@@ -22,7 +22,7 @@ First Couple Steps:
 Please write the code now.""" # TODO: maybe find a better way to handle presence/absence of plan
         self.user_message_without_plan = """Please write the code now.""" # TODO: maybe adjust '```python' and '```' scaffolding
 
-    def get_prompt(self, history: list[dict[str, str]], problem_description: str, plan: str) -> str:
+    def get_prompt(self, history: list[dict[str, str]], problem_description: str, plan: str) -> list[dict[str, str]]:
         if not history or history[0]["role"] != "system":
             history.insert(0, {"role": "system", "content": self.system_prompt.format(problem_description)})
         if plan is not None:

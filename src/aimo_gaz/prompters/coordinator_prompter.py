@@ -17,43 +17,20 @@ You are the coordinator in charge of solving this problem. You have several tool
 
 If you think one of the previous tool outputs contains the correct answer, you also have the option to globally guess that answer. Simply output "[BEGIN GLOBAL GUESS]" before the numerical answer and "[END GLOBAL GUESS]" after it.
 
-Please output which tool you would like to use next or, if you believe the problem has been solved, output your global guess for an answer."""
-        self.user_message = """Here is the history of actions taken so far by the coordinator (you) and the tools to solve this problem:
+Please output which tool you would like to use next or, if you believe the problem has been solved, output your global guess for an answer.
 
-[START HISTORY]
-{}
-[END HISTORY]
+Below is the history of actions taken so far by the coordinator (you) and the tools to solve this problem."""
+        self.user_message = "Please output your chosen tool or global guess now." # TODO: add more [START] and [END] scaffolding
 
-Please output your chosen tool or global guess now.""" # TODO: add more [START] and [END] scaffolding
-#         self.user_message = """Below is a math problem statement.
-
-# Problem Statement: {}
-
-# You are the coordinator in charge of solving this problem. You have several tools at your disposal to help you solve it. Your tools are:
-
-# (1) planner: Query an LLM to generate the first few steps of a plan for solving the problem.
-# (2) coder: Query an LLM to generate code to solve the problem and then run the code. The most recently generated plan, if one exists, will be passed to the LLM coder.
-# (3) llm_guesser: Query an LLM to guess the answer to the problem.
-
-# If you think one of the previous tool outputs contains the correct answer, you also have the option to globally guess that answer. Simply output "[BEGIN GLOBAL GUESS]" before the numerical answer and "[END GLOBAL GUESS]" after it.
-
-# Here is the history of actions taken so far by the coordinator (you) and the tools to solve this problem:
-
-# [START HISTORY]
-# {}
-# [END HISTORY]
-
-# Please output which tool you would like to use next or, if you believe the problem has been solved, output your global guess for an answer."""
-
-    def get_prompt(self, history: list[dict[str, str]], problem_description: str, global_history: list[str]) -> str:
+    def get_prompt(self, history: list[dict[str, str]], problem_description: str) -> list[dict[str, str]]:
         if not history or history[0]["role"] != "system":
             history.insert(0, {"role": "system", "content": self.system_prompt.format(problem_description)})
-        history.append({"role": "user", "content": self.user_message.format("\n".join(global_history))})
+        history.append({"role": "user", "content": self.user_message})
         return history
 
     def parse_response(self, response: str) -> str: # TODO: find a better way to do this and parse the guessed float within this method (maybe use enums with associated data)
         if "[BEGIN GLOBAL GUESS]" in response and "[END GLOBAL GUESS]" in response:
-            # this does not include the '[END GLOBAL GUESS]'
+            # this does not include the end token
             return response[response.rfind("[BEGIN GLOBAL GUESS]"):response.rfind("[END GLOBAL GUESS]")]
         
         tools = ["planner", "coder", "llm_guesser"]

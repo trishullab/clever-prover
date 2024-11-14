@@ -17,7 +17,7 @@ Problem Statement: {}
 Write for me a guess for the numerical answer to this problem. Only output the guessed number, as an integer or a fraction."""
         self.user_message = """Please write your guess now.""" # TODO: add [START] and [END] scaffolding
 
-    def get_prompt(self, history: list[dict[str, str]], problem_description: str) -> str:
+    def get_prompt(self, history: list[dict[str, str]], problem_description: str) -> list[dict[str, str]]:
         if not history or history[0]["role"] != "system":
             history.insert(0, {"role": "system", "content": self.system_prompt.format(problem_description)})
         history.append({"role": "user", "content": self.user_message})

@@ -24,7 +24,7 @@ First Couple Steps:
 # Make sure to print the final answer on a new line using print command. End the code by writing [END CODE]."""
         self.assistant_message_start = """```python
 """
-    def get_prompt(self, history: list[dict[str, str]]) -> str:
+    def get_prompt(self, history: list[dict[str, str]]) -> list[dict[str, str]]:
         if history[-1]['role'] == 'assistant': # already have information produced
             history.append({'role': 'user', 'content': self.user_message})
             history.append({'role': 'assistant', 'content': self.assistant_message_start}) # TODO: Do this in a more natural way?

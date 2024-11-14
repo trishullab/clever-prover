@@ -27,7 +27,7 @@ class OldPlannerPrompter(ConcatPrompter):
         #     1."""
         # ]
 
-    def get_prompt(self, history: list[dict[str, str]]) -> str:
+    def get_prompt(self, history: list[dict[str, str]]) -> list[dict[str, str]]:
         if history[-1]['role'] == 'user':
             main_message_added = False
             for msg in history:
