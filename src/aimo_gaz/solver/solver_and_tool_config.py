@@ -3,7 +3,7 @@ import os
 import logging
 import typing
 import hydra
-from aimo_gaz.prompters.prompter import Prompter, ConcatPrompter
+from aimo_gaz.prompters.prompter import Prompter
 from aimo_gaz.prompters.cot_prompter import CoTPrompter
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
@@ -89,7 +89,6 @@ from aimo_gaz.prompters.llm_guesser_prompter import LLMGuesserPrompter
 GLOBAL_MODEL_CACHE = {}
 
 class PrompterType(Enum):
-    ConcatPrompter = "ConcatPrompter"
     CoTPrompter = "CoTPrompter"
     OldCodePrompter = "OldCodePrompter"
     OldPlannerPrompter = "OldPlannerPrompter"
@@ -124,9 +123,7 @@ class PrompterConfig:
     example_prompt_path: str
     
     def get_prompter(self) -> Prompter:
-        if self.prompter_type == PrompterType.ConcatPrompter:
-            return ConcatPrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
-        elif self.prompter_type == PrompterType.CoTPrompter:
+        if self.prompter_type == PrompterType.CoTPrompter:
             return CoTPrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
         elif self.prompter_type == PrompterType.OldCodePrompter:
             return OldCodePrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)

@@ -1,10 +1,8 @@
-import re
 import typing
-from aimo_gaz.prompters.prompter import ConcatPrompter
+from aimo_gaz.prompters.prompter import Prompter
 from aimo_gaz.utils import string_utils
 
-class LLMGuesserPrompter(ConcatPrompter):
-    last_num_regex = re.compile(r"-?\d*\s*[./]?\s*\d+")
+class LLMGuesserPrompter(Prompter):
 
     def __init__(self, system_prompt_path: str = None, example_prompt_path: str = None, system_prompt: str = None,
                  example_prompt: str = None, append_system_prompt_after_every_message: bool = False):
@@ -14,8 +12,10 @@ class LLMGuesserPrompter(ConcatPrompter):
 
 Problem Statement: {}
 
-Write for me a guess for the numerical answer to this problem. Only output the guessed number, as an integer or a fraction.""" # TODO: add examples
-        self.user_message = """Please write your guess now.""" # TODO: add [START] and [END] scaffolding
+Write for me a guess for the numerical answer to this problem.
+
+Please start your guess with '[START GUESS]' and end it with '[END GUESS]'. Only include the guessed number, as an integer or a fraction.""" # TODO: add examples
+        self.user_message = """Please write your guess now."""
 
     def get_prompt(self, history: list[dict[str, str]], problem_description: str) -> list[dict[str, str]]:
         if not history or history[0]["role"] != "system":
@@ -24,16 +24,14 @@ Write for me a guess for the numerical answer to this problem. Only output the g
         return history
 
     def parse_response(self, response: str) -> typing.Tuple[str, float]:
+        actual_guess_ind = response.rfind("[START GUESS]")
+        if actual_guess_ind != -1:
+            response = response[(actual_guess_ind + len("[START GUESS]")):]
+        response = response.strip()
+
         guess_float = string_utils.parse_float(response)
 
-        if guess_float is None: # TODO: this can be deleted once we add the [START] and [STOP] scaffolding
-            guess_parse = self.last_num_regex.findall(response)
-            if guess_parse:
-                guess_float = string_utils.parse_float(guess_parse[-1])
-                if guess_float is not None:
-                    response = guess_parse[-1]
-
-        return response.strip(), guess_float
+        return response, guess_float
 
 
 if __name__ == "__main__":

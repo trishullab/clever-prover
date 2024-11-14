@@ -13,7 +13,7 @@ class PlannerTool(Tool):
         self.inference_kwargs = inference_kwargs
         self.logger = logger
         self.inference_kwargs["n"] = 1 # Only one response is needed from planner tool
-        self.inference_kwargs["stop"] = []
+        self.inference_kwargs["stop"] = ["[END PROCEDURE]"] # TODO: move this specification to prompter (for all)
         self.history = []
 
     def solve_intermediate(self, problem_description: str) -> typing.Tuple[str, float]:

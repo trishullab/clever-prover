@@ -9,6 +9,6 @@ solver_or_tool_type: CodeTool
 solver_or_tool_args:
 prompter_config:
   prompter_type: CodePrompter
-inference_settings:
-  stop:
-    - '[END CODE]' # TODO: delete this and others since these are defined in tool constructors anyways
+# inference_settings:
+#   stop:
+#     - '[END CODE]'

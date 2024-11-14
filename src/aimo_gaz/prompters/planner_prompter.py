@@ -1,9 +1,9 @@
-from aimo_gaz.prompters.prompter import ConcatPrompter
+from aimo_gaz.prompters.prompter import Prompter
 
-class PlannerPrompter(ConcatPrompter): # TODO: get rid of all ConcatPrompters?
+class PlannerPrompter(Prompter):
 
     def __init__(self, system_prompt_path: str = None, example_prompt_path: str = None, system_prompt: str = None,
-                 example_prompt: str = None, append_system_prompt_after_every_message: bool = False): # TODO: try passing problem statement here for all prompters?
+                 example_prompt: str = None, append_system_prompt_after_every_message: bool = False):
         super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt,
                          append_system_prompt_after_every_message)
         self.system_prompt = """Below is a math problem statement.
@@ -12,8 +12,9 @@ Problem Statement: {}
 
 Write for me the first couple steps you would do to solve this problem. Only write the first couple steps please.
 
-Please begin your response with: '0. I would break down the problem into simpler steps, this can be done by the following:'""" # TODO: add examples
-        self.user_message = "Please write the steps now." # TODO: add [START] and [END] scaffolding
+Please begin your response with: '0. I would break down the problem into simpler steps, this can be done by the following:'
+Please end your response with: '[END PROCEDURE]'""" # TODO: add examples
+        self.user_message = "Please write the steps now."
 
     def get_prompt(self, history: list[dict[str, str]], problem_description: str) -> list[dict[str, str]]:
         if not history or history[0]["role"] != "system":

@@ -13,6 +13,7 @@ from aimo_gaz.solver.tools.coordinator_tool import CoordinatorTool
 from aimo_gaz.solver.tools.planner_tool import PlannerTool
 from aimo_gaz.solver.tools.code_tool import CodeTool
 from aimo_gaz.solver.tools.llm_guesser_tool import LLMGuesserTool
+from aimo_gaz.solver.tools.coordinator_tool import ToolOrGlobalGuess
 from aimo_gaz.utils import string_utils
 from enum import Enum
 from collections import Counter
@@ -113,22 +114,15 @@ class CoordinationSolver(Solver):
 
             coordinator_error = False
             try:
-                tool_str = coordinator.solve_intermediate(problem_description)
-                self._log_and_add_to_history(coordinator.history, f"Loop {MAX_LOOPS - loops_left} / {MAX_LOOPS}: Coordinator chose tool: {tool_str}")
+                tool_or_global_guess, global_guess_str, global_guess_float_temp = coordinator.solve_intermediate(problem_description)
+                self._log_and_add_to_history(coordinator.history, f"Loop {MAX_LOOPS - loops_left} / {MAX_LOOPS}: Coordinator chose tool: {None if tool_or_global_guess is None else tool_or_global_guess.value}")
             except Exception as e:
                 self._log_and_add_to_history(coordinator.history, f"Exception encountered in coordinator: {e}")
                 coordinator_error = True
 
             if coordinator_error:
                 pass
-            elif tool_str[:len("[BEGIN GLOBAL GUESS]")] == "[BEGIN GLOBAL GUESS]":
-                guess_float = string_utils.parse_float(tool_str[len("[BEGIN GLOBAL GUESS]"):])
-                if guess_float is not None:
-                    global_guess_float = guess_float
-                    end_loop = True
-                else:
-                    self._log_and_add_to_history(coordinator.history, f"Coordinator output global guess could not be parsed as float: {tool_str}")
-            elif tool_str == "planner":
+            elif tool_or_global_guess == ToolOrGlobalGuess.PLANNER:
                 try:
                     global_plan = planner.solve_intermediate(problem_description)
 
@@ -137,7 +131,7 @@ class CoordinationSolver(Solver):
                     self._log_and_add_to_history(coordinator.history, f"Exception encountered in planner: {e}")
 
                 planner.reset()
-            elif tool_str == "coder":
+            elif tool_or_global_guess == ToolOrGlobalGuess.CODER:
                 code = None
                 try:
                     code = coder.solve_intermediate(problem_description, plan=global_plan)
@@ -160,7 +154,7 @@ class CoordinationSolver(Solver):
                 
                 coder.reset()
                 executor.reset()
-            elif tool_str == "llm_guesser":
+            elif tool_or_global_guess == ToolOrGlobalGuess.LLM_GUESSER:
                 try:
                     guess_str, guess_float = llm_guesser.solve_intermediate(problem_description)
 
@@ -173,8 +167,16 @@ class CoordinationSolver(Solver):
                     self._log_and_add_to_history(coordinator.history, f"Exception encountered in LLM guesser: {e}")
 
                 llm_guesser.reset()
+            elif tool_or_global_guess == ToolOrGlobalGuess.GLOBAL_GUESS:
+                if global_guess_float_temp is not None:
+                    self.logger.info(f"Coordinator outputted global guess: {global_guess_str}")
+
+                    global_guess_float = global_guess_float_temp
+                    end_loop = True
+                else:
+                    self._log_and_add_to_history(coordinator.history, f"Coordinator output global guess could not be parsed as float: {global_guess_str}")
             else:
-                self._log_and_add_to_history(coordinator.history, f"Coordinator-chosen tool '{tool_str}' is invalid.")
+                self._log_and_add_to_history(coordinator.history, f"Coordinator-chosen tool '{tool_or_global_guess}' is invalid.")
             
             self.logger.info(f"End of loop {MAX_LOOPS - loops_left}. Loops left: {loops_left}\n")
         

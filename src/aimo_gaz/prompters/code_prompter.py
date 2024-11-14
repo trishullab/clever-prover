@@ -1,7 +1,6 @@
-from aimo_gaz.prompters.prompter import ConcatPrompter
-import copy
+from aimo_gaz.prompters.prompter import Prompter
 
-class CodePrompter(ConcatPrompter):
+class CodePrompter(Prompter):
 
     def __init__(self, system_prompt_path: str = None, example_prompt_path: str = None, system_prompt: str = None,
                  example_prompt: str = None, append_system_prompt_after_every_message: bool = False):
@@ -13,7 +12,7 @@ Problem Statement: {}
 
 Can you write a python program that tries to solve the problem statement using SymPy? The code should always answer by printing only a number (integer or fraction) and nothing else. Make sure it runs correctly!
 
-Start the code with '```python' and end the code with '```'.""" # TODO: add examples
+Please start the code with '```python' and end it with '```'""" # TODO: add examples
         self.user_message_with_plan = """Here are the first couple steps in trying to solve the problem:
 
 First Couple Steps:

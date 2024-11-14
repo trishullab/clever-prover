@@ -1,3 +1,3 @@
-prompter_type: ConcatPrompter
-system_prompt_path: <AIMO_GAZ_ROOT>/prompters/system_prompts/test_system_prompt.md
-example_prompt_path: <AIMO_GAZ_ROOT>/prompters/example_prompts/test_example_prompt.md
+# prompter_type: ConcatPrompter
+# system_prompt_path: <AIMO_GAZ_ROOT>/prompters/system_prompts/test_system_prompt.md
+# example_prompt_path: <AIMO_GAZ_ROOT>/prompters/example_prompts/test_example_prompt.md

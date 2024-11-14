@@ -9,6 +9,6 @@ solver_or_tool_type: OldCodeTool
 solver_or_tool_args:
 prompter_config:
   prompter_type: OldCodePrompter
-inference_settings:
-  stop:
-    - '[END CODE]'
+# inference_settings:
+#   stop:
+#     - '[END CODE]'

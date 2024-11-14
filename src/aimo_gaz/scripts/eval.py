@@ -37,7 +37,7 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger : logg
 
         category = ex.get('Tag')
 
-        solver_ans = solver.solve(problem, time_allowed = total_time_left//(50 - total))
+        solver_ans = solver.solve(problem, time_allowed = total_time_left // (50 - total))
 
         # solver_is_correct = int(solver_ans) % 1000 == int(answer)
         eps = 1e-6

@@ -1,7 +1,7 @@
 import re
-from aimo_gaz.prompters.prompter import ConcatPrompter
+from aimo_gaz.prompters.prompter import Prompter
 
-class CoTPrompter(ConcatPrompter):
+class CoTPrompter(Prompter):
     int_regex = re.compile(r"[-+]?\d+")
     box_regex = re.compile(r"\\boxed{([-+]?\d+)}")
 

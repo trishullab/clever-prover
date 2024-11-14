@@ -9,6 +9,6 @@ solver_or_tool_type: CoordinatorTool
 solver_or_tool_args:
 prompter_config:
   prompter_type: CoordinatorPrompter
-inference_settings:
-  stop:
-    - '[END COORDINATOR]'
+# inference_settings:
+#   stop:
+#     - '[END COORDINATOR]'

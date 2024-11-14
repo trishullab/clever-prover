@@ -9,6 +9,6 @@ solver_or_tool_type: OldPlannerTool
 solver_or_tool_args:
 prompter_config:
   prompter_type: OldPlannerPrompter
-inference_settings:
-  stop:
-    - '[END PROCEDURE]'
+# inference_settings:
+#   stop:
+#     - '[END PROCEDURE]'

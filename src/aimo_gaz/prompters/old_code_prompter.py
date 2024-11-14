@@ -1,7 +1,7 @@
-from aimo_gaz.prompters.prompter import ConcatPrompter
+from aimo_gaz.prompters.prompter import Prompter
 import copy
 
-class OldCodePrompter(ConcatPrompter):
+class OldCodePrompter(Prompter):
     def __init__(self, system_prompt_path: str = None, example_prompt_path: str = None, system_prompt: str = None, example_prompt: str = None, append_system_prompt_after_every_message: bool = False):
         super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt, append_system_prompt_after_every_message)
 #         self.user_message = """Below is a problem statement and the first couple steps in trying to solve it. Can you write a python program that tries to solve the problem statement using SymPy? The code should always answer with a number. Make sure it runs correctly! End the code by writing [END CODE].\n\nProblem Statement:

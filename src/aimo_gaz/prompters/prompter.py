@@ -80,13 +80,13 @@ class Prompter(ABC):
             with open(self.system_prompt_path, "r") as f:
                 self.system_prompt = f.read()
 
-class ConcatPrompter(Prompter):
-    def get_prompt(self, history: typing.List[typing.Dict[str, str]]) -> list[dict[str, str]]:
-        full_prompt = self.system_prompt + "\n" + self.example_prompt
-        for msg in history:
-            for k, v in msg.items():
-                full_prompt += f"\n{k}\n{v}"
-        return full_prompt + "\n"
+# class ConcatPrompter(Prompter):
+#     def get_prompt(self, history: typing.List[typing.Dict[str, str]]) -> list[dict[str, str]]:
+#         full_prompt = self.system_prompt + "\n" + self.example_prompt
+#         for msg in history:
+#             for k, v in msg.items():
+#                 full_prompt += f"\n{k}\n{v}"
+#         return full_prompt + "\n"
     
-    def parse_response(self, response: str) -> str:
-        return response
+#     def parse_response(self, response: str) -> str:
+#         return response
