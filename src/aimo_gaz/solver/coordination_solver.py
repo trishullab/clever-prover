@@ -81,7 +81,7 @@ class CoordinationSolver(Solver):
     #                 self._cloned_exec_tool = copy.deepcopy(self.tools["executor"])
     #             self._cloned_exec_tool.reset()
     #             outs = self._cloned_exec_tool.solve_intermediate_parallel([f"print(simplify('{output}'))"])
-    #             simpl_output = self._cloned_exec_tool.extract_last_output(outs[0])
+    #             simpl_output, _ = self._cloned_exec_tool.extract_last_output(outs[0])
     #             self.logger.info(f"SymPy simplified output is {simpl_output}")
     #             return float(simpl_output)
     #         except Exception as e:
@@ -142,13 +142,16 @@ class CoordinationSolver(Solver):
                     try:
                         output = executor.solve_intermediate(code) # TODO: maybe switch to multiple code generations and parallel execution
 
-                        last_output = executor.extract_last_output(output)
-                        output_float = string_utils.parse_float(last_output)
-                        if output_float is not None:
-                            self._log_and_add_to_history(coordinator.history, f"Code executor guessed: {last_output}")
-                            global_guess_float = output_float
+                        last_output, code_success = executor.extract_last_output(output)
+                        if code_success:
+                            output_float = string_utils.parse_float(last_output)
+                            if output_float is not None:
+                                self._log_and_add_to_history(coordinator.history, f"Code executor guessed: {last_output}")
+                                global_guess_float = output_float
+                            else:
+                                self._log_and_add_to_history(coordinator.history, f"Code executor output could not be parsed as float: {last_output}")
                         else:
-                            self._log_and_add_to_history(coordinator.history, f"Code executor could not be parsed as float: {last_output}") # TODO: output something different when there's a code error
+                            self._log_and_add_to_history(coordinator.history, f"Code executor raised exception: {last_output}")
                     except Exception as e:
                         self._log_and_add_to_history(coordinator.history, f"Exception encountered in code executor: {e}")
                 
@@ -246,7 +249,7 @@ class CoordinationSolver(Solver):
             executor.history = copy.deepcopy(old_coder.history)
             outputs = executor.solve_intermediate_parallel(codes)
             # Extract the last output
-            last_outputs = [executor.extract_last_output(output) for output in outputs]
+            last_outputs = [executor.extract_last_output(output)[0] for output in outputs]
             
             # See if this is a valid answer
             self.logger.info(f"Checking if executor outputs are valid answers.")
@@ -325,7 +328,7 @@ class CoordinationSolver(Solver):
 #             if len(fixed_codes) > 0:
 #                 repaired_outputs = executor.solve_intermediate_parallel(fixed_codes)
 #                 # Extract the last output
-#                 repaired_last_outputs = [executor.extract_last_output(output) for output in repaired_outputs]
+#                 repaired_last_outputs = [executor.extract_last_output(output)[0] for output in repaired_outputs]
 #             else:
 #                 repaired_last_outputs = []
 #             repaired_float_answers = [None] * len(repaired_last_outputs)

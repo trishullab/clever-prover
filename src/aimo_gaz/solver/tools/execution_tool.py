@@ -152,13 +152,15 @@ print("[OUTPUT END]")"""
             os.remove(tempfiles[i])
         return outputs
     
-    def extract_last_output(self, output: str) -> str:
+    def extract_last_output(self, output: str) -> typing.Tuple[str, bool]:
         # Find the last occurence of "[OUTPUT END]"
         output = output.strip()
         assert output.endswith("[OUTPUT END]"), "Output does not end with [OUTPUT END]"
         stripped_output = output[:-len("[OUTPUT END]")].strip()
+        code_success = False
         if stripped_output.endswith("[CODE RAN SUCCESSFULLY]"):
             stripped_output = stripped_output[:-len("[CODE RAN SUCCESSFULLY]")].strip()
+            code_success = True
         elif stripped_output.endswith("[CODE RAISED EXCEPTION]"):
             stripped_output = stripped_output[:-len("[CODE RAISED EXCEPTION]")].strip()
         elif stripped_output.endswith("[TIMEOUT]"):
@@ -169,7 +171,7 @@ print("[OUTPUT END]")"""
             last_output = stripped_output[len("[OUTPUT START]"):].strip()
         else:
             last_output = stripped_output[last_newline_index:].strip()
-        return last_output
+        return last_output, code_success
     
     def reset(self):
         self.history = []
