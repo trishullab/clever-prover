@@ -22,13 +22,12 @@ class ExecutionTool(Tool):
             bufsize = 1,
             universal_newlines = True)
         # Start the process, and wait for it to finish
+        output = None
         try:
-            process.wait(timeout=timeout_in_secs)
+            output, _ = process.communicate(timeout=timeout_in_secs)
             is_timeout = False
         except TimeoutExpired:
             is_timeout = True
-        # Get the output
-        output = process.stdout.read()
         # Kill the process if it is still running
         process.kill()
         # Return the output
@@ -51,8 +50,9 @@ class ExecutionTool(Tool):
         for process in processes:
             # Start the process, and wait for it to finish
             # This won't really be sequential because other processes are running in background
+            output = None
             try:
-                process.wait(timeout=timeout_in_secs)
+                output, _ = process.communicate(timeout=timeout_in_secs)
                 is_timeout = False
             except TimeoutExpired:
                 is_timeout = True
@@ -63,8 +63,6 @@ class ExecutionTool(Tool):
                 timeout_in_secs = 1
             # Kill the process if it is still running
             process.kill()
-            # Get the output
-            output = process.stdout.read()
             # Return the output
             outputs.append(self.parse_output(is_timeout, process, output))
         return outputs
