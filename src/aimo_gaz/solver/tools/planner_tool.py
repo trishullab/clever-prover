@@ -21,7 +21,7 @@ class PlannerTool(Tool):
             self.model.__enter__()
         # Prompt the model for the plan
         self.history = self.prompter.get_prompt(self.history, problem_description)
-        self.logger.info(f"[PLANNER] Raw prompt used:\n{self.history}")
+        self.logger.info(f"[PLANNER] Raw prompt used:\n{self.history}") # TODO: this all shows up on one line, format this better
         # Get the model response
         response = self.model.generate(self.history, **self.inference_kwargs)
         outs = self.model.parse_out(response)

@@ -16,7 +16,7 @@ class LLMGuesserTool(Tool):
         self.inference_kwargs["stop"] = ["[END GUESS]"]
         self.history = []
 
-    def solve_intermediate(self, problem_description: str) -> typing.Tuple[str, float]:
+    def solve_intermediate(self, problem_description: str) -> typing.Tuple[str, float]: # TODO: pass in plan, like in coder
         if not self.model.is_loaded():
             self.model.__enter__()
         # Prompt the model for the guess

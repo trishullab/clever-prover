@@ -10,16 +10,16 @@ class LLMGuesserPrompter(Prompter):
                          append_system_prompt_after_every_message)
         self.system_prompt = """Below is a math problem statement.
 
-Problem Statement: {}
-
 Write for me a guess for the numerical answer to this problem.
 
 Please start your guess with '[START GUESS]' and end it with '[END GUESS]'. Only include the guessed number, as an integer or a fraction.""" # TODO: add examples
-        self.user_message = """Please write your guess now."""
+        self.problem_statement_message = "Problem Statement: {}"
+        self.user_message = "Please write your guess now."
 
     def get_prompt(self, history: list[dict[str, str]], problem_description: str) -> list[dict[str, str]]:
         if not history or history[0]["role"] != "system":
-            history.insert(0, {"role": "system", "content": self.system_prompt.format(problem_description)})
+            history.insert(0, {"role": "system", "content": self.system_prompt})
+            history.insert(1, {"role": "user", "content": self.problem_statement_message.format(problem_description)})
         history.append({"role": "user", "content": self.user_message})
         return history
 

@@ -10,8 +10,6 @@ class CoordinatorPrompter(Prompter):
                          append_system_prompt_after_every_message)
         self.system_prompt = """Below is a math problem statement.
 
-Problem Statement: {}
-
 You are the coordinator in charge of solving this problem. You have several tools at your disposal to help you solve it. Your tools are:
 
 (1) planner: Query an LLM to generate the first few steps of a plan for solving the problem.
@@ -25,12 +23,14 @@ Please output which tool you would like to use next or, if you believe the probl
 If you choose to use a tool, please output the name of the tool between the tokens '[START TOOL]' and '[END TOOL]'
 If you choose to globally guess the answer, please output your numerical answer between the tokens '[START GLOBAL GUESS]' and '[END GLOBAL GUESS]'. Only include the guessed number, as an integer or a fraction.
 
-Below is the history of actions taken so far by the coordinator (you) and the tools to solve this problem.""" # TODO: add examples
+Below is the problem statement and the history of actions taken so far by the coordinator (you) and the tools to solve this problem.""" # TODO: add examples
+        self.problem_statement_message = "Problem Statement: {}"
         self.user_message = "Please output your chosen tool or global guess now."
 
     def get_prompt(self, history: list[dict[str, str]], problem_description: str) -> list[dict[str, str]]:
         if not history or history[0]["role"] != "system":
-            history.insert(0, {"role": "system", "content": self.system_prompt.format(problem_description)})
+            history.insert(0, {"role": "system", "content": self.system_prompt})
+            history.insert(1, {"role": "user", "content": self.problem_statement_message.format(problem_description)})
         history.append({"role": "user", "content": self.user_message})
         return history
 
