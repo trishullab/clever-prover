@@ -16,6 +16,8 @@ Please start your guess with '[START GUESS]' and end it with '[END GUESS]'. Only
         self.problem_statement_message = "Problem Statement: {}"
         self.user_message = "Please write your guess now."
 
+        self.stop_tokens = ["[END GUESS]"]
+
     def get_prompt(self, history: list[dict[str, str]], problem_description: str) -> list[dict[str, str]]:
         if not history or history[0]["role"] != "system":
             history.insert(0, {"role": "system", "content": self.system_prompt})

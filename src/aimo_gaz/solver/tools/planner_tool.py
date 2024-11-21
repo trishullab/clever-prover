@@ -13,7 +13,7 @@ class PlannerTool(Tool):
         self.inference_kwargs = inference_kwargs
         self.logger = logger
         self.inference_kwargs["n"] = 1 # Only one response is needed from planner tool
-        self.inference_kwargs["stop"] = ["[END PROCEDURE]"] # TODO: move this specification to prompter (for all)
+        self.inference_kwargs["stop"] = prompter.stop_tokens
         self.history = []
 
     def solve_intermediate(self, problem_description: str) -> typing.Tuple[str, float]:
@@ -21,7 +21,7 @@ class PlannerTool(Tool):
             self.model.__enter__()
         # Prompt the model for the plan
         self.history = self.prompter.get_prompt(self.history, problem_description)
-        self.logger.info(f"[PLANNER] Raw prompt used:\n{self.history}") # TODO: this all shows up on one line, format this better
+        self.logger.info("[PLANNER] Raw prompt used:\n[{}]".format(",\n".join(map(str, self.history))))
         # Get the model response
         response = self.model.generate(self.history, **self.inference_kwargs)
         outs = self.model.parse_out(response)

@@ -35,8 +35,8 @@ def main(cfg):
         data_dir = os.path.dirname(data_dir)
         data_dir = os.path.join(data_dir, "data")
         # benchmark = "valid"
-        # benchmark = "kaggle_train_1"
-        benchmark = "kaggle_train_1_x_20_temp"
+        benchmark = "kaggle_train_1"
+        # benchmark = "kaggle_train_1_x_20_temp"
         # benchmark = "harmonic_find_test_28"
         logger.info(f"Running on {benchmark}")
         os.makedirs(f".logs/{time_str}/{benchmark}", exist_ok=True)

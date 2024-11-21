@@ -20,7 +20,7 @@ class CoordinatorTool(Tool):
         self.inference_kwargs = inference_kwargs
         self.logger = logger
         self.inference_kwargs["n"] = 1 # Only one response is needed from coordinator tool
-        self.inference_kwargs["stop"] = ["[END TOOL]", "[END GLOBAL GUESS]"]
+        self.inference_kwargs["stop"] = prompter.stop_tokens
         self.history = []
 
     def solve_intermediate(self, problem_description: str) -> typing.Tuple[ToolOrGlobalGuess, str, float]:
@@ -28,7 +28,7 @@ class CoordinatorTool(Tool):
             self.model.__enter__()
         # Prompt the model for the tool
         self.history = self.prompter.get_prompt(self.history, problem_description)
-        self.logger.info(f"[COORDINATOR] Raw prompt used:\n{self.history}")
+        self.logger.info("[COORDINATOR] Raw prompt used:\n[{}]".format(",\n".join(map(str, self.history))))
         # Get the model response
         response = self.model.generate(self.history, **self.inference_kwargs)
         outs = self.model.parse_out(response)

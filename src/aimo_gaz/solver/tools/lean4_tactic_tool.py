@@ -12,8 +12,8 @@
 #         self.prompter = prompter
 #         self.inference_kwargs = inference_kwargs
 #         self.logger = logger
-#         self.inference_kwargs["n"] = 1 # Only one response is needed from Lean 4 tactic tool
-#         self.inference_kwargs["stop"] = []
+#         self.inference_kwargs["n"] = 1 # Only one response is needed from planner tool
+#         self.inference_kwargs["stop"] = prompter.stop_tokens
 #         self.history = []
 
 #     def solve_intermediate(self, problem_description: str) -> typing.Tuple[str, float]:
@@ -21,7 +21,7 @@
 #             self.model.__enter__()
 #         # Prompt the model for the plan
 #         self.history = self.prompter.get_prompt(self.history, problem_description)
-#         self.logger.info(f"[PLANNER] Raw prompt used:\n{self.history}")
+#         self.logger.info("[PLANNER] Raw prompt used:\n[{}]".format(",\n".join(map(str, self.history))))
 #         # Get the model response
 #         response = self.model.generate(self.history, **self.inference_kwargs)
 #         outs = self.model.parse_out(response)
@@ -40,6 +40,7 @@
     
 #     def __exit__(self, exc_type, exc_val, exc_tb):
 #         self.model.__exit__(exc_type, exc_val, exc_tb)
+
 
 # if __name__ == "__main__":
 #     import sys

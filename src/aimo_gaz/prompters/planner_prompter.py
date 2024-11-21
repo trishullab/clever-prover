@@ -14,6 +14,8 @@ Please begin your response with: '0. I would break down the problem into simpler
 Please end your response with: '[END PROCEDURE]'""" # TODO: add examples
         self.problem_statement_message = "Problem Statement: {}"
         self.user_message = "Please write the steps now."
+        
+        self.stop_tokens = ["[END PROCEDURE]"]
 
     def get_prompt(self, history: list[dict[str, str]], problem_description: str) -> list[dict[str, str]]:
         if not history or history[0]["role"] != "system":

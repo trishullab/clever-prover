@@ -21,7 +21,8 @@ class Prompter(ABC):
         if self.example_prompt is None and self.example_prompt is not None:
             with open(self.example_prompt_path, "r") as f:
                 self.example_prompt = f.read()
-
+        
+        self.stop_tokens = []
 
     # def translate_for_deepseek(self, history, no_newline_after_assistant=False):
     #     last_role = None
@@ -55,7 +56,6 @@ class Prompter(ABC):
     #         prompt += 'Assistant:'
     #     return prompt
 
-
     @abstractmethod
     def get_prompt(self, history: typing.List[typing.Dict[str, str]], *args, **kwargs) -> list[dict[str, str]]:
         pass
@@ -79,6 +79,7 @@ class Prompter(ABC):
         if self.system_prompt is None:
             with open(self.system_prompt_path, "r") as f:
                 self.system_prompt = f.read()
+
 
 # class ConcatPrompter(Prompter):
 #     def get_prompt(self, history: typing.List[typing.Dict[str, str]]) -> list[dict[str, str]]:

@@ -13,7 +13,7 @@ class LLMGuesserTool(Tool):
         self.inference_kwargs = inference_kwargs
         self.logger = logger
         self.inference_kwargs["n"] = 1 # Only one response is needed from LLM guesser tool
-        self.inference_kwargs["stop"] = ["[END GUESS]"]
+        self.inference_kwargs["stop"] = prompter.stop_tokens
         self.history = []
 
     def solve_intermediate(self, problem_description: str) -> typing.Tuple[str, float]: # TODO: pass in plan, like in coder
@@ -21,7 +21,7 @@ class LLMGuesserTool(Tool):
             self.model.__enter__()
         # Prompt the model for the guess
         self.history = self.prompter.get_prompt(self.history, problem_description)
-        self.logger.info(f"[LLM GUESSER] Raw prompt used:\n{self.history}")
+        self.logger.info("[LLM GUESSER] Raw prompt used:\n[{}]".format(",\n".join(map(str, self.history))))
         # Get the model response
         response = self.model.generate(self.history, **self.inference_kwargs)
         outs = self.model.parse_out(response)
