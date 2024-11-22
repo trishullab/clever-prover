@@ -14,7 +14,7 @@ You are the coordinator in charge of solving this problem. You have several tool
 
 (1) planner: Query an LLM to generate the first few steps of a plan for solving the problem.
 (2) coder: Query an LLM to generate code to solve the problem and then run the code. The most recently generated plan, if one exists, will be passed to the LLM coder.
-(3) llm_guesser: Query an LLM to guess the answer to the problem.
+(3) llm_guesser: Query an LLM to guess the answer to the problem. The most recently generated plan, if one exists, will be passed to the LLM guesser.
 
 If you think one of the previous tool outputs contains the correct answer, you also have the option to globally guess that answer.
 

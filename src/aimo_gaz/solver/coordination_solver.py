@@ -159,7 +159,7 @@ class CoordinationSolver(Solver):
                 executor.reset()
             elif tool_or_global_guess == ToolOrGlobalGuess.LLM_GUESSER:
                 try:
-                    guess_str, guess_float = llm_guesser.solve_intermediate(problem_description)
+                    guess_str, guess_float = llm_guesser.solve_intermediate(problem_description, plan=global_plan)
 
                     if guess_float is not None:
                         self._log_and_add_to_history(coordinator.history, f"LLM guesser guessed: {guess_str}")
