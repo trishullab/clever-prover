@@ -8,7 +8,7 @@ class CodePrompter(Prompter):
                          append_system_prompt_after_every_message)
         self.system_prompt = """Below is a math problem statement.
 
-Can you write a python program that tries to solve the problem statement using SymPy? The code should always answer by printing only a number (integer or fraction) and nothing else (no expressions). Make sure it runs correctly!
+Can you write a python program that tries to solve the problem statement using SymPy? The code should always answer by printing only a number (integer or fraction) and nothing else. Make sure it runs correctly!
 
 Please start the code with '```python' and end it with '```'""" # TODO: add examples
         self.problem_statement_message = "Problem Statement: {}"
