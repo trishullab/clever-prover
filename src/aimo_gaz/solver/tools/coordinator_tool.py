@@ -28,7 +28,10 @@ class CoordinatorTool(Tool):
             self.model.__enter__()
         # Prompt the model for the tool
         self.history = self.prompter.get_prompt(self.history, problem_description)
-        self.logger.info("[COORDINATOR] Raw prompt used:\n[{}]".format(",\n".join(map(str, self.history))))
+        if len(self.history) > 10:
+            self.logger.info("[COORDINATOR] Raw prompt used:\n[...,\n{}]".format(",\n".join(map(str, self.history[-10:]))))
+        else:
+            self.logger.info("[COORDINATOR] Raw prompt used:\n[{}]".format(",\n".join(map(str, self.history))))
         # Get the model response
         response = self.model.generate(self.history, **self.inference_kwargs)
         outs = self.model.parse_out(response)
