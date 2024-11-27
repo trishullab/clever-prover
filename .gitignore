@@ -171,3 +171,7 @@ nohup.out
 
 # Secrets
 .secrets/
+
+# lean4_proj
+.lake
+temptodel*
