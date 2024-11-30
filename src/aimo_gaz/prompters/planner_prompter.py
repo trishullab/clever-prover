@@ -5,7 +5,7 @@ class PlannerPrompter(Prompter):
     def __init__(self, system_prompt_path: str = None, example_prompt_path: str = None, system_prompt: str = None,
                  example_prompt: str = None, append_system_prompt_after_every_message: bool = False):
         super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt,
-                         append_system_prompt_after_every_message)
+                         append_system_prompt_after_every_message) # TODO: below, change 'begin' to 'start' for consistency
         self.system_prompt = """Below is a math problem statement.
 
 Write for me the first couple steps you would do to solve this problem. Only write the first couple steps please.

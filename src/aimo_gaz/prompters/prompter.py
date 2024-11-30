@@ -18,7 +18,7 @@ class Prompter(ABC):
         if self.system_prompt is None and self.system_prompt_path is not None:
             with open(self.system_prompt_path, "r") as f:
                 self.system_prompt = f.read()
-        if self.example_prompt is None and self.example_prompt is not None:
+        if self.example_prompt is None and self.example_prompt_path is not None:
             with open(self.example_prompt_path, "r") as f:
                 self.example_prompt = f.read()
         

@@ -38,7 +38,7 @@ def attempt_on_subset(rank, size, time_str, cfg, csv_path, benchmark_name, confi
         evaluate_on_benchmarks(benchmark_name, csv_path, solver, time_str, logger)
     dist.destroy_process_group()
 
-@hydra.main(config_path="configs", config_name="coordination_solver_config", version_base="1.2")
+@hydra.main(config_path="configs/", config_name="coordination_solver_config", version_base="1.2")
 def main(cfg):
     dist.init_process_group(backend='nccl')
     dirpath = os.path.dirname(os.path.abspath(__file__))
