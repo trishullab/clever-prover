@@ -28,8 +28,8 @@ class PlannerTool(Tool):
         assert len(outs) == 1, "No response (or too many responses) from the model."
         generated_text = outs[0][0]
         self.history.append({"role": "assistant", "content": generated_text})
-        self.logger.info(f"[PLANNER] Plan generated.") # TODO: remove fstring here (for all)
-        return f"{generated_text}" # TODO: remove fstring here (for all)
+        self.logger.info("[PLANNER] Plan generated.")
+        return generated_text
 
     def reset(self):
         self.history = []

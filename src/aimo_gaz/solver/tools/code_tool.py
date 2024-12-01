@@ -28,8 +28,8 @@ class CodeTool(Tool):
         assert len(outs) == 1, "No response (or too many responses) from the model."
         generated_text = outs[0][0]
         self.history.append({"role": "assistant", "content": generated_text})
-        self.logger.info(f"[CODE TOOL] Generated code.")
-        return self.prompter.parse_response(f"{generated_text}")
+        self.logger.info("[CODE TOOL] Generated code.")
+        return self.prompter.parse_response(generated_text)
 
     def reset(self):
         self.history = []

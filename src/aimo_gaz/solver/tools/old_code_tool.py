@@ -50,7 +50,7 @@ class OldCodeTool(Tool):
                 # elif gen_text.endswith('<｜end▁of▁sentence｜>'):
                 #     generated_texts.append(gen_text.replace('<｜end▁of▁sentence｜>', ''))
                 # else:
-                #     generated_texts.append(f"{gen_text}")
+                #     generated_texts.append(gen_text)
                 actual_code_ind = gen_text.find("```python")
                 if actual_code_ind != -1:
                     gen_text = gen_text[(actual_code_ind + len("```python")):]
@@ -58,7 +58,7 @@ class OldCodeTool(Tool):
                 if actual_code_ind != -1:
                     gen_text = gen_text[:actual_code_ind]
                 gen_text = gen_text.strip()
-                generated_texts.append(f"{gen_text}")
+                generated_texts.append(gen_text)
                 self.logger.info(f"[CODE TOOL] Generated code:\n{gen_text}")
         return generated_texts
 

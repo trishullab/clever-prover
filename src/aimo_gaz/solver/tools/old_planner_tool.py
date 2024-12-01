@@ -50,10 +50,10 @@ class OldPlannerTool(Tool):
         # if not generated_text.strip().endswith("[END PROCEDURE]"):
         #     generated_text = generated_text.rstrip('\n') + "\n[END PROCEDURE]"
         # self.logger.info(f"[PLANNER] Plan generated:\n{generated_text}")
-        # return f"{generated_text.replace('[END PROCEDURE]', '')}"
-        generated_text = generated_text.rstrip('\n') + "\n" # TODO: Is adding the extra newline necessary?
+        # return generated_text.replace('[END PROCEDURE]', '')
+        generated_text = generated_text.rstrip("\n") + "\n" # TODO: Is adding the extra newline necessary?
         self.logger.info(f"[PLANNER] Plan generated:\n{generated_text}")
-        return f"{generated_text}"
+        return generated_text
 
     def reset(self):
         self.history = []

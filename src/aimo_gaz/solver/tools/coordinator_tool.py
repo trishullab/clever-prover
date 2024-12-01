@@ -39,7 +39,7 @@ class CoordinatorTool(Tool):
         generated_text = outs[0][0]
         self.history.append({"role": "assistant", "content": generated_text})
         self.logger.info(f"[COORDINATOR] Output generated: {generated_text}")
-        return self.prompter.parse_response(f"{generated_text}")
+        return self.prompter.parse_response(generated_text)
 
     def reset(self):
         self.history = []
