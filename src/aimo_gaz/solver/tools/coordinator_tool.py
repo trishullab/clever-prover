@@ -10,6 +10,7 @@ class ToolOrGlobalGuess(Enum):
     CODER = "coder"
     LLM_GUESSER = "llm_guesser"
     GLOBAL_GUESS = "global_guess"
+    PROVER = "prover"
 
 class CoordinatorTool(Tool):
     def __init__(self, model: Model, prompter: Prompter, logger: logging.Logger = None, **inference_kwargs):
@@ -28,7 +29,7 @@ class CoordinatorTool(Tool):
             self.model.__enter__()
         # Prompt the model for the tool
         self.history = self.prompter.get_prompt(self.history, problem_description)
-        if len(self.history) > 10:
+        if len(self.history) > 10: # TODO: move this pattern into string_utils
             self.logger.info("[COORDINATOR] Raw prompt used:\n[...,\n{}]".format(",\n".join(map(str, self.history[-10:]))))
         else:
             self.logger.info("[COORDINATOR] Raw prompt used:\n[{}]".format(",\n".join(map(str, self.history))))

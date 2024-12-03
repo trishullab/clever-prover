@@ -1,5 +1,7 @@
 import Mathlib
 
+open BigOperators
+
 theorem induction_prod1p1onk3le3m1onn
   (n : ℕ)
   (h₀ : 0 < n) :

@@ -1,5 +1,7 @@
 import Mathlib
 
+open BigOperators
+
 theorem imo_1969_p2
  (x₁ x₂ : ℝ)
  (n : ℕ)

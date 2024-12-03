@@ -7,12 +7,14 @@ class ProverPrompter(Prompter):
                  example_prompt: str = None, append_system_prompt_after_every_message: bool = False):
         super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt,
                          append_system_prompt_after_every_message)
-        self.system_prompt = """Below is the current proof state of a theorem in Lean 4, along with the history of proof states and tactics used to prove it.
+        self.system_prompt = """Below is the informal problem statement and current proof state of a theorem in Lean 4, along with the history of proof states and tactics used to prove it.
 
-Write for me the next tactic to prove this theorem in Lean 4.
+Please write for me the next tactic to prove this theorem in Lean 4. Only write one tactic.
+
+Be sure to use correct Lean 4 notation.
 
 Please start your response with '[START TACTIC]' and end it with '[END TACTIC]'""" # TODO: add examples
-        # self.problem_statement_message = "Problem Statement: {}"
+        self.problem_statement_message = "Problem Statement: {}"
         self.user_message = "Please write the next tactic now."
         
         self.stop_tokens = ["[END TACTIC]"]
@@ -20,7 +22,7 @@ Please start your response with '[START TACTIC]' and end it with '[END TACTIC]'"
     def get_prompt(self, history: list[dict[str, str]], problem_description: str) -> list[dict[str, str]]:
         if not history or history[0]["role"] != "system":
             history.insert(0, {"role": "system", "content": self.system_prompt})
-            # history.insert(1, {"role": "user", "content": self.problem_statement_message.format(problem_description)})
+            history.insert(1, {"role": "user", "content": self.problem_statement_message.format(problem_description)})
         history.append({"role": "user", "content": self.user_message})
         return history
 
@@ -67,8 +69,3 @@ Please start your response with '[START TACTIC]' and end it with '[END TACTIC]'"
         render_list.append(f"Info:\n {info.to_json()}")
         # self.logger.info("-"*50)
         return "\n".join(render_list)
-    
-    def get_prompt_state(self, history: list[dict[str, str]], proof_env: ProofEnv) -> list[dict[str, str]]:
-        render_message = self.render_proof_env(proof_env)
-        history.append({"role": "user", "content": render_message})
-        return history

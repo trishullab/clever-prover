@@ -8,22 +8,33 @@ class CoordinatorPrompter(Prompter):
                  example_prompt: str = None, append_system_prompt_after_every_message: bool = False):
         super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt,
                          append_system_prompt_after_every_message)
+#         self.system_prompt = """Below is a math problem statement.
+
+# You are the coordinator in charge of solving this problem. You have several tools at your disposal to help you solve it. Your tools are:
+
+# (1) planner: Query an LLM to generate the first few steps of a plan for solving the problem. Any old plans will be overwritten; do not use the planner two times in a row.
+# (2) coder: Query an LLM to generate code to solve the problem and then run the code. The most recently generated plan, if one exists, will be passed to the LLM coder.
+# (3) llm_guesser: Query an LLM to guess the answer to the problem. The most recently generated plan, if one exists, will be passed to the LLM guesser.
+
+# If you think one of the previous tool outputs contains the correct answer, you also have the option to globally guess that answer.
+
+# Please output which tool you would like to use next or, if you believe the problem has been solved, output your global guess for an answer.
+
+# If you choose to use a tool, please output the name of the tool between the tokens '[START TOOL]' and '[END TOOL]'
+# If you choose to globally guess the answer, please output your numerical answer between the tokens '[START GLOBAL GUESS]' and '[END GLOBAL GUESS]'. Only include the guessed number, as an integer or a fraction.
+
+# Below is the problem statement and the history of actions taken so far by the coordinator (you) and the tools to solve this problem.""" # TODO: add examples
         self.system_prompt = """Below is a math problem statement.
 
-You are the coordinator in charge of solving this problem. You have several tools at your disposal to help you solve it. Your tools are:
+You are the coordinator in charge of formally proving this problem. You have several tools at your disposal to help you solve it. Your tools are:
 
-(1) planner: Query an LLM to generate the first few steps of a plan for solving the problem. Any old plans will be overwritten; do not use the planner two times in a row.
-(2) coder: Query an LLM to generate code to solve the problem and then run the code. The most recently generated plan, if one exists, will be passed to the LLM coder.
-(3) llm_guesser: Query an LLM to guess the answer to the problem. The most recently generated plan, if one exists, will be passed to the LLM guesser.
+(1) prover: Query an LLM to generate the next tactic for proving the problem in Lean 4. The LLM will be provided the current proof state.
 
-If you think one of the previous tool outputs contains the correct answer, you also have the option to globally guess that answer.
+Please output which tool you would like to use next.
 
-Please output which tool you would like to use next or, if you believe the problem has been solved, output your global guess for an answer.
+Please output the name of the tool between the tokens '[START TOOL]' and '[END TOOL]'
 
-If you choose to use a tool, please output the name of the tool between the tokens '[START TOOL]' and '[END TOOL]'
-If you choose to globally guess the answer, please output your numerical answer between the tokens '[START GLOBAL GUESS]' and '[END GLOBAL GUESS]'. Only include the guessed number, as an integer or a fraction.
-
-Below is the problem statement and the history of actions taken so far by the coordinator (you) and the tools to solve this problem.""" # TODO: add examples
+Below is the problem statement and the history of actions taken so far by the coordinator (you) and the tools to prove this problem.""" # TODO: add examples
         self.problem_statement_message = "Problem Statement: {}"
         self.user_message = "Please output your chosen tool or global guess now."
 
