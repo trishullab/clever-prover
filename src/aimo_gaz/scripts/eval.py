@@ -31,7 +31,7 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger : logg
         # answer = ex.get('answer', ex.get('Answer'))
         # assert answer is not None, f'Answer not found in example: {ex}'
 
-        # answer = string_utils.parse_float(answer)
+        # answer = string_utils.parse_float(answer) # TODO: handle non-numerical answers
         # if answer is None:
         #     logger.error(f"ERROR: Answer '{answer}' is not a float or fraction for row {exidx}")
         #     continue
@@ -49,7 +49,7 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger : logg
 
         proof_exec_callback = ProofExecutorCallback(
             project_folder="../../data/test/lean4_proj",
-            file_path=f"../../data/test/lean4_proj/Lean4Proj/HarmonicTestProve/{name}.lean",
+            file_path=f"../../data/test/lean4_proj/Lean4Proj/HarmonicTest/{name}.lean",
             language=ProofAction.Language.LEAN4,
             always_use_retrieval=False,
             keep_local_context=True

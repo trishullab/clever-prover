@@ -177,7 +177,7 @@ class CoordinationSolver(Solver):
                 try:
                     tactic, proof_state_render = prover.solve_intermediate(problem_description, proof_env)
 
-                    self._log_and_add_to_history(coordinator.history, f"Prover used tactic: {tactic}\n\n{proof_state_render}") # TODO: log (proof state)/(change in proof state) also
+                    self._log_and_add_to_history(coordinator.history, f"Prover used tactic: {tactic}\n\n{proof_state_render}")
                 except Exception as e:
                     self._log_and_add_to_history(coordinator.history, f"Exception encountered in prover: {e}")
                 
