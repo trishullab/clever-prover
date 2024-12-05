@@ -3,6 +3,7 @@ import typing
 from aimo_gaz.solver.abs_solver_and_tool import Tool
 from aimo_gaz.models.abs_model import Model
 from aimo_gaz.prompters.prompter import Prompter
+from aimo_gaz.scripts.eval import ProblemType
 import logging
 
 class ToolOrGlobalGuess(Enum):
@@ -24,11 +25,11 @@ class CoordinatorTool(Tool):
         self.inference_kwargs["stop"] = prompter.stop_tokens
         self.history = []
 
-    def solve_intermediate(self, problem_description: str) -> typing.Tuple[ToolOrGlobalGuess, str, float]:
+    def solve_intermediate(self, problem_description: str, problem_type: ProblemType) -> typing.Tuple[ToolOrGlobalGuess, str, float]:
         if not self.model.is_loaded():
             self.model.__enter__()
         # Prompt the model for the tool
-        self.history = self.prompter.get_prompt(self.history, problem_description)
+        self.history = self.prompter.get_prompt(self.history, problem_description, problem_type)
         if len(self.history) > 10: # TODO: move this pattern into string_utils
             self.logger.info("[COORDINATOR] Raw prompt used:\n[...,\n{}]".format(",\n".join(map(str, self.history[-10:]))))
         else:

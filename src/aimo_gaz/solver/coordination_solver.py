@@ -16,6 +16,7 @@ from aimo_gaz.solver.tools.code_tool import CodeTool
 from aimo_gaz.solver.tools.llm_guesser_tool import LLMGuesserTool
 from aimo_gaz.solver.tools.prover_tool import ProverTool
 from aimo_gaz.solver.tools.coordinator_tool import ToolOrGlobalGuess
+from aimo_gaz.scripts.eval import ProblemType
 from aimo_gaz.utils import string_utils
 from enum import Enum
 from collections import Counter
@@ -95,7 +96,7 @@ class CoordinationSolver(Solver):
         history.append({"role": "user", "content": message})
 
 
-    def _coordinator_tool_history_loop(self, problem_description: str, proof_env: ProofEnv, time_allowed: int) -> float:
+    def _coordinator_tool_history_loop(self, problem_description: str, problem_type: ProblemType, proof_env: ProofEnv, time_allowed: int) -> float:
         assert len(self.tools) > 0, "No tools provided."
         assert "llm_guesser" in self.tools, "LLM guesser tool not provided."
 
@@ -117,7 +118,7 @@ class CoordinationSolver(Solver):
 
             coordinator_error = False
             try:
-                tool_or_global_guess, global_guess_str, global_guess_float_temp = coordinator.solve_intermediate(problem_description)
+                tool_or_global_guess, global_guess_str, global_guess_float_temp = coordinator.solve_intermediate(problem_description, problem_type)
                 self._log_and_add_to_history(coordinator.history, f"Loop {MAX_LOOPS - loops_left} / {MAX_LOOPS}: Coordinator chose tool: {None if tool_or_global_guess is None else tool_or_global_guess.value}")
             except Exception as e:
                 self._log_and_add_to_history(coordinator.history, f"Exception encountered in coordinator: {e}")
@@ -202,15 +203,16 @@ class CoordinationSolver(Solver):
 
         self.logger.info("Solver finished looping.")
 
-        # if global_guess_float is None:
-        #     self.logger.info("No global guess for answer found, returning 0.0")
-        #     global_guess_float = 0.0
-        # self.logger.info(f"Solver returning: {global_guess_float}")
-
-        if proof_env.done:
-            self.logger.info("Succesfully proved theorem.")
+        if problem_type == ProblemType.FIND:
+            if global_guess_float is None:
+                self.logger.info("No global guess for answer found, returning 0.0")
+                global_guess_float = 0.0
+            self.logger.info(f"Solver returning: {global_guess_float}")
         else:
-            self.logger.info("Failed to prove theorem.")
+            if proof_env.done:
+                self.logger.info("Succesfully proved theorem.")
+            else:
+                self.logger.info("Failed to prove theorem.")
         
         return global_guess_float
 
@@ -437,7 +439,7 @@ Choices:
                     answer = random.choice(answers)
             return answer
 
-    def solve(self, problem_description: str, proof_env: ProofEnv, time_allowed: int) -> float:
+    def solve(self, problem_description: str, problem_type: ProblemType, proof_env: ProofEnv, time_allowed: int) -> float:
         assert len(self.tools) > 0, "No tools provided."
         self.start_time = time.time()
         self.logger.info(f"Starting to solve problem: {problem_description}")
@@ -446,7 +448,7 @@ Choices:
             if self.strategy == CoordinationSolverStrategy.PLAN_CODE_EXEC_EXRACT_LAST_MAJ_VOTE:
                 answer = self._plan_code_exec_extract_last_maj_vote(problem_description, time_allowed)
             elif self.strategy == CoordinationSolverStrategy.COORDINATOR_TOOL_HISTORY_LOOP:
-                answer = self._coordinator_tool_history_loop(problem_description, proof_env, time_allowed)
+                answer = self._coordinator_tool_history_loop(problem_description, problem_type, proof_env, time_allowed)
             else:
                 raise NotImplementedError(f"Strategy {self.strategy} is not implemented.")
         except Exception as e:

@@ -3,6 +3,7 @@ import logging
 import time
 import matplotlib.pyplot as plt
 import math
+from enum import Enum
 from itp_interface.rl.simple_proof_env import ProofExecutorCallback, ProofAction, ProofEnvReRankStrategy, ProofEnv
 from aimo_gaz.solver.abs_solver_and_tool import Solver
 from aimo_gaz.solver.test_solver import TestSolver
@@ -15,10 +16,15 @@ def get_csv_data(path: str):
         return [x for x in reader]
 
 
+class ProblemType(Enum):
+    FIND = "FIND"
+    PROVE = "PROVE"
+
 def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger : logging.Logger = None):
     logger = logger if logger is not None else logging.getLogger(__name__)
     solver = solver_cls() if solver is None else solver
 
+    problem_type_statistics = {}
     category_statistics = {}
     total = 0
     correct = 0
@@ -28,63 +34,71 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger : logg
         problem = ex.get('problem', ex.get('Question'))
         assert problem is not None, f'Problem not found in example: {ex}'
 
-        # answer = ex.get('answer', ex.get('Answer'))
-        # assert answer is not None, f'Answer not found in example: {ex}'
+        answer = ex.get('answer', ex.get('Answer'))
 
-        # answer = string_utils.parse_float(answer) # TODO: handle non-numerical answers
-        # if answer is None:
-        #     logger.error(f"ERROR: Answer '{answer}' is not a float or fraction for row {exidx}")
-        #     continue
-
-        # category = ex.get('Tag')
-
-        # solver_ans = solver.solve(problem, time_allowed = total_time_left // (50 - total))
-
-        # eps = 1e-6
-        # solver_is_correct = (abs(solver_ans - answer) < eps)
+        problem_type = ProblemType.FIND if answer != "None" else ProblemType.PROVE
 
         category = ex.get('Tag')
 
-        name = ex.get("name")
+        if problem_type == ProblemType.FIND:
+            assert answer is not None, f'Answer not found in example: {ex}'
 
-        proof_exec_callback = ProofExecutorCallback(
-            project_folder="../../data/test/lean4_proj",
-            file_path=f"../../data/test/lean4_proj/Lean4Proj/HarmonicTest/{name}.lean",
-            language=ProofAction.Language.LEAN4,
-            always_use_retrieval=False,
-            keep_local_context=True
-        )
-        theorem_name = name
-        always_retrieve_thms = False
-        retrieval_strategy = ProofEnvReRankStrategy.NO_RE_RANK
+            answer = string_utils.parse_float(answer) # TODO: handle non-numerical answers
+            if answer is None:
+                logger.error(f"ERROR: Answer '{answer}' is not a float or fraction for row {exidx}")
+                continue
 
-        with ProofEnv(name, proof_exec_callback, theorem_name, retrieval_strategy=retrieval_strategy, max_proof_depth=10, always_retrieve_thms=always_retrieve_thms) as proof_env:
-            solver.solve(problem, proof_env, time_allowed = total_time_left // (50 - total))
+            solver_ans = solver.solve(problem, problem_type, None, time_allowed = total_time_left // (50 - total))
 
-            solver_is_correct = proof_env.done
+            eps = 1e-6
+            solver_is_correct = (abs(solver_ans - answer) < eps)
+        else:
+            name = ex.get("name")
+
+            proof_exec_callback = ProofExecutorCallback(
+                project_folder="../../data/test/lean4_proj",
+                file_path=f"../../data/test/lean4_proj/Lean4Proj/HarmonicTest/{name}.lean",
+                language=ProofAction.Language.LEAN4,
+                always_use_retrieval=False,
+                keep_local_context=True
+            )
+            theorem_name = name
+            always_retrieve_thms = False
+            retrieval_strategy = ProofEnvReRankStrategy.NO_RE_RANK
+
+            with ProofEnv(name, proof_exec_callback, theorem_name, retrieval_strategy=retrieval_strategy, max_proof_depth=10, always_retrieve_thms=always_retrieve_thms) as proof_env:
+                solver.solve(problem, problem_type, proof_env, time_allowed = total_time_left // (50 - total))
+
+                solver_is_correct = proof_env.done
 
         total += 1
         correct += solver_is_correct
         logger.info(f'Example {exidx}:')
         logger.info(f'Problem: {problem}')
-        # logger.info(f'Answer: {answer}') # TODO: handle existence/nonexistence of answer in future
-        # logger.info(f'Solver answer: {solver_ans}')
+        logger.info(f"Problem type: {problem_type}")
+        if problem_type == ProblemType.FIND:
+            logger.info(f'Answer: {answer}')
+            logger.info(f'Solver answer: {solver_ans}')
         logger.info(f'Correct: {solver_is_correct}')
+
+        problem_type_statistics.setdefault(problem_type, {'correct': 0, 'total': 0})['total'] += 1
+        problem_type_statistics[problem_type]['correct'] += solver_is_correct
 
         if category:
             category_statistics.setdefault(category, {'correct': 0, 'total': 0})['total'] += 1
             category_statistics[category]['correct'] += solver_is_correct
+        
         total_time_left -= math.ceil(time.time()-start_timer)
 
     return {
         'total': total,
         'correct': correct,
+        'problem_type_statistics': problem_type_statistics,
         'category_statistics': category_statistics,
     }
 
 
 def plot_category_statistics(category_statistics, time_str, benchmark):
-
     categories = list(category_statistics.keys())
     accuracies = [category_statistics[cat]['correct'] / category_statistics[cat]['total'] for cat in categories]
 
@@ -113,6 +127,8 @@ def evaluate_on_benchmarks(benchmark, valid_path, solver, time_str = None, logge
 
     logger.info(f'Benchmark: {benchmark}')
     logger.info(f'Accuracy: {stats["correct"]} / {stats["total"]} = {stats["correct"] / stats["total"]:.2f}')
+    for problem_type, problem_type_stats in stats['problem_type_statistics'].items():
+        logger.info(f'Problem type: {problem_type.value} ({problem_type_stats["correct"]} / {problem_type_stats["total"]} = {problem_type_stats["correct"] / problem_type_stats["total"]:.2f})')
     for category, category_stats in stats['category_statistics'].items():
         logger.info(f'Category: {category} ({category_stats["correct"]} / {category_stats["total"]} = {category_stats["correct"] / category_stats["total"]:.2f})')
     logger.info('\n\n')
@@ -147,6 +163,8 @@ if __name__ == "__main__":
 
         print(f'Benchmark: {benchmark}')
         print(f'Accuracy: {stats["correct"]} / {stats["total"]} = {stats["correct"] / stats["total"]:.2f}')
+        for problem_type, problem_type_stats in stats['problem_type_statistics'].items():
+            print(f'Problem type: {problem_type.value} ({problem_type_stats["correct"]} / {problem_type_stats["total"]} = {problem_type_stats["correct"] / problem_type_stats["total"]:.2f})')
         for category, category_stats in stats['category_statistics'].items():
             print(f'Category: {category} ({category_stats["correct"]} / {category_stats["total"]} = {category_stats["correct"] / category_stats["total"]:.2f})')
         print('\n\n')

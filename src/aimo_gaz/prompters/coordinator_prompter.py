@@ -1,6 +1,7 @@
 import typing
 from aimo_gaz.prompters.prompter import Prompter
 from aimo_gaz.solver.tools.coordinator_tool import ToolOrGlobalGuess
+from aimo_gaz.scripts.eval import ProblemType
 from aimo_gaz.utils import string_utils
 
 class CoordinatorPrompter(Prompter):
@@ -8,23 +9,23 @@ class CoordinatorPrompter(Prompter):
                  example_prompt: str = None, append_system_prompt_after_every_message: bool = False):
         super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt,
                          append_system_prompt_after_every_message)
-#         self.system_prompt = """Below is a math problem statement.
+        self.system_prompt_find = """Below is a math problem statement.
 
-# You are the coordinator in charge of solving this problem. You have several tools at your disposal to help you solve it. Your tools are:
+You are the coordinator in charge of solving this problem. You have several tools at your disposal to help you solve it. Your tools are:
 
-# (1) planner: Query an LLM to generate the first few steps of a plan for solving the problem. Any old plans will be overwritten; do not use the planner two times in a row.
-# (2) coder: Query an LLM to generate code to solve the problem and then run the code. The most recently generated plan, if one exists, will be passed to the LLM coder.
-# (3) llm_guesser: Query an LLM to guess the answer to the problem. The most recently generated plan, if one exists, will be passed to the LLM guesser.
+(1) planner: Query an LLM to generate the first few steps of a plan for solving the problem. Any old plans will be overwritten; do not use the planner two times in a row.
+(2) coder: Query an LLM to generate code to solve the problem and then run the code. The most recently generated plan, if one exists, will be passed to the LLM coder.
+(3) llm_guesser: Query an LLM to guess the answer to the problem. The most recently generated plan, if one exists, will be passed to the LLM guesser.
 
-# If you think one of the previous tool outputs contains the correct answer, you also have the option to globally guess that answer.
+If you think one of the previous tool outputs contains the correct answer, you also have the option to globally guess that answer.
 
-# Please output which tool you would like to use next or, if you believe the problem has been solved, output your global guess for an answer.
+Please output which tool you would like to use next or, if you believe the problem has been solved, output your global guess for an answer.
 
-# If you choose to use a tool, please output the name of the tool between the tokens '[START TOOL]' and '[END TOOL]'
-# If you choose to globally guess the answer, please output your numerical answer between the tokens '[START GLOBAL GUESS]' and '[END GLOBAL GUESS]'. Only include the guessed number, as an integer or a fraction.
+If you choose to use a tool, please output the name of the tool between the tokens '[START TOOL]' and '[END TOOL]'
+If you choose to globally guess the answer, please output your numerical answer between the tokens '[START GLOBAL GUESS]' and '[END GLOBAL GUESS]'. Only include the guessed number, as an integer or a fraction.
 
-# Below is the problem statement and the history of actions taken so far by the coordinator (you) and the tools to solve this problem.""" # TODO: add examples
-        self.system_prompt = """Below is a math problem statement.
+Below is the problem statement and the history of actions taken so far by the coordinator (you) and the tools to solve this problem.""" # TODO: add examples
+        self.system_prompt_prove = """Below is a math problem statement.
 
 You are the coordinator in charge of formally proving this problem. You have several tools at your disposal to help you solve it. Your tools are:
 
@@ -40,9 +41,17 @@ Below is the problem statement and the history of actions taken so far by the co
 
         self.stop_tokens = ["[END TOOL]", "[END GLOBAL GUESS]"]
 
-    def get_prompt(self, history: list[dict[str, str]], problem_description: str) -> list[dict[str, str]]:
+        self.saved_problem_type = None
+
+    def get_prompt(self, history: list[dict[str, str]], problem_description: str, problem_type: ProblemType) -> list[dict[str, str]]:
+        if self.saved_problem_type is None:
+            self.saved_problem_type = problem_type
+        if self.saved_problem_type != problem_type:
+            history.clear() # TODO: maybe preserve history across problem_type change in the future
+            self.saved_problem_type = problem_type
         if not history or history[0]["role"] != "system":
-            history.insert(0, {"role": "system", "content": self.system_prompt})
+            system_prompt = self.system_prompt_find if problem_type == ProblemType.FIND else self.system_prompt_prove
+            history.insert(0, {"role": "system", "content": system_prompt})
             history.insert(1, {"role": "user", "content": self.problem_statement_message.format(problem_description)})
         history.append({"role": "user", "content": self.user_message})
         return history
