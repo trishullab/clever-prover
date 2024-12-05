@@ -3,6 +3,7 @@ from itp_interface.rl.simple_proof_env import ProofAction, ProofEnv
 from aimo_gaz.solver.abs_solver_and_tool import Tool
 from aimo_gaz.models.abs_model import Model
 from aimo_gaz.prompters.prompter import Prompter
+from aimo_gaz.utils import string_utils
 import logging
 import hydra
 
@@ -26,10 +27,7 @@ class ProverTool(Tool): # TODO: ignoring all actions other than RUN_TACTIC for n
             proof_state_render = self.prompter.render_proof_env(proof_env)
             self.history.append({"role": "user", "content": proof_state_render})
         self.history = self.prompter.get_prompt(self.history, problem_description)
-        if len(self.history) > 10:
-            self.logger.info("[PROVER] Raw prompt used:\n[...,\n{}]".format(",\n".join(map(str, self.history[-10:]))))
-        else:
-            self.logger.info("[PROVER] Raw prompt used:\n[{}]".format(",\n".join(map(str, self.history))))
+        self.logger.info(f"[PROVER] Raw prompt used:\n{string_utils.history_to_str(self.history)}")
         # Get the model response
         response = self.model.generate(self.history, **self.inference_kwargs)
         outs = self.model.parse_out(response)

@@ -1,6 +1,7 @@
 from aimo_gaz.solver.abs_solver_and_tool import Tool
 from aimo_gaz.models.abs_model import Model
 from aimo_gaz.prompters.prompter import Prompter
+from aimo_gaz.utils import string_utils
 import logging
 
 class CodeTool(Tool):
@@ -21,7 +22,7 @@ class CodeTool(Tool):
         # Prompt the model for the code
         assert self.history == [], "History not empty (Code Tool)"
         self.history = self.prompter.get_prompt(self.history, problem_description, plan)
-        self.logger.info("[CODE TOOL] Raw prompt used:\n[{}]".format(",\n".join(map(str, self.history))))
+        self.logger.info(f"[CODE TOOL] Raw prompt used:\n{string_utils.history_to_str(self.history)}")
         # Get the model response
         response = self.model.generate(self.history, **self.inference_kwargs)
         outs = self.model.parse_out(response)
