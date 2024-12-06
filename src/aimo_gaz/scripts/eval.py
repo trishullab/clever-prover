@@ -40,6 +40,8 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger : logg
 
         category = ex.get('Tag')
 
+        solver_is_correct = False
+
         if problem_type == ProblemType.FIND:
             assert answer is not None, f'Answer not found in example: {ex}'
 

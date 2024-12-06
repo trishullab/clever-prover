@@ -23,10 +23,7 @@ class ProverTool(Tool): # TODO: ignoring all actions other than RUN_TACTIC for n
         if not self.model.is_loaded():
             self.model.__enter__()
         # Prompt the model for the tactic
-        if not self.history:
-            proof_state_render = self.prompter.render_proof_env(proof_env)
-            self.history.append({"role": "user", "content": proof_state_render})
-        self.history = self.prompter.get_prompt(self.history, problem_description)
+        self.history = self.prompter.get_prompt(self.history, problem_description, proof_env)
         self.logger.info(f"[PROVER] Raw prompt used:\n{string_utils.history_to_str(self.history)}")
         # Get the model response
         response = self.model.generate(self.history, **self.inference_kwargs)
@@ -35,7 +32,6 @@ class ProverTool(Tool): # TODO: ignoring all actions other than RUN_TACTIC for n
         generated_text = outs[0][0]
         self.history.append({"role": "assistant", "content": generated_text})
         self.logger.info(f"[PROVER] Tactic generated: {generated_text}")
-
         tactic = self.prompter.parse_response(generated_text)
 
         tactic_list = tactic.split(";")
@@ -43,8 +39,6 @@ class ProverTool(Tool): # TODO: ignoring all actions other than RUN_TACTIC for n
         proof_env.step(action)
 
         proof_state_render = self.prompter.render_proof_env(proof_env)
-        self.history.append({"role": "user", "content": proof_state_render})
-
         return tactic, proof_state_render
 
     def reset(self):

@@ -110,7 +110,11 @@ class CoordinationSolver(Solver):
         global_guess_float = None
         global_plan = None
 
-        MAX_LOOPS = 10
+        if problem_type == ProblemType.PROVE:
+            proof_state_render = prover.prompter.render_proof_env(proof_env)
+            self._log_and_add_to_history(coordinator.history, proof_state_render)
+
+        MAX_LOOPS = 10 # TODO: maybe keep track of global loops per problem, so pass in an optional 'curr_loops_left' parameter
         loops_left = MAX_LOOPS
         end_loop = False
         while loops_left > 0 and not end_loop:
@@ -181,6 +185,8 @@ class CoordinationSolver(Solver):
                     self._log_and_add_to_history(coordinator.history, f"Prover used tactic: {tactic}\n\n{proof_state_render}")
                 except Exception as e:
                     self._log_and_add_to_history(coordinator.history, f"Exception encountered in prover: {e}")
+                
+                prover.reset()
                 
                 if proof_env.done:
                     self.logger.info("Succesfully proved theorem, ending loop.")
