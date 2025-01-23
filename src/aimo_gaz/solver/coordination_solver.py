@@ -123,7 +123,7 @@ class CoordinationSolver(Solver):
 
             coordinator_error = False
             try:
-                tool_or_global_guess, tool_prompt, global_guess_str_temp, global_guess_float_temp = coordinator.solve_intermediate(problem_description, problem_type)
+                tool_or_global_guess, tool_prompt, global_guess_str_temp = coordinator.solve_intermediate(problem_description, problem_type)
                 self._log_and_add_to_history(coordinator.history, f"Loop {MAX_LOOPS - loops_left} / {MAX_LOOPS}: Coordinator chose tool: {None if tool_or_global_guess is None else tool_or_global_guess.value}")
             except Exception as e:
                 self._log_and_add_to_history(coordinator.history, f"Exception encountered in coordinator: {e}")
@@ -153,13 +153,7 @@ class CoordinationSolver(Solver):
 
                         last_output, code_success = executor.extract_last_output(output)
                         if code_success:
-                            output_float = string_utils.parse_float(last_output)
-                            if output_float is not None:
-                                self._log_and_add_to_history(coordinator.history, f"Code executor guessed: {last_output}")
-                                global_guess_str = last_output
-                                global_guess_float = output_float
-                            else:
-                                self._log_and_add_to_history(coordinator.history, f"Code executor output could not be parsed as float: {last_output}")
+                            self._log_and_add_to_history(coordinator.history, f"Code executor output: {last_output}") # TODO: include entire code generated too?
                         else:
                             self._log_and_add_to_history(coordinator.history, f"Code executor raised exception: {last_output}")
                     except Exception as e:
@@ -169,14 +163,9 @@ class CoordinationSolver(Solver):
                 executor.reset()
             elif tool_or_global_guess == ToolOrGlobalGuess.LLM_GUESSER:
                 try:
-                    guess_str, guess_float = llm_guesser.solve_intermediate(problem_description, tool_prompt)
+                    guess_str = llm_guesser.solve_intermediate(problem_description, tool_prompt)
 
-                    if guess_float is not None:
-                        self._log_and_add_to_history(coordinator.history, f"LLM guesser guessed: {guess_str}")
-                        global_guess_str = guess_str
-                        global_guess_float = guess_float
-                    else:
-                        self._log_and_add_to_history(coordinator.history, f"LLM guesser output could not be parsed as float: {guess_str}")
+                    self._log_and_add_to_history(coordinator.history, f"LLM guesser guessed: {guess_str}") # TODO: include entire LLM guesser reasoning output too?
                 except Exception as e:
                     self._log_and_add_to_history(coordinator.history, f"Exception encountered in LLM guesser: {e}")
 
@@ -195,6 +184,7 @@ class CoordinationSolver(Solver):
                     self.logger.info("Succesfully proved theorem, ending loop.")
                     end_loop = True
             elif tool_or_global_guess == ToolOrGlobalGuess.GLOBAL_GUESS:
+                global_guess_float_temp = string_utils.parse_float(global_guess_str_temp)
                 if global_guess_float_temp is not None:
                     self.logger.info(f"Coordinator outputted global guess: {global_guess_str_temp}")
 
@@ -228,7 +218,7 @@ class CoordinationSolver(Solver):
         if problem_type == ProblemType.FIND: # TODO: return both global guess and proof done?
             with open(f"../../data/test/lean4_proj/Lean4Proj/HarmonicTest/{name}.lean", "r") as lean_file:
                 lean_content = lean_file.read()
-            # TODO: deal with integer division
+            # TODO: deal with noncomputable real division? (only an issue if guess is fraction of real numbers but actual solution is literal)
             lean_content = lean_content.replace("sorry", global_guess_str, 1)
             self.logger.info(f"Lean theorem with answer filled in:\n{lean_content}")
             
@@ -247,8 +237,8 @@ class CoordinationSolver(Solver):
                 always_retrieve_thms = False
                 retrieval_strategy = ProofEnvReRankStrategy.NO_RE_RANK
 
-                # with ProofEnv(name, proof_exec_callback, theorem_name, retrieval_strategy=retrieval_strategy, max_proof_depth=10, always_retrieve_thms=always_retrieve_thms) as proof_env:
-                #     self._coordinator_tool_history_loop(problem_description, ProblemType.PROVE, proof_env, name, global_guess_str, time_allowed) # TODO: uncomment
+                with ProofEnv(name, proof_exec_callback, theorem_name, retrieval_strategy=retrieval_strategy, max_proof_depth=10, always_retrieve_thms=always_retrieve_thms) as proof_env:
+                    self._coordinator_tool_history_loop(problem_description, ProblemType.PROVE, proof_env, name, global_guess_str, time_allowed) # TODO: uncomment
         
         return global_guess_float
 

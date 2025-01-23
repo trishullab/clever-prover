@@ -73,7 +73,7 @@ Below is the problem statement and the history of actions taken so far by the co
                 if tool_response == iter_tool.value:
                     tool = iter_tool
             if not tool:
-                return None, None, None, None
+                return None, None, None
             
             tool_prompt = None
             actual_tool_prompt_ind = response.rfind("[START PROMPT]")
@@ -84,15 +84,14 @@ Below is the problem statement and the history of actions taken so far by the co
                     tool_prompt_response = tool_prompt_response[:actual_tool_prompt_ind]
                 tool_prompt = tool_prompt_response.strip()
             
-            return tool, tool_prompt, None, None
+            return tool, tool_prompt, None
 
         actual_guess_ind = response.rfind("[START GLOBAL GUESS]")
         if actual_guess_ind != -1:
             response = response[actual_guess_ind + len("[START GLOBAL GUESS]"):]
-            response = response.strip()
-            return ToolOrGlobalGuess.GLOBAL_GUESS, None, response, string_utils.parse_float(response)
+            return ToolOrGlobalGuess.GLOBAL_GUESS, None, response.strip()
         
-        return None, None, None, None
+        return None, None, None
 
 
 if __name__ == "__main__":

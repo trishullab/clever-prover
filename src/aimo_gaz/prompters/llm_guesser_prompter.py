@@ -29,11 +29,7 @@ Please start your guess with '[START GUESS]' and end it with '[END GUESS]'""" # 
         actual_guess_ind = response.rfind("[START GUESS]")
         if actual_guess_ind != -1:
             response = response[(actual_guess_ind + len("[START GUESS]")):]
-        response = response.strip()
-
-        guess_float = string_utils.parse_float(response)
-
-        return response, guess_float
+        return response.strip()
 
 
 if __name__ == "__main__":
