@@ -238,7 +238,7 @@ class CoordinationSolver(Solver):
                 retrieval_strategy = ProofEnvReRankStrategy.NO_RE_RANK
 
                 with ProofEnv(name, proof_exec_callback, theorem_name, retrieval_strategy=retrieval_strategy, max_proof_depth=10, always_retrieve_thms=always_retrieve_thms) as proof_env:
-                    self._coordinator_tool_history_loop(problem_description, ProblemType.PROVE, proof_env, name, global_guess_str, time_allowed) # TODO: uncomment
+                    self._coordinator_tool_history_loop(problem_description, ProblemType.PROVE, proof_env, name, global_guess_str, time_allowed)
         
         return global_guess_float
 
