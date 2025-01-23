@@ -110,7 +110,6 @@ class CoordinationSolver(Solver):
 
         global_guess_str = None
         global_guess_float = None
-        global_plan = None
 
         if problem_type == ProblemType.PROVE:
             proof_state_render = prover.prompter.render_proof_env(proof_env, solution_str)
@@ -124,7 +123,7 @@ class CoordinationSolver(Solver):
 
             coordinator_error = False
             try:
-                tool_or_global_guess, global_guess_str_temp, global_guess_float_temp = coordinator.solve_intermediate(problem_description, problem_type)
+                tool_or_global_guess, tool_prompt, global_guess_str_temp, global_guess_float_temp = coordinator.solve_intermediate(problem_description, problem_type)
                 self._log_and_add_to_history(coordinator.history, f"Loop {MAX_LOOPS - loops_left} / {MAX_LOOPS}: Coordinator chose tool: {None if tool_or_global_guess is None else tool_or_global_guess.value}")
             except Exception as e:
                 self._log_and_add_to_history(coordinator.history, f"Exception encountered in coordinator: {e}")
@@ -134,9 +133,9 @@ class CoordinationSolver(Solver):
                 pass
             elif tool_or_global_guess == ToolOrGlobalGuess.PLANNER:
                 try:
-                    global_plan = planner.solve_intermediate(problem_description)
+                    plan = planner.solve_intermediate(problem_description, tool_prompt)
 
-                    self._log_and_add_to_history(coordinator.history, f"Planner generated plan:\n{global_plan}")
+                    self._log_and_add_to_history(coordinator.history, f"Planner generated plan:\n{plan}")
                 except Exception as e:
                     self._log_and_add_to_history(coordinator.history, f"Exception encountered in planner: {e}")
 
@@ -144,7 +143,7 @@ class CoordinationSolver(Solver):
             elif tool_or_global_guess == ToolOrGlobalGuess.CODER:
                 code = None
                 try:
-                    code = coder.solve_intermediate(problem_description, plan=global_plan)
+                    code = coder.solve_intermediate(problem_description, tool_prompt)
                 except Exception as e:
                     self._log_and_add_to_history(coordinator.history, f"Exception encountered in coder: {e}")
                 
@@ -170,7 +169,7 @@ class CoordinationSolver(Solver):
                 executor.reset()
             elif tool_or_global_guess == ToolOrGlobalGuess.LLM_GUESSER:
                 try:
-                    guess_str, guess_float = llm_guesser.solve_intermediate(problem_description, plan=global_plan)
+                    guess_str, guess_float = llm_guesser.solve_intermediate(problem_description, tool_prompt)
 
                     if guess_float is not None:
                         self._log_and_add_to_history(coordinator.history, f"LLM guesser guessed: {guess_str}")
@@ -184,7 +183,7 @@ class CoordinationSolver(Solver):
                 llm_guesser.reset()
             elif tool_or_global_guess == ToolOrGlobalGuess.PROVER:
                 try:
-                    tactic, proof_state_render = prover.solve_intermediate(problem_description, proof_env, solution_str)
+                    tactic, proof_state_render = prover.solve_intermediate(problem_description, proof_env, solution_str, tool_prompt)
 
                     self._log_and_add_to_history(coordinator.history, f"Prover used tactic: {tactic}\n\n{proof_state_render}")
                 except Exception as e:
@@ -248,8 +247,8 @@ class CoordinationSolver(Solver):
                 always_retrieve_thms = False
                 retrieval_strategy = ProofEnvReRankStrategy.NO_RE_RANK
 
-                with ProofEnv(name, proof_exec_callback, theorem_name, retrieval_strategy=retrieval_strategy, max_proof_depth=10, always_retrieve_thms=always_retrieve_thms) as proof_env:
-                    self._coordinator_tool_history_loop(problem_description, ProblemType.PROVE, proof_env, name, global_guess_str, time_allowed)
+                # with ProofEnv(name, proof_exec_callback, theorem_name, retrieval_strategy=retrieval_strategy, max_proof_depth=10, always_retrieve_thms=always_retrieve_thms) as proof_env:
+                #     self._coordinator_tool_history_loop(problem_description, ProblemType.PROVE, proof_env, name, global_guess_str, time_allowed) # TODO: uncomment
         
         return global_guess_float
 

@@ -17,11 +17,11 @@ class PlannerTool(Tool):
         self.inference_kwargs["stop"] = prompter.stop_tokens
         self.history = []
 
-    def solve_intermediate(self, problem_description: str) -> typing.Tuple[str, float]:
+    def solve_intermediate(self, problem_description: str, tool_prompt: str) -> typing.Tuple[str, float]:
         if not self.model.is_loaded():
             self.model.__enter__()
         # Prompt the model for the plan
-        self.history = self.prompter.get_prompt(self.history, problem_description)
+        self.history = self.prompter.get_prompt(self.history, problem_description, tool_prompt)
         self.logger.info(f"[PLANNER] Raw prompt used:\n{string_utils.history_to_str(self.history)}")
         # Get the model response
         response = self.model.generate(self.history, **self.inference_kwargs)

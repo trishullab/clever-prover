@@ -14,24 +14,15 @@ Please solve this problem and write for me a guess for the numerical answer to t
 
 Please start your guess with '[START GUESS]' and end it with '[END GUESS]'""" # TODO: add examples
         self.problem_statement_message = "Problem Statement: {}"
-        self.user_message_with_plan = """Here are the first couple steps in trying to solve the problem:
-
-First Couple Steps:
-{}
-
-Please write your guess now.""" # TODO: maybe find a better way to handle presence/absence of plan
-        self.user_message_without_plan = "Please write your guess now."
+        self.default_user_message = "Please write your guess now."
 
         self.stop_tokens = ["[END GUESS]"]
 
-    def get_prompt(self, history: list[dict[str, str]], problem_description: str, plan: str) -> list[dict[str, str]]:
+    def get_prompt(self, history: list[dict[str, str]], problem_description: str, tool_prompt: str) -> list[dict[str, str]]:
         if not history or history[0]["role"] != "system":
             history.insert(0, {"role": "system", "content": self.system_prompt})
             history.insert(1, {"role": "user", "content": self.problem_statement_message.format(problem_description)})
-        if plan is not None:
-            history.append({"role": "user", "content": self.user_message_with_plan.format(plan)})
-        else:
-            history.append({"role": "user", "content": self.user_message_without_plan})
+        history.append({"role": "user", "content": tool_prompt if tool_prompt else self.default_user_message})
         return history
 
     def parse_response(self, response: str) -> typing.Tuple[str, float]:

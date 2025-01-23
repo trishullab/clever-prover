@@ -15,7 +15,7 @@ Be sure to use correct Lean 4 notation; do not use Lean 3 notation.
 
 Please start your response with '[START TACTIC]' and end it with '[END TACTIC]'""" # TODO: add examples
         self.problem_statement_message = "Problem Statement: {}"
-        self.user_message = "Please write the next tactic now."
+        self.default_user_message = "Please write the next tactic now."
         
         self.stop_tokens = ["[END TACTIC]"]
 
@@ -61,13 +61,13 @@ Please start your response with '[START TACTIC]' and end it with '[END TACTIC]'"
         # self.logger.info("-"*50)
         return "\n".join(render_list)
 
-    def get_prompt(self, history: list[dict[str, str]], problem_description: str, proof_env: ProofEnv, solution_str: str) -> list[dict[str, str]]:
+    def get_prompt(self, history: list[dict[str, str]], problem_description: str, proof_env: ProofEnv, solution_str: str, tool_prompt: str) -> list[dict[str, str]]:
         if not history or history[0]["role"] != "system":
             history.insert(0, {"role": "system", "content": self.system_prompt})
             history.insert(1, {"role": "user", "content": self.problem_statement_message.format(problem_description)})
         proof_state_render = self.render_proof_env(proof_env, solution_str)
         history.append({"role": "user", "content": proof_state_render})
-        history.append({"role": "user", "content": self.user_message})
+        history.append({"role": "user", "content": tool_prompt if tool_prompt else self.default_user_message})
         return history
 
     def parse_response(self, response: str) -> str:
