@@ -27,7 +27,7 @@ Please start the code with '```python' and end it with '```'""" # TODO: add exam
         actual_code_ind = response.find("```python")
         if actual_code_ind != -1:
             response = response[(actual_code_ind + len("```python")):]
-        actual_code_ind = response.rfind("```")
+        actual_code_ind = response.find("```")
         if actual_code_ind != -1:
             response = response[:actual_code_ind]
         return response.strip()

@@ -36,9 +36,9 @@ def main(cfg):
         data_dir = os.path.join(data_dir, "data")
         # benchmark = "valid"
         # benchmark = "kaggle_train_1"
-        benchmark = "harmonic_test_find_1"
+        # benchmark = "harmonic_test_find_1"
         # benchmark = "harmonic_test_prove_1"
-        # benchmark = "harmonic_test_find_prove_2"
+        benchmark = "harmonic_test_find_prove_2"
         logger.info(f"Running on {benchmark}")
         os.makedirs(f".logs/{time_str}/{benchmark}", exist_ok=True)
         evaluate_on_benchmarks(benchmark, os.path.join(data_dir, f"{benchmark}.csv"), solver, time_str, logger)

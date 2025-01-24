@@ -237,8 +237,8 @@ class CoordinationSolver(Solver):
                 always_retrieve_thms = False
                 retrieval_strategy = ProofEnvReRankStrategy.NO_RE_RANK
 
-                with ProofEnv(name, proof_exec_callback, theorem_name, retrieval_strategy=retrieval_strategy, max_proof_depth=10, always_retrieve_thms=always_retrieve_thms) as proof_env:
-                    self._coordinator_tool_history_loop(problem_description, ProblemType.PROVE, proof_env, name, global_guess_str, time_allowed)
+                # with ProofEnv(name, proof_exec_callback, theorem_name, retrieval_strategy=retrieval_strategy, max_proof_depth=10, always_retrieve_thms=always_retrieve_thms) as proof_env:
+                #     self._coordinator_tool_history_loop(problem_description, ProblemType.PROVE, proof_env, name, global_guess_str, time_allowed) # TODO: this is supposed to be uncommented but may be commented for testing purposes until the prover is good enough
         
         return global_guess_float
 

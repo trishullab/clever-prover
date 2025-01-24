@@ -41,9 +41,10 @@ Then output custom instructions for the tool to follow between the tokens '[STAR
 
 Below is the problem statement and the history of actions taken so far by the coordinator (you) and the tools to prove this problem.""" # TODO: add examples
         self.problem_statement_message = "Problem Statement: {}"
-        self.user_message = "Please output your chosen tool or global guess now."
+        self.user_message_find = "Please output your chosen tool and prompt or your global guess now."
+        self.user_message_prove = "Please output your chosen tool and prompt now."
 
-        self.stop_tokens = ["[END GLOBAL GUESS]"]
+        self.stop_tokens = ["[END PROMPT]", "[END GLOBAL GUESS]"]
 
         self.saved_problem_type = None
 
@@ -57,14 +58,14 @@ Below is the problem statement and the history of actions taken so far by the co
             system_prompt = self.system_prompt_find if problem_type == ProblemType.FIND else self.system_prompt_prove
             history.insert(0, {"role": "system", "content": system_prompt})
             history.insert(1, {"role": "user", "content": self.problem_statement_message.format(problem_description)})
-        history.append({"role": "user", "content": self.user_message})
+        history.append({"role": "user", "content": self.user_message_find if problem_type == ProblemType.FIND else self.user_message_prove})
         return history
 
     def parse_response(self, response: str) -> typing.Tuple[ToolOrGlobalGuess, str, float]:        
-        actual_tool_ind = response.rfind("[START TOOL]")
+        actual_tool_ind = response.find("[START TOOL]")
         if actual_tool_ind != -1:
             tool_response = response[actual_tool_ind + len("[START TOOL]"):]
-            actual_tool_ind = tool_response.rfind("[END TOOL]")
+            actual_tool_ind = tool_response.find("[END TOOL]")
             if actual_tool_ind != -1:
                 tool_response = tool_response[:actual_tool_ind]
             tool_response = tool_response.strip()
@@ -79,9 +80,6 @@ Below is the problem statement and the history of actions taken so far by the co
             actual_tool_prompt_ind = response.rfind("[START PROMPT]")
             if actual_tool_prompt_ind != -1:
                 tool_prompt_response = response[actual_tool_prompt_ind + len("[START PROMPT]"):]
-                actual_tool_prompt_ind = tool_prompt_response.rfind("[END PROMPT]")
-                if actual_tool_prompt_ind != -1:
-                    tool_prompt_response = tool_prompt_response[:actual_tool_prompt_ind]
                 tool_prompt = tool_prompt_response.strip()
             
             return tool, tool_prompt, None
