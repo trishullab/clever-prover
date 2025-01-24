@@ -161,8 +161,9 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
 
-.logs/*
-!.logs/archive/
+src/aimo_gaz/.logs/*
+!src/aimo_gaz/.logs/archive/
+!aimo_gaz.log
 
 .log/
 
