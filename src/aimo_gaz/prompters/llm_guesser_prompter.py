@@ -10,10 +10,10 @@ class LLMGuesserPrompter(Prompter):
                          append_system_prompt_after_every_message)
         self.system_prompt = """Below is a math problem statement.
 
-Please solve this problem and write for me a guess for the numerical answer to this problem, as an integer or a fraction.
+Please write for me a guess for a numerical answer to help solve this problem, as an integer or a fraction.
 
-Please start your guess with '[START GUESS]' and end it with '[END GUESS]'""" # TODO: add examples
-        self.problem_statement_message = "Problem Statement: {}"
+Please start your guess with '[START GUESS]' and end it with '[END GUESS]'""" # TODO: add examples # TODO: remove restriction on only printing a number
+        self.problem_statement_message = "Problem Statement: {}" # TODO: phrase this as a helper instead of a guesser
         self.default_user_message = "Please write your guess now."
 
         self.stop_tokens = ["[END GUESS]"]

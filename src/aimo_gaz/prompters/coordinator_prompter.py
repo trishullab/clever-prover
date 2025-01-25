@@ -9,17 +9,18 @@ class CoordinatorPrompter(Prompter):
                  example_prompt: str = None, append_system_prompt_after_every_message: bool = False):
         super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt,
                          append_system_prompt_after_every_message)
-        self.system_prompt_find = """Below is a math problem statement.
+        self.system_prompt = """Below is a math problem statement.
 
-You are the coordinator in charge of solving this problem. You have several tools at your disposal to help you solve it. Your tools are:
+You are the coordinator in charge of {} this problem. You have several tools at your disposal to help you solve it. Your tools are:
 
 (1) planner: Query an LLM to generate the first few steps of a plan for solving the problem. You can use this plan later in custom instructions for other tools.
-(2) coder: Query an LLM to generate code to solve the problem and then run the code.
-(3) llm_guesser: Query an LLM to guess the answer to the problem.
+(2) coder: Query an LLM to generate code to help solve the problem and then run the code.
+(3) llm_guesser: Query an LLM to guess an answer to help solve the problem.
+(4) prover: Query an LLM to generate the next tactic for proving the problem in Lean 4. The LLM will be provided the current proof state. You should only use this tool if you are formally proving the problem.
 
-If you think one of the previous tool outputs contains the correct answer, you also have the option to globally guess that answer.
+If you think one of the previous tool outputs contains the correct answer, you also have the option to globally guess that answer. Do not do this if you are formally proving the problem.
 
-Please output which tool you would like to use next or, if you believe the problem has been solved, output your global guess for an answer.
+Please output which tool you would like to use next or, if you are not formally proving the problem and believe the problem has been solved, output your global guess for an answer.
 
 If you choose to use a tool, please output the name of the tool between the tokens '[START TOOL]' and '[END TOOL]'
 Then output custom instructions for the tool to follow between the tokens '[START PROMPT]' and '[END PROMPT]'. These instructions can use previously generated plans.
@@ -27,22 +28,10 @@ Then output custom instructions for the tool to follow between the tokens '[STAR
 If you choose to globally guess the answer, please output your numerical answer between the tokens '[START GLOBAL GUESS]' and '[END GLOBAL GUESS]'. Only include the guessed number, as an integer or a fraction.
 
 Below is the problem statement and the history of actions taken so far by the coordinator (you) and the tools to solve this problem.""" # TODO: add examples
-        self.system_prompt_prove = """Below is a math problem statement.
-
-You are the coordinator in charge of formally proving this problem. You have several tools at your disposal to help you solve it. Your tools are:
-
-(1) prover: Query an LLM to generate the next tactic for proving the problem in Lean 4. The LLM will be provided the current proof state.
-
-Please output which tool you would like to use next.
-
-Please output the name of the tool between the tokens '[START TOOL]' and '[END TOOL]'
-
-Then output custom instructions for the tool to follow between the tokens '[START PROMPT]' and '[END PROMPT]'
-
-Below is the problem statement and the history of actions taken so far by the coordinator (you) and the tools to prove this problem.""" # TODO: add examples
+        self.system_prompt_format_find = "solving"
+        self.system_prompt_format_prove = "formally proving"
         self.problem_statement_message = "Problem Statement: {}"
-        self.user_message_find = "Please output your chosen tool and prompt or your global guess now."
-        self.user_message_prove = "Please output your chosen tool and prompt now."
+        self.user_message = "Please output your chosen tool and prompt or your global guess now."
 
         self.stop_tokens = ["[END PROMPT]", "[END GLOBAL GUESS]"]
 
@@ -55,10 +44,9 @@ Below is the problem statement and the history of actions taken so far by the co
             history.clear() # TODO: maybe preserve history across problem_type change in the future
             self.saved_problem_type = problem_type
         if not history or history[0]["role"] != "system":
-            system_prompt = self.system_prompt_find if problem_type == ProblemType.FIND else self.system_prompt_prove
-            history.insert(0, {"role": "system", "content": system_prompt})
+            history.insert(0, {"role": "system", "content": self.system_prompt.format(self.system_prompt_format_find if problem_type == ProblemType.FIND else self.system_prompt_format_prove)})
             history.insert(1, {"role": "user", "content": self.problem_statement_message.format(problem_description)})
-        history.append({"role": "user", "content": self.user_message_find if problem_type == ProblemType.FIND else self.user_message_prove})
+        history.append({"role": "user", "content": self.user_message})
         return history
 
     def parse_response(self, response: str) -> typing.Tuple[ToolOrGlobalGuess, str, float]:        

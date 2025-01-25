@@ -171,28 +171,34 @@ class CoordinationSolver(Solver):
 
                 llm_guesser.reset()
             elif tool_or_global_guess == ToolOrGlobalGuess.PROVER:
-                try:
-                    tactic, proof_state_render = prover.solve_intermediate(problem_description, proof_env, solution_str, tool_prompt)
+                if problem_type == ProblemType.PROVE:
+                    try:
+                        tactic, proof_state_render = prover.solve_intermediate(problem_description, proof_env, solution_str, tool_prompt)
 
-                    self._log_and_add_to_history(coordinator.history, f"Prover used tactic: {tactic}\n\n{proof_state_render}")
-                except Exception as e:
-                    self._log_and_add_to_history(coordinator.history, f"Exception encountered in prover: {e}")
-                
-                prover.reset()
-                
-                if proof_env.done:
-                    self.logger.info("Succesfully proved theorem, ending loop.")
-                    end_loop = True
-            elif tool_or_global_guess == ToolOrGlobalGuess.GLOBAL_GUESS:
-                global_guess_float_temp = string_utils.parse_float(global_guess_str_temp)
-                if global_guess_float_temp is not None:
-                    self.logger.info(f"Coordinator outputted global guess: {global_guess_str_temp}")
-
-                    global_guess_str = global_guess_str_temp
-                    global_guess_float = global_guess_float_temp
-                    end_loop = True
+                        self._log_and_add_to_history(coordinator.history, f"Prover used tactic: {tactic}\n\n{proof_state_render}")
+                    except Exception as e:
+                        self._log_and_add_to_history(coordinator.history, f"Exception encountered in prover: {e}")
+                    
+                    prover.reset()
+                    
+                    if proof_env.done:
+                        self.logger.info("Succesfully proved theorem, ending loop.")
+                        end_loop = True
                 else:
-                    self._log_and_add_to_history(coordinator.history, f"Coordinator output global guess could not be parsed as float: {global_guess_str_temp}")
+                    self._log_and_add_to_history(coordinator.history, f"Prover tool is invalid for FIND problems.") # TODO: this won't be needed later
+            elif tool_or_global_guess == ToolOrGlobalGuess.GLOBAL_GUESS:
+                if problem_type == ProblemType.FIND:
+                    global_guess_float_temp = string_utils.parse_float(global_guess_str_temp)
+                    if global_guess_float_temp is not None:
+                        self.logger.info(f"Coordinator outputted global guess: {global_guess_str_temp}")
+
+                        global_guess_str = global_guess_str_temp
+                        global_guess_float = global_guess_float_temp
+                        end_loop = True
+                    else:
+                        self._log_and_add_to_history(coordinator.history, f"Coordinator output global guess could not be parsed as float: {global_guess_str_temp}")
+                else:
+                    self._log_and_add_to_history(coordinator.history, f"Globally guessing is invalid for PROVE problems.") # TODO: rephrase this later
             else:
                 self._log_and_add_to_history(coordinator.history, f"Coordinator-chosen tool '{tool_or_global_guess}' is invalid.")
             
