@@ -16,6 +16,7 @@ from aimo_gaz.solver.tools.planner_tool import PlannerTool
 from aimo_gaz.solver.tools.code_tool import CodeTool
 from aimo_gaz.solver.tools.llm_guesser_tool import LLMGuesserTool
 from aimo_gaz.solver.tools.prover_tool import ProverTool
+from aimo_gaz.solver.tools.lean4_executor_tool import Lean4ExecutorTool
 from aimo_gaz.solver.tools.coordinator_tool import ToolOrGlobalGuess
 from aimo_gaz.scripts.eval import ProblemType
 from aimo_gaz.utils import string_utils
@@ -107,12 +108,13 @@ class CoordinationSolver(Solver):
         executor: ExecutionTool = self.tools["executor"]
         llm_guesser: LLMGuesserTool = self.tools["llm_guesser"]
         prover: ProverTool = self.tools["prover"]
+        lean4_executor: Lean4ExecutorTool = self.tools["lean4_executor"]
 
         global_guess_str = None
         global_guess_float = None
 
         if problem_type == ProblemType.PROVE:
-            proof_state_render = prover.prompter.render_proof_env(proof_env, solution_str)
+            proof_state_render = string_utils.render_proof_env(proof_env, solution_str)
             self._log_and_add_to_history(coordinator.history, proof_state_render)
 
         MAX_LOOPS = 10 # TODO: maybe keep track of global loops per problem, so pass in an optional 'curr_loops_left' parameter
@@ -173,24 +175,39 @@ class CoordinationSolver(Solver):
             elif tool_or_global_guess == ToolOrGlobalGuess.PROVER:
                 if problem_type == ProblemType.PROVE:
                     try:
-                        tactic, proof_state_render = prover.solve_intermediate(problem_description, proof_env, solution_str, tool_prompt)
+                        proof_state_render = string_utils.render_proof_env(proof_env, solution_str)
+                        tactic = prover.solve_intermediate(problem_description, proof_state_render, tool_prompt)
 
-                        self._log_and_add_to_history(coordinator.history, f"Prover used tactic: {tactic}\n\n{proof_state_render}")
+                        self._log_and_add_to_history(coordinator.history, f"Prover output tactic: {tactic}")
                     except Exception as e:
                         self._log_and_add_to_history(coordinator.history, f"Exception encountered in prover: {e}")
                     
                     prover.reset()
+                else:
+                    self._log_and_add_to_history(coordinator.history, f"Prover tool is invalid for FIND problems.") # TODO: this won't be needed later
+            elif tool_or_global_guess == ToolOrGlobalGuess.LEAN4_EXECUTOR:
+                if problem_type == ProblemType.PROVE:
+                    try:
+                        tactic = tool_prompt
+                        lean4_executor.solve_intermediate(proof_env, tactic)
+                        
+                        proof_state_render = string_utils.render_proof_env(proof_env, solution_str)
+                        self._log_and_add_to_history(coordinator.history, f"Lean 4 executor executed tactic: {tactic}\n\n{proof_state_render}")
+                    except Exception as e:
+                        self._log_and_add_to_history(coordinator.history, f"Exception encountered in Lean 4 executor: {e}")
+                    
+                    lean4_executor.reset()
                     
                     if proof_env.done:
                         self.logger.info("Succesfully proved theorem, ending loop.")
                         end_loop = True
                 else:
-                    self._log_and_add_to_history(coordinator.history, f"Prover tool is invalid for FIND problems.") # TODO: this won't be needed later
+                    self._log_and_add_to_history(coordinator.history, f"Lean 4 executor tool is invalid for FIND problems.") # TODO: this won't be needed later
             elif tool_or_global_guess == ToolOrGlobalGuess.GLOBAL_GUESS:
                 if problem_type == ProblemType.FIND:
                     global_guess_float_temp = string_utils.parse_float(global_guess_str_temp)
                     if global_guess_float_temp is not None:
-                        self.logger.info(f"Coordinator outputted global guess: {global_guess_str_temp}")
+                        self.logger.info(f"Coordinator output global guess: {global_guess_str_temp}")
 
                         global_guess_str = global_guess_str_temp
                         global_guess_float = global_guess_float_temp

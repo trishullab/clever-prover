@@ -13,15 +13,17 @@ class ToolOrGlobalGuess(Enum):
     LLM_GUESSER = "llm_guesser"
     GLOBAL_GUESS = "global_guess"
     PROVER = "prover"
+    LEAN4_EXECUTOR = "lean4_executor"
 
 class CoordinatorTool(Tool):
     def __init__(self, model: Model, prompter: Prompter, logger: logging.Logger = None, **inference_kwargs):
-        assert model is not None, "model must be provided."
-        assert prompter is not None, "prompter must be provided."
+        assert model is not None, "Model must be provided."
+        assert prompter is not None, "Prompter must be provided."
+        assert logger is not None, "Logger must be provided."
         self.model = model
         self.prompter = prompter
-        self.inference_kwargs = inference_kwargs
         self.logger = logger
+        self.inference_kwargs = inference_kwargs
         self.inference_kwargs["n"] = 1 # Only one response is needed from coordinator tool
         self.inference_kwargs["stop"] = prompter.stop_tokens
         self.history = []

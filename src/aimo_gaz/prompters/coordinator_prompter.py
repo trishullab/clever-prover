@@ -2,7 +2,6 @@ import typing
 from aimo_gaz.prompters.prompter import Prompter
 from aimo_gaz.solver.tools.coordinator_tool import ToolOrGlobalGuess
 from aimo_gaz.scripts.eval import ProblemType
-from aimo_gaz.utils import string_utils
 
 class CoordinatorPrompter(Prompter):
     def __init__(self, system_prompt_path: str = None, example_prompt_path: str = None, system_prompt: str = None,
@@ -16,14 +15,15 @@ You are the coordinator in charge of {} this problem. You have several tools at 
 (1) planner: Query an LLM to generate the first few steps of a plan for solving the problem. You can use this plan later in custom instructions for other tools.
 (2) coder: Query an LLM to generate code to help solve the problem and then run the code.
 (3) llm_guesser: Query an LLM to guess an answer to help solve the problem.
-(4) prover: Query an LLM to generate the next tactic for proving the problem in Lean 4. The LLM will be provided the current proof state. You should only use this tool if you are formally proving the problem.
+(4) prover: Query an LLM to guess the next tactic for proving the problem in Lean 4. The LLM will be provided the current proof state. You can later choose this tactic as input to the lean4_executor. You should only use this tool if you are formally proving the problem.
+(5) lean4_executor: Input a Lean 4 tactic to execute the next step to formally prove the problem in Lean 4. Please output the tactic between the tokens '[START TACTIC]' and '[END TACTIC]'. You should only use this tool if you are formally proving the problem.
 
 If you think one of the previous tool outputs contains the correct answer, you also have the option to globally guess that answer. Do not do this if you are formally proving the problem.
 
 Please output which tool you would like to use next or, if you are not formally proving the problem and believe the problem has been solved, output your global guess for an answer.
 
 If you choose to use a tool, please output the name of the tool between the tokens '[START TOOL]' and '[END TOOL]'
-Then output custom instructions for the tool to follow between the tokens '[START PROMPT]' and '[END PROMPT]'. These instructions can use previously generated plans.
+Then for LLM tools, output custom instructions for the tool to follow between the tokens '[START PROMPT]' and '[END PROMPT]'. These instructions can use previously generated plans.
 
 If you choose to globally guess the answer, please output your numerical answer between the tokens '[START GLOBAL GUESS]' and '[END GLOBAL GUESS]'. Only include the guessed number, as an integer or a fraction.
 
@@ -33,7 +33,7 @@ Below is the problem statement and the history of actions taken so far by the co
         self.problem_statement_message = "Problem Statement: {}"
         self.user_message = "Please output your chosen tool and prompt or your global guess now."
 
-        self.stop_tokens = ["[END PROMPT]", "[END GLOBAL GUESS]"]
+        self.stop_tokens = ["[END PROMPT]", "[END TACTIC]", "[END GLOBAL GUESS]"]
 
         self.saved_problem_type = None
 
@@ -49,7 +49,7 @@ Below is the problem statement and the history of actions taken so far by the co
         history.append({"role": "user", "content": self.user_message})
         return history
 
-    def parse_response(self, response: str) -> typing.Tuple[ToolOrGlobalGuess, str, float]:        
+    def parse_response(self, response: str) -> typing.Tuple[ToolOrGlobalGuess, str, str]:
         actual_tool_ind = response.find("[START TOOL]")
         if actual_tool_ind != -1:
             tool_response = response[actual_tool_ind + len("[START TOOL]"):]
@@ -65,9 +65,10 @@ Below is the problem statement and the history of actions taken so far by the co
                 return None, None, None
             
             tool_prompt = None
-            actual_tool_prompt_ind = response.rfind("[START PROMPT]")
+            start_prompt_token = "[START TACTIC]" if tool == ToolOrGlobalGuess.LEAN4_EXECUTOR else "[START PROMPT]"
+            actual_tool_prompt_ind = response.rfind(start_prompt_token)
             if actual_tool_prompt_ind != -1:
-                tool_prompt_response = response[actual_tool_prompt_ind + len("[START PROMPT]"):]
+                tool_prompt_response = response[actual_tool_prompt_ind + len(start_prompt_token):]
                 tool_prompt = tool_prompt_response.strip()
             
             return tool, tool_prompt, None

@@ -5,6 +5,5 @@ defaults:
   - override hydra/job_logging: 'disabled'
   - _self_
 
-solver_or_tool_type: ExecutionTool
+solver_or_tool_type: Lean4ExecutorTool
 solver_or_tool_args:
-  timeout_in_secs: 15.0

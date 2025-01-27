@@ -79,6 +79,7 @@ from aimo_gaz.solver.tools.planner_tool import PlannerTool
 from aimo_gaz.solver.tools.code_tool import CodeTool
 from aimo_gaz.solver.tools.llm_guesser_tool import LLMGuesserTool
 from aimo_gaz.solver.tools.prover_tool import ProverTool
+from aimo_gaz.solver.tools.lean4_executor_tool import Lean4ExecutorTool
 from aimo_gaz.models.gpt_model import GptModel
 from aimo_gaz.prompters.old_code_prompter import OldCodePrompter
 from aimo_gaz.prompters.old_planner_prompter import OldPlannerPrompter
@@ -115,6 +116,7 @@ class SolverOrToolType(Enum):
     CodeTool = "CodeTool"
     LLMGuesserTool = "LLMGuesserTool"
     ProverTool = "ProverTool"
+    Lean4ExecutorTool = "Lean4ExecutorTool"
 
     def __str__(self):
         return self.value
@@ -245,8 +247,6 @@ class SolverOrToolConfig:
                 model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
             prompter = self.prompter_config.get_prompter()
             return OldPlannerTool(model, prompter, logger, **self.inference_settings.to_dict())
-        elif self.solver_or_tool_type == SolverOrToolType.ExecutionTool:
-            return ExecutionTool(logger, **self.solver_or_tool_args)
         elif self.solver_or_tool_type == SolverOrToolType.CoordinatorTool:
             if self.model_settings.name_or_path not in GLOBAL_MODEL_CACHE:
                 model = GptModel(self.model_settings.name_or_path)
@@ -271,6 +271,8 @@ class SolverOrToolConfig:
                 model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
             prompter = self.prompter_config.get_prompter()
             return CodeTool(model, prompter, logger, **self.inference_settings.to_dict())
+        elif self.solver_or_tool_type == SolverOrToolType.ExecutionTool:
+            return ExecutionTool(logger, **self.solver_or_tool_args)
         elif self.solver_or_tool_type == SolverOrToolType.LLMGuesserTool:
             if self.model_settings.name_or_path not in GLOBAL_MODEL_CACHE:
                 model = GptModel(self.model_settings.name_or_path)
@@ -287,6 +289,8 @@ class SolverOrToolConfig:
                 model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
             prompter = self.prompter_config.get_prompter()
             return ProverTool(model, prompter, logger, **self.inference_settings.to_dict())
+        elif self.solver_or_tool_type == SolverOrToolType.Lean4ExecutorTool:
+            return Lean4ExecutorTool(logger)
         else:
             raise NotImplementedError(f"Solver type {self.solver_or_tool_type} is not implemented.")
 

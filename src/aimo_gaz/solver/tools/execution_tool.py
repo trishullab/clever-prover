@@ -7,13 +7,13 @@ from subprocess import Popen, PIPE, STDOUT, TimeoutExpired
 
 class ExecutionTool(Tool):
     def __init__(self, logger: logging.Logger = None, timeout_in_secs: float = 10.0):
-        assert logger is not None, "logger must be provided."
+        assert logger is not None, "Logger must be provided."
         self.logger = logger
-        self.history = []
         self.timeout_in_secs = timeout_in_secs
+        self.history = []
     
     def run(self, filepath: str, timeout_in_secs: float = 10.0):
-        assert os.path.isfile(filepath), f"filepath must be a valid file: {filepath}"
+        assert os.path.isfile(filepath), f"Filepath must be a valid file: {filepath}"
         process = Popen(
             ['python', filepath],
             stdin = PIPE,
@@ -34,11 +34,11 @@ class ExecutionTool(Tool):
         return self.parse_output(is_timeout, process, output)
     
     def run_parallel(self, filepaths: list, timeout_in_secs: float = 10.0) -> typing.List[str]:
-        assert len(filepaths) > 0, "filepaths must not be empty."
+        assert len(filepaths) > 0, "Filepaths must not be empty."
         processes : typing.List[Popen] = []
         outputs = []
         for filepath in filepaths:
-            assert os.path.isfile(filepath), f"filepath must be a valid file: {filepath}"
+            assert os.path.isfile(filepath), f"Filepath must be a valid file: {filepath}"
             process = Popen(
                 ['python', filepath],
                 stdin = PIPE,

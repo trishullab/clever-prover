@@ -1,48 +1,29 @@
 from itp_interface.rl.simple_proof_env import ProofAction, ProofEnv
 from aimo_gaz.solver.abs_solver_and_tool import Tool
-from aimo_gaz.models.abs_model import Model
-from aimo_gaz.prompters.prompter import Prompter
-from aimo_gaz.utils import string_utils
 import logging
 import hydra
 
-class ProverTool(Tool): # TODO: ignoring all actions other than RUN_TACTIC for now
-    def __init__(self, model: Model, prompter: Prompter, logger: logging.Logger = None, **inference_kwargs):
-        assert model is not None, "Model must be provided."
-        assert prompter is not None, "Prompter must be provided."
+class Lean4ExecutorTool(Tool):
+    def __init__(self, logger: logging.Logger = None):
         assert logger is not None, "Logger must be provided."
-        self.model = model
-        self.prompter = prompter
         self.logger = logger
-        self.inference_kwargs = inference_kwargs
-        self.inference_kwargs["n"] = 1 # Only one response is needed from prover tool
-        self.inference_kwargs["stop"] = prompter.stop_tokens
         self.history = []
 
-    def solve_intermediate(self, problem_description: str, proof_state_render: str, tool_prompt: str) -> str: # TODO: maybe make solution_str part of proof_env instead of passing it separately
-        if not self.model.is_loaded():
-            self.model.__enter__()
-        # Prompt the model for the tactic
-        self.history = self.prompter.get_prompt(self.history, problem_description, proof_state_render, tool_prompt)
-        self.logger.info(f"[PROVER] Raw prompt used:\n{string_utils.history_to_str(self.history)}")
-        # Get the model response
-        response = self.model.generate(self.history, **self.inference_kwargs)
-        outs = self.model.parse_out(response)
-        assert len(outs) == 1, "No response (or too many responses) from the model."
-        generated_text = outs[0][0]
-        self.history.append({"role": "assistant", "content": generated_text})
-        self.logger.info(f"[PROVER] Tactic generated.")
-        return self.prompter.parse_response(generated_text)
+    def solve_intermediate(self, proof_env: ProofEnv, tactic: str):
+        tactic_list = tactic.split(";")
+        action = ProofAction(ProofAction.ActionType.RUN_TACTIC, ProofAction.Language.LEAN4, tactics=tactic_list)
+        proof_env.step(action)
+
+        self.logger.info(f"[LEAN 4 EXECUTOR] Tactic executed.")
 
     def reset(self):
         self.history = []
 
     def __enter__(self):
-        self.model.__enter__()
         return self
     
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.model.__exit__(exc_type, exc_val, exc_tb)
+        pass
 
 
 @hydra.main(config_path="../../configs/", config_name="prover_tool_config", version_base="1.2")
