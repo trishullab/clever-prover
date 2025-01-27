@@ -1,0 +1,2 @@
+"name","problem","answer"
+"mathd_numbertheory_233","Show that $24^{-1} \equiv 116 \pmod{11^2}$. That is, show that $24 \cdot 116 \equiv 1\pmod{11^2}$.","None"
