@@ -31,12 +31,12 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger : logg
     total_time_left = 9 * 60 * 60 - 1.5 * 650 # 600 is an upper bound on the startup time, as seen from kaggle test logs
     for exidx, ex in enumerate(data):
         start_timer = time.time()
-        problem = ex.get("natural_statement", ex.get("problem", ex.get("Question")))
-        assert problem is not None, f"Problem not found in example: {ex}"
+        natural_statement = ex.get("natural_statement", ex.get("problem", ex.get("Question")))
+        assert natural_statement is not None, f"Natural statement not found in example: {ex}"
 
-        answer = ex.get("numerical_answer", ex.get("answer", ex.get("Answer")))
+        numerical_answer = ex.get("numerical_answer", ex.get("answer", ex.get("Answer")))
 
-        problem_type = ProblemType.FIND if answer != "None" else ProblemType.PROVE
+        problem_type = ProblemType.FIND if numerical_answer != "None" else ProblemType.PROVE
 
         category = ex.get("Tag")
         name = ex.get("name")
@@ -44,17 +44,17 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger : logg
         solver_is_correct = False
 
         if problem_type == ProblemType.FIND: # TODO: maybe refactor to avoid separation of FIND and PROVE (since they both end up being PROVE anyways)
-            assert answer is not None, f"Answer not found in example: {ex}"
+            assert numerical_answer is not None, f"Numerical answer not found in example: {ex}"
 
-            answer = string_utils.parse_float(answer) # TODO: handle non-numerical answers
-            if answer is None:
-                logger.error(f"ERROR: Answer '{answer}' is not a float or fraction for row {exidx}")
+            numerical_answer = string_utils.parse_float(numerical_answer) # TODO: handle non-numerical answers
+            if numerical_answer is None:
+                logger.error(f"ERROR: Numerical answer '{numerical_answer}' is not a float or fraction for row {exidx}")
                 continue
 
-            solver_ans = solver.solve(problem, problem_type, None, name, time_allowed = total_time_left // (50 - total))
+            solver_ans = solver.solve(natural_statement, problem_type, None, name, time_allowed = total_time_left // (50 - total))
 
             eps = 1e-6
-            solver_is_correct = (abs(solver_ans - answer) < eps)
+            solver_is_correct = (abs(solver_ans - numerical_answer) < eps)
         else:
             proof_exec_callback = ProofExecutorCallback(
                 project_folder="../../data/test/lean4_proj",
@@ -68,17 +68,17 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger : logg
             retrieval_strategy = ProofEnvReRankStrategy.NO_RE_RANK
 
             with ProofEnv(name, proof_exec_callback, theorem_name, retrieval_strategy=retrieval_strategy, max_proof_depth=10, always_retrieve_thms=always_retrieve_thms) as proof_env:
-                solver.solve(problem, problem_type, proof_env, name, time_allowed = total_time_left // (50 - total))
+                solver.solve(natural_statement, problem_type, proof_env, name, time_allowed = total_time_left // (50 - total))
 
                 solver_is_correct = proof_env.done
 
         total += 1
         correct += solver_is_correct
-        logger.info(f"Example {exidx}:")
-        logger.info(f"Problem: {problem}")
+        logger.info(f"Example {exidx}:") # TODO: include formal statement here
+        logger.info(f"Problem: {natural_statement}")
         logger.info(f"Problem type: {problem_type}")
         if problem_type == ProblemType.FIND:
-            logger.info(f"Answer: {answer}")
+            logger.info(f"Answer: {numerical_answer}")
             logger.info(f"Solver answer: {solver_ans}")
         logger.info(f"Correct: {solver_is_correct}")
 
