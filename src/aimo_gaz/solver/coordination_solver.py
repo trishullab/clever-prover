@@ -165,9 +165,9 @@ class CoordinationSolver(Solver):
                 executor.reset()
             elif tool_or_global_guess == ToolOrGlobalGuess.LLM_GUESSER:
                 try:
-                    guess_str = llm_guesser.solve_intermediate(problem_description, tool_prompt)
+                    guess = llm_guesser.solve_intermediate(problem_description, tool_prompt)
 
-                    self._log_and_add_to_history(coordinator.history, f"LLM guesser guessed: {guess_str}") # TODO: include entire LLM guesser reasoning output too?
+                    self._log_and_add_to_history(coordinator.history, f"LLM guesser guessed:\n{guess}")
                 except Exception as e:
                     self._log_and_add_to_history(coordinator.history, f"Exception encountered in LLM guesser: {e}")
 

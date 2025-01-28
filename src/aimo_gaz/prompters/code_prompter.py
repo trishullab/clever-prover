@@ -9,7 +9,7 @@ class CodePrompter(Prompter):
 
 Can you write a Python program to help solve the problem using SymPy? The code can print a guess for the answer or some other helpful output. Make sure it runs correctly!
 
-Please start the code with '```python' and end it with '```'""" # TODO: add examples # TODO: remove restriction on only printing a number
+Please start the code with '```python' and end it with '```'""" # TODO: add examples
         self.problem_statement_message = "Problem Statement: {}"
         self.default_user_message = "Please write the code now." # TODO: maybe adjust '```python' and '```' scaffolding
         

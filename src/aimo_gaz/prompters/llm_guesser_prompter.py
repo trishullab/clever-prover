@@ -8,13 +8,9 @@ class LLMGuesserPrompter(Prompter):
                          append_system_prompt_after_every_message)
         self.system_prompt = """Below is a math problem statement.
 
-Please write for me a guess for an answer to help solve this problem.
-
-Please start your guess with '[START GUESS]' and end it with '[END GUESS]'""" # TODO: add examples # TODO: remove restriction on only printing a number
+Please write for me a guess for an answer to help solve this problem.""" # TODO: add examples
         self.problem_statement_message = "Problem Statement: {}" # TODO: phrase this as a helper instead of a guesser
         self.default_user_message = "Please write your guess now."
-
-        self.stop_tokens = ["[END GUESS]"]
 
     def get_prompt(self, history: list[dict[str, str]], problem_description: str, tool_prompt: str) -> list[dict[str, str]]:
         if not history or history[0]["role"] != "system":
@@ -23,10 +19,7 @@ Please start your guess with '[START GUESS]' and end it with '[END GUESS]'""" # 
         history.append({"role": "user", "content": tool_prompt if tool_prompt else self.default_user_message})
         return history
 
-    def parse_response(self, response: str) -> typing.Tuple[str, float]: # TODO: remove guess tokens entirely like in planner?
-        actual_guess_ind = response.rfind("[START GUESS]")
-        if actual_guess_ind != -1:
-            response = response[(actual_guess_ind + len("[START GUESS]")):]
+    def parse_response(self, response: str) -> typing.Tuple[str, float]:
         return response.strip()
 
 
