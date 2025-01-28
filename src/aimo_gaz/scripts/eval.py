@@ -31,20 +31,20 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger : logg
     total_time_left = 9 * 60 * 60 - 1.5 * 650 # 600 is an upper bound on the startup time, as seen from kaggle test logs
     for exidx, ex in enumerate(data):
         start_timer = time.time()
-        problem = ex.get('problem', ex.get('Question'))
-        assert problem is not None, f'Problem not found in example: {ex}'
+        problem = ex.get("natural_statement", ex.get("problem", ex.get("Question")))
+        assert problem is not None, f"Problem not found in example: {ex}"
 
-        answer = ex.get('answer', ex.get('Answer'))
+        answer = ex.get("numerical_answer", ex.get("answer", ex.get("Answer")))
 
         problem_type = ProblemType.FIND if answer != "None" else ProblemType.PROVE
 
-        category = ex.get('Tag')
+        category = ex.get("Tag")
         name = ex.get("name")
 
         solver_is_correct = False
 
         if problem_type == ProblemType.FIND: # TODO: maybe refactor to avoid separation of FIND and PROVE (since they both end up being PROVE anyways)
-            assert answer is not None, f'Answer not found in example: {ex}'
+            assert answer is not None, f"Answer not found in example: {ex}"
 
             answer = string_utils.parse_float(answer) # TODO: handle non-numerical answers
             if answer is None:
@@ -74,49 +74,49 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger : logg
 
         total += 1
         correct += solver_is_correct
-        logger.info(f'Example {exidx}:')
-        logger.info(f'Problem: {problem}')
+        logger.info(f"Example {exidx}:")
+        logger.info(f"Problem: {problem}")
         logger.info(f"Problem type: {problem_type}")
         if problem_type == ProblemType.FIND:
-            logger.info(f'Answer: {answer}')
-            logger.info(f'Solver answer: {solver_ans}')
-        logger.info(f'Correct: {solver_is_correct}')
+            logger.info(f"Answer: {answer}")
+            logger.info(f"Solver answer: {solver_ans}")
+        logger.info(f"Correct: {solver_is_correct}")
 
-        problem_type_statistics.setdefault(problem_type, {'correct': 0, 'total': 0})['total'] += 1
-        problem_type_statistics[problem_type]['correct'] += solver_is_correct
+        problem_type_statistics.setdefault(problem_type, {"correct": 0, "total": 0})["total"] += 1
+        problem_type_statistics[problem_type]["correct"] += solver_is_correct
 
         if category:
-            category_statistics.setdefault(category, {'correct': 0, 'total': 0})['total'] += 1
-            category_statistics[category]['correct'] += solver_is_correct
+            category_statistics.setdefault(category, {"correct": 0, "total": 0})["total"] += 1
+            category_statistics[category]["correct"] += solver_is_correct
         
         total_time_left -= math.ceil(time.time()-start_timer)
 
     return {
-        'total': total,
-        'correct': correct,
-        'problem_type_statistics': problem_type_statistics,
-        'category_statistics': category_statistics,
+        "total": total,
+        "correct": correct,
+        "problem_type_statistics": problem_type_statistics,
+        "category_statistics": category_statistics,
     }
 
 
 def plot_category_statistics(category_statistics, time_str, benchmark):
     categories = list(category_statistics.keys())
-    accuracies = [category_statistics[cat]['correct'] / category_statistics[cat]['total'] for cat in categories]
+    accuracies = [category_statistics[cat]["correct"] / category_statistics[cat]["total"] for cat in categories]
 
     # Plot the accuracies per category
     plt.bar(categories, accuracies)
-    plt.title('Accuracy per category')
+    plt.title("Accuracy per category")
 
     # Tilt the x-axis labels
-    plt.xticks(rotation=45, ha='right')
-    plt.ylabel('Accuracy')
+    plt.xticks(rotation=45, ha="right")
+    plt.ylabel("Accuracy")
 
     # Give more margin on the bottom for text to fit
     plt.subplots_adjust(bottom=0.3)
 
     # Set y-limits to 0 to 1
     plt.ylim(0, 1)
-    plt.savefig(f'.logs/{time_str}/{benchmark}/category_statistics.png')
+    plt.savefig(f".logs/{time_str}/{benchmark}/category_statistics.png")
     plt.close()
     # plt.show()
 
@@ -126,26 +126,26 @@ def evaluate_on_benchmarks(benchmark, valid_path, solver, time_str = None, logge
 
     stats = evaluate(data, solver=solver, logger=logger)
 
-    logger.info(f'Benchmark: {benchmark}')
-    logger.info(f'Accuracy: {stats["correct"]} / {stats["total"]} = {stats["correct"] / stats["total"]:.2f}')
-    for problem_type, problem_type_stats in stats['problem_type_statistics'].items():
-        logger.info(f'Problem type: {problem_type.value} ({problem_type_stats["correct"]} / {problem_type_stats["total"]} = {problem_type_stats["correct"] / problem_type_stats["total"]:.2f})')
-    for category, category_stats in stats['category_statistics'].items():
-        logger.info(f'Category: {category} ({category_stats["correct"]} / {category_stats["total"]} = {category_stats["correct"] / category_stats["total"]:.2f})')
-    logger.info('\n\n')
+    logger.info(f"Benchmark: {benchmark}")
+    logger.info(f"Accuracy: {stats['correct']} / {stats['total']} = {stats['correct'] / stats['total']:.2f}")
+    for problem_type, problem_type_stats in stats["problem_type_statistics"].items():
+        logger.info(f"Problem type: {problem_type.value} ({problem_type_stats['correct']} / {problem_type_stats['total']} = {problem_type_stats['correct'] / problem_type_stats['total']:.2f})")
+    for category, category_stats in stats["category_statistics"].items():
+        logger.info(f"Category: {category} ({category_stats['correct']} / {category_stats['total']} = {category_stats['correct'] / category_stats['total']:.2f})")
+    logger.info("\n\n")
     time_str = time.strftime("%Y%m%d-%H%M%S") if time_str is None else time_str
-    if len(stats['category_statistics']) != 0:
-        plot_category_statistics(stats['category_statistics'], time_str, benchmark)
+    if len(stats["category_statistics"]) != 0:
+        plot_category_statistics(stats["category_statistics"], time_str, benchmark)
 
 if __name__ == "__main__":
     from argparse import ArgumentParser
 
     parser = ArgumentParser()
 
-    parser.add_argument('--kaggle_train_10_path', type=str, default='../data/kaggle_train_10.csv')
-    parser.add_argument('--valid_path', type=str, default='../data/valid.csv')
+    parser.add_argument("--kaggle_train_10_path", type=str, default="../data/kaggle_train_10.csv")
+    parser.add_argument("--valid_path", type=str, default="../data/valid.csv")
 
-    parser.add_argument('--benchmarks', type=str, nargs='+', choices=['kaggle_train_10', 'valid'])
+    parser.add_argument("--benchmarks", type=str, nargs="+", choices=["kaggle_train_10", "valid"])
 
     args = parser.parse_args()
 
@@ -153,22 +153,22 @@ if __name__ == "__main__":
     benchmarks = args.benchmarks
 
     for benchmark in benchmarks:
-        if benchmark == 'kaggle_train_10':
+        if benchmark == "kaggle_train_10":
             data = get_csv_data(kaggle_train_10_path)
-        elif benchmark == 'valid':
+        elif benchmark == "valid":
             data = get_csv_data(args.valid_path)
         else:
-            assert False, f'Unknown benchmark: {benchmark}'
+            assert False, f"Unknown benchmark: {benchmark}"
 
         stats = evaluate(data, solver_cls=TestSolver)
 
-        print(f'Benchmark: {benchmark}')
-        print(f'Accuracy: {stats["correct"]} / {stats["total"]} = {stats["correct"] / stats["total"]:.2f}')
-        for problem_type, problem_type_stats in stats['problem_type_statistics'].items():
-            print(f'Problem type: {problem_type.value} ({problem_type_stats["correct"]} / {problem_type_stats["total"]} = {problem_type_stats["correct"] / problem_type_stats["total"]:.2f})')
-        for category, category_stats in stats['category_statistics'].items():
-            print(f'Category: {category} ({category_stats["correct"]} / {category_stats["total"]} = {category_stats["correct"] / category_stats["total"]:.2f})')
-        print('\n\n')
+        print(f"Benchmark: {benchmark}")
+        print(f"Accuracy: {stats['correct']} / {stats['total']} = {stats['correct'] / stats['total']:.2f}")
+        for problem_type, problem_type_stats in stats["problem_type_statistics"].items():
+            print(f"Problem type: {problem_type.value} ({problem_type_stats['correct']} / {problem_type_stats['total']} = {problem_type_stats['correct'] / problem_type_stats['total']:.2f})")
+        for category, category_stats in stats["category_statistics"].items():
+            print(f"Category: {category} ({category_stats['correct']} / {category_stats['total']} = {category_stats['correct'] / category_stats['total']:.2f})")
+        print("\n\n")
 
-        if len(stats['category_statistics']) != 0:
-            plot_category_statistics(stats['category_statistics'])
+        if len(stats["category_statistics"]) != 0:
+            plot_category_statistics(stats["category_statistics"])

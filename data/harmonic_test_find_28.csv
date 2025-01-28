@@ -1,4 +1,4 @@
-"name","problem","answer"
+"name","natural_statement","numerical_answer"
 "amc12a_2003_p5","The sum of the two 5-digit numbers $AMC10$ and $AMC12$ is $123422$. Find $A+M+C$.","14"
 "mathd_numbertheory_521","The product of two consecutive positive even integers is 288. Find the greater of the two integers.","18"
 "mathd_numbertheory_541","The product of two positive whole numbers is 2005. If neither number is 1, find the sum of the two numbers.","406"

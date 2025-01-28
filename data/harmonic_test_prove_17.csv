@@ -1,4 +1,4 @@
-"name","problem","answer"
+"name","natural_statement","numerical_answer"
 "numbertheory_4x3m7y3neq2003","Show that there are no integers $x$ and $y$ such that $4x^3 - 7y^3 = 2003$.","None"
 "mathd_numbertheory_728","Show that $29^{13} - 5^{13} \equiv 3 \pmod{7}$.","None"
 "induction_1pxpownlt1pnx","Show that for any real number $x$ and any natural number $n$, if $x > -1$, then $(1+nx)\leq (1+x)^n$.","None"
