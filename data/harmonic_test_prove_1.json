@@ -1,0 +1,8 @@
+[
+    {
+        "name": "numbertheory_4x3m7y3neq2003",
+        "natural_statement": "Show that there are no integers $x$ and $y$ such that $4x^3 - 7y^3 = 2003$.",
+        "natural_solution": "None.",
+        "numerical_answer": "None"
+    }
+]

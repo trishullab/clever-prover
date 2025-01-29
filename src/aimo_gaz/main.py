@@ -38,8 +38,7 @@ def main(cfg):
         # benchmark = "kaggle_train_1"
         # benchmark = "harmonic_test_find_1"
         # benchmark = "harmonic_test_prove_1"
-        # benchmark = "harmonic_test_find_prove_2"
-        benchmark = "temp_json"
+        benchmark = "harmonic_test_find_prove_2"
         # benchmark_ext = "csv"
         benchmark_ext = "json"
         logger.info(f"Running on {benchmark}")

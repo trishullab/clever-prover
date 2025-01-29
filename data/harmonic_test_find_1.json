@@ -1,0 +1,8 @@
+[
+    {
+        "name": "amc12a_2003_p5",
+        "natural_statement": "The sum of the two 5-digit numbers $AMC10$ and $AMC12$ is $123422$. Find $A+M+C$.",
+        "natural_solution": "Show that $A+M+C=14$.",
+        "numerical_answer": "14"
+    }
+]

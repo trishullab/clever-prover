@@ -1,0 +1,104 @@
+[
+    {
+        "name": "numbertheory_4x3m7y3neq2003",
+        "natural_statement": "Show that there are no integers $x$ and $y$ such that $4x^3 - 7y^3 = 2003$.",
+        "natural_solution": "None.",
+        "numerical_answer": "None"
+    },
+    {
+        "name": "mathd_numbertheory_728",
+        "natural_statement": "Show that $29^{13} - 5^{13} \\equiv 3 \\pmod{7}$.",
+        "natural_solution": "None.",
+        "numerical_answer": "None"
+    },
+    {
+        "name": "induction_1pxpownlt1pnx",
+        "natural_statement": "Show that for any real number $x$ and any natural number $n$, if $x > -1$, then $(1+nx)\\leq (1+x)^n$.",
+        "natural_solution": "None.",
+        "numerical_answer": "None"
+    },
+    {
+        "name": "mathd_algebra_484",
+        "natural_statement": "Show that $\\log_{3}{27} = 3$.",
+        "natural_solution": "None.",
+        "numerical_answer": "None"
+    },
+    {
+        "name": "imo_1984_p6",
+        "natural_statement": "Let $a,b,c,d$ be odd integers such that $0<a<b<c<d$ and $ad=bc$. Prove that if $a+d=2^k$ and $b+c=2^m$ for some integers $k$ and $m$, then $a=1$.",
+        "natural_solution": "None.",
+        "numerical_answer": "None"
+    },
+    {
+        "name": "mathd_numbertheory_233",
+        "natural_statement": "Show that $24^{-1} \\equiv 116 \\pmod{11^2}$. That is, show that $24 \\cdot 116 \\equiv 1\\pmod{11^2}$.",
+        "natural_solution": "None.",
+        "numerical_answer": "None"
+    },
+    {
+        "name": "amc12a_2021_p18",
+        "natural_statement": "Let $f$ be a function defined on the set of positive rational numbers with the property that $f(a \\cdot b)=f(a)+f(b)$ for all positive rational numbers $a$ and $b$. Suppose that $f$ also has the property that $f(p)=p$ for every prime number $p$. Show that $f(\\frac{25}{11})<0$.",
+        "natural_solution": "None.",
+        "numerical_answer": "None"
+    },
+    {
+        "name": "algebra_sqineq_unitcircatbpabsamblt1",
+        "natural_statement": "Let $a$ and $b$ be real numbers such that $a^2+b^2=1$. Show that $ab+\\lvert a-b\\rvert \\leq 1$.",
+        "natural_solution": "None.",
+        "numerical_answer": "None"
+    },
+    {
+        "name": "induction_12dvd4expnp1p20",
+        "natural_statement": "Show that for any natural number $n$, 12 divides $4^{n+1} + 20$.",
+        "natural_solution": "None.",
+        "numerical_answer": "None"
+    },
+    {
+        "name": "algebra_9onxpypzleqsum2onxpy",
+        "natural_statement": "Show that for any three positive real numbers $x$, $y$, and $z$, $9/(x+y+z)\\leq 2/(x+y)+2/(y+z)+2/(z+x)$.",
+        "natural_solution": "None.",
+        "numerical_answer": "None"
+    },
+    {
+        "name": "algebra_others_exirrpowirrrat",
+        "natural_statement": "Show that there exist real numbers $a$ and $b$ such that $a$ is irrational, $b$ is irrational, and $a^b$ is rational.",
+        "natural_solution": "None.",
+        "numerical_answer": "None"
+    },
+    {
+        "name": "imo_1968_p5_1",
+        "natural_statement": "Let $a$ be a positive real number and $f$ be a real function such that $\\forall x \\in \\mathbb{R}, f(x+a)=\\frac{1}{2}+\\sqrt{f(x)-f(x)^2}$.\nShow that there exists a positive real number $b$ such that $\\forall x \\in \\mathbb{R}, f(x+b)=f(x)$.",
+        "natural_solution": "None.",
+        "numerical_answer": "None"
+    },
+    {
+        "name": "imo_1969_p2",
+        "natural_statement": "Let $a_0, a_1, \\cdots, a_{n-1}$ be real constants, $x$ a real variable, and $f(x)=\\cos(a_0+x)+\\frac{1}{2}\\cos(a_1+x)+\\frac{1}{4}\\cos(a_2+x)+\\cdots+\\frac{1}{2^{n-1}}\\cos(a_{n-1}+x)$. For real numbers $x_1, x_2$, given that $f(x_1)=f(x_2)=0$, prove that $x_2-x_1=m\\pi$ for some integer $m$.",
+        "natural_solution": "None.",
+        "numerical_answer": "None"
+    },
+    {
+        "name": "induction_prod1p1onk3le3m1onn",
+        "natural_statement": "Show that for any positive integer $n$, we have $\\prod_{k=1}^n (1 + 1/k^3) \\leq 3 - 1/n$.",
+        "natural_solution": "None.",
+        "numerical_answer": "None"
+    },
+    {
+        "name": "algebra_absapbon1pabsapbleqsumabsaon1pabsa",
+        "natural_statement": "Show that for any real numbers $a$ and $b$, $\\frac{|a+b|}{1+|a+b|}\\leq \\frac{|a|}{1+|a|}+\\frac{|b|}{1+|b|}$.",
+        "natural_solution": "None.",
+        "numerical_answer": "None"
+    },
+    {
+        "name": "algebra_abpbcpcageq3_sumaonsqrtapbgeq3onsqrt2",
+        "natural_statement": "For positive real numbers a, b, c, such that $3 \\leq ab+bc+ca$, show that $\\frac{3}{\\sqrt{2}} \\leq \\frac{a}{\\sqrt{a+b}} + \\frac{b}{\\sqrt{b+c}} + \\frac{c}{\\sqrt{c+a}}$.",
+        "natural_solution": "None.",
+        "numerical_answer": "None"
+    },
+    {
+        "name": "numbertheory_2pownm1prime_nprime",
+        "natural_statement": "Show that if $n$ is a positive integer and $2^n - 1$ is prime, then $n$ is prime.",
+        "natural_solution": "None.",
+        "numerical_answer": "None"
+    }
+]
