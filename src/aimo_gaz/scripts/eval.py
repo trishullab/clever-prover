@@ -1,3 +1,4 @@
+import json
 import csv
 import logging
 import time
@@ -10,8 +11,13 @@ from aimo_gaz.solver.test_solver import TestSolver
 from aimo_gaz.utils import string_utils
 
 
+def get_json_data(path: str):
+    with open(path, "r") as f:
+        data = json.load(f)
+        return [x for x in data]
+
 def get_csv_data(path: str):
-    with open(path, 'r') as f:
+    with open(path, "r") as f:
         reader = csv.DictReader(f)
         return [x for x in reader]
 
@@ -75,7 +81,7 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger : logg
         total += 1
         correct += solver_is_correct
         logger.info(f"Example {exidx}:") # TODO: include formal statement here
-        logger.info(f"Problem: {natural_statement}")
+        logger.info(f"Problem:\n{natural_statement}")
         logger.info(f"Problem type: {problem_type}")
         if problem_type == ProblemType.FIND:
             logger.info(f"Answer: {numerical_answer}")
@@ -120,9 +126,9 @@ def plot_category_statistics(category_statistics, time_str, benchmark):
     plt.close()
     # plt.show()
 
-def evaluate_on_benchmarks(benchmark, valid_path, solver, time_str = None, logger : logging.Logger = None):
+def evaluate_on_benchmarks(benchmark, benchmark_ext, valid_path, solver, time_str = None, logger : logging.Logger = None):
     logger = logger if logger is not None else logging.getLogger(__name__)
-    data = get_csv_data(valid_path)
+    data = get_json_data(valid_path) if benchmark_ext == "json" else get_csv_data(valid_path)
 
     stats = evaluate(data, solver=solver, logger=logger)
 

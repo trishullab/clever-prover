@@ -1,0 +1,14 @@
+[
+    {
+      "name": "amc12a_2003_p5",
+      "natural_statement": "The sum of the two 5-digit numbers $AMC10$ and $AMC12$ is $123422$. Find $A+M+C$.",
+      "natural_solution": "Show that $A+M+C=14$.",
+      "numerical_answer": "14"
+    },
+    {
+      "name": "numbertheory_4x3m7y3neq2003",
+      "natural_statement": "Show that there are no integers $x$ and $y$ such that $4x^3 - 7y^3 = 2003$.",
+      "natural_solution": "None.",
+      "numerical_answer": "None"
+    }
+]

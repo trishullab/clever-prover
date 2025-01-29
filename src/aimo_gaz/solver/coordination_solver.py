@@ -491,7 +491,7 @@ Choices:
     def solve(self, problem_description: str, problem_type: ProblemType, proof_env: ProofEnv, name: str, time_allowed: int) -> float:
         assert len(self.tools) > 0, "No tools provided."
         self.start_time = time.time()
-        self.logger.info(f"Starting to solve problem: {problem_description}")
+        self.logger.info(f"Starting to solve problem:\n{problem_description}")
         answer = -1
         try:
             if self.strategy == CoordinationSolverStrategy.PLAN_CODE_EXEC_EXRACT_LAST_MAJ_VOTE:

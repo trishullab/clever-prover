@@ -9,7 +9,7 @@ class LLMGuesserPrompter(Prompter):
         self.system_prompt = """Below is a math problem statement.
 
 Please write for me a guess for an answer to help solve this problem.""" # TODO: add examples
-        self.problem_statement_message = "Problem Statement: {}" # TODO: phrase this as a helper instead of a guesser
+        self.problem_statement_message = "Problem Statement:\n{}" # TODO: phrase this as a helper instead of a guesser
         self.default_user_message = "Please write your guess now."
 
     def get_prompt(self, history: list[dict[str, str]], problem_description: str, tool_prompt: str) -> list[dict[str, str]]:

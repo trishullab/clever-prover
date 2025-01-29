@@ -30,7 +30,7 @@ If you choose to globally guess the answer, please output your answer between th
 Below is the problem statement and the history of actions taken so far by the coordinator (you) and the tools to solve this problem.""" # TODO: add examples
         self.system_prompt_format_find = "solving"
         self.system_prompt_format_prove = "formally proving"
-        self.problem_statement_message = "Problem Statement: {}"
+        self.problem_statement_message = "Problem Statement:\n{}"
         self.user_message = "Please output your chosen tool and prompt or your global guess now."
 
         self.stop_tokens = ["[END PROMPT]", "[END TACTIC]", "[END GLOBAL GUESS]"]

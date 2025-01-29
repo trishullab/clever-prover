@@ -12,7 +12,7 @@ Please write for me the next tactic to prove this theorem in Lean 4. Only write 
 Be sure to use correct Lean 4 notation; do not use Lean 3 notation.
 
 Please start your response with '[START TACTIC]' and end it with '[END TACTIC]'""" # TODO: add examples
-        self.problem_statement_message = "Problem Statement: {}"
+        self.problem_statement_message = "Problem Statement:\n{}"
         self.default_user_message = "Please write the next tactic now."
         
         self.stop_tokens = ["[END TACTIC]"]

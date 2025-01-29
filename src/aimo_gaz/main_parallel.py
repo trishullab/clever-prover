@@ -35,7 +35,7 @@ def attempt_on_subset(rank, size, time_str, cfg, csv_path, benchmark_name, confi
     with solver:
         logger.info(f"Running on {benchmark_name} split {rank}.")
         os.makedirs(f".logs/{time_str}/{benchmark_name}", exist_ok=True)
-        evaluate_on_benchmarks(benchmark_name, csv_path, solver, time_str, logger)
+        evaluate_on_benchmarks(benchmark_name, "csv", csv_path, solver, time_str, logger)
     dist.destroy_process_group()
 
 @hydra.main(config_path="configs/", config_name="coordination_solver_config", version_base="1.2")
