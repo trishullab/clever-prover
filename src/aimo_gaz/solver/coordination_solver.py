@@ -110,8 +110,7 @@ class CoordinationSolver(Solver):
         prover: ProverTool = self.tools["prover"]
         lean4_executor: Lean4ExecutorTool = self.tools["lean4_executor"]
 
-        global_guess_str = None
-        global_guess_float = None
+        global_guess = None
 
         if problem_type == ProblemType.PROVE:
             proof_state_render = string_utils.render_proof_env(proof_env, solution_str)
@@ -125,7 +124,7 @@ class CoordinationSolver(Solver):
 
             coordinator_error = False
             try:
-                tool_or_global_guess, tool_prompt, global_guess_str_temp = coordinator.solve_intermediate(problem_description, problem_type)
+                tool_or_global_guess, tool_prompt, global_guess_temp = coordinator.solve_intermediate(problem_description, problem_type)
                 self._log_and_add_to_history(coordinator.history, f"Loop {MAX_LOOPS - loops_left} / {MAX_LOOPS}: Coordinator chose tool: {None if tool_or_global_guess is None else tool_or_global_guess.value}")
             except Exception as e:
                 self._log_and_add_to_history(coordinator.history, f"Exception encountered in coordinator: {e}")
@@ -205,15 +204,10 @@ class CoordinationSolver(Solver):
                     self._log_and_add_to_history(coordinator.history, f"Lean 4 executor tool is invalid for FIND problems.") # TODO: this won't be needed later
             elif tool_or_global_guess == ToolOrGlobalGuess.GLOBAL_GUESS:
                 if problem_type == ProblemType.FIND:
-                    global_guess_float_temp = string_utils.parse_float(global_guess_str_temp)
-                    if global_guess_float_temp is not None:
-                        self.logger.info(f"Coordinator output global guess: {global_guess_str_temp}")
+                    global_guess = global_guess_temp
+                    self.logger.info(f"Coordinator output global guess: {global_guess}")
 
-                        global_guess_str = global_guess_str_temp
-                        global_guess_float = global_guess_float_temp
-                        end_loop = True
-                    else:
-                        self._log_and_add_to_history(coordinator.history, f"Coordinator output global guess could not be parsed as float: {global_guess_str_temp}")
+                    end_loop = True
                 else:
                     self._log_and_add_to_history(coordinator.history, f"Globally guessing is invalid for PROVE problems.") # TODO: rephrase this later
             else:
@@ -227,11 +221,7 @@ class CoordinationSolver(Solver):
         self.logger.info("Solver finished looping.")
 
         if problem_type == ProblemType.FIND:
-            if global_guess_float is None:
-                self.logger.info("No global guess for answer found, returning 0.0")
-                global_guess_str = "0"
-                global_guess_float = 0.0
-            self.logger.info(f"Solver returning: {global_guess_float} ({global_guess_str})")
+            self.logger.info(f"Solver returning: {global_guess}")
         else:
             if proof_env.done:
                 self.logger.info("Succesfully proved theorem.")
@@ -242,7 +232,8 @@ class CoordinationSolver(Solver):
             with open(f"../../data/test/lean4_proj/Lean4Proj/HarmonicTest/{name}.lean", "r") as lean_file:
                 lean_content = lean_file.read()
             # TODO: deal with noncomputable real division? (only an issue if guess is fraction of real numbers but actual solution is literal)
-            lean_content = lean_content.replace("sorry", global_guess_str, 1)
+            # TODO: deal with non-numerical answers, putting in Lean format
+            lean_content = lean_content.replace("sorry", global_guess, 1)
             self.logger.info(f"Lean theorem with answer filled in:\n{lean_content}")
             
             with tempfile.NamedTemporaryFile(mode="w+", suffix=".lean") as temp_lean_file:
@@ -261,9 +252,9 @@ class CoordinationSolver(Solver):
                 retrieval_strategy = ProofEnvReRankStrategy.NO_RE_RANK
 
                 # with ProofEnv(name, proof_exec_callback, theorem_name, retrieval_strategy=retrieval_strategy, max_proof_depth=10, always_retrieve_thms=always_retrieve_thms) as proof_env:
-                #     self._coordinator_tool_history_loop(problem_description, ProblemType.PROVE, proof_env, name, global_guess_str, time_allowed) # TODO: this is supposed to be uncommented but may be commented for testing purposes until the prover is good enough
+                #     self._coordinator_tool_history_loop(problem_description, ProblemType.PROVE, proof_env, name, global_guess, time_allowed) # TODO: this is supposed to be uncommented but may be commented for testing purposes until the prover is good enough
         
-        return global_guess_float
+        return global_guess
 
 
     def _plan_code_exec_extract_last_maj_vote(self, problem_description: str, time_allowed: int) -> float:

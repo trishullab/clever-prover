@@ -37,12 +37,15 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger : logg
     total_time_left = 9 * 60 * 60 - 1.5 * 650 # 600 is an upper bound on the startup time, as seen from kaggle test logs
     for exidx, ex in enumerate(data):
         start_timer = time.time()
+
         natural_statement = ex.get("natural_statement", ex.get("problem", ex.get("Question")))
         assert natural_statement is not None, f"Natural statement not found in example: {ex}"
 
+        natural_solution = ex.get("natural_solution")
         numerical_answer = ex.get("numerical_answer", ex.get("answer", ex.get("Answer")))
 
-        problem_type = ProblemType.FIND if numerical_answer != "None" else ProblemType.PROVE
+        problem_type = ProblemType.FIND if natural_solution != "None." else ProblemType.PROVE
+        has_numerical_answer = (numerical_answer != "None")
 
         category = ex.get("Tag")
         name = ex.get("name")
@@ -50,17 +53,26 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger : logg
         solver_is_correct = False
 
         if problem_type == ProblemType.FIND: # TODO: maybe refactor to avoid separation of FIND and PROVE (since they both end up being PROVE anyways)
-            assert numerical_answer is not None, f"Numerical answer not found in example: {ex}"
+            assert natural_solution is not None, f"Natural solution not found in example: {ex}"
 
-            numerical_answer = string_utils.parse_float(numerical_answer) # TODO: handle non-numerical answers
-            if numerical_answer is None:
-                logger.error(f"ERROR: Numerical answer '{numerical_answer}' is not a float or fraction for row {exidx}")
-                continue
+            if has_numerical_answer:
+                numerical_answer = string_utils.parse_float(numerical_answer) # TODO: handle non-numerical answers
+                if numerical_answer is None:
+                    logger.error(f"ERROR: Numerical answer '{numerical_answer}' is not a float or fraction for row {exidx}")
+                    continue
 
             solver_ans = solver.solve(natural_statement, problem_type, None, name, time_allowed = total_time_left // (50 - total))
 
-            eps = 1e-6
-            solver_is_correct = (abs(solver_ans - numerical_answer) < eps)
+            if has_numerical_answer:
+                solver_ans_float = string_utils.parse_float(solver_ans)
+                if solver_ans_float is None:
+                    logger.info(f"ERROR: Solver answer '{solver_ans}' is not a float or fraction.")
+                    solver_is_correct = False
+                else:
+                    eps = 1e-6
+                    solver_is_correct = (abs(solver_ans_float - numerical_answer) < eps)
+            else:
+                solver_is_correct = True
         else:
             proof_exec_callback = ProofExecutorCallback(
                 project_folder="../../data/test/lean4_proj",
@@ -84,7 +96,8 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger : logg
         logger.info(f"Problem:\n{natural_statement}")
         logger.info(f"Problem type: {problem_type}")
         if problem_type == ProblemType.FIND:
-            logger.info(f"Answer: {numerical_answer}")
+            logger.info(f"Solution: {natural_solution}")
+            logger.info(f"Numerical answer: {numerical_answer}")
             logger.info(f"Solver answer: {solver_ans}")
         logger.info(f"Correct: {solver_is_correct}")
 
