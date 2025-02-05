@@ -25,6 +25,7 @@ def get_csv_data(path: str):
 class ProblemType(Enum):
     FIND = "FIND"
     PROVE = "PROVE"
+    PROVE_AFTER_FIND = "PROVE_AFTER_FIND"
 
 def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: logging.Logger = None):
     logger = logger if logger is not None else logging.getLogger(__name__)

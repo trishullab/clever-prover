@@ -112,7 +112,7 @@ class CoordinationSolver(Solver):
 
         global_guess = None
 
-        if problem_type == ProblemType.PROVE:
+        if problem_type == ProblemType.PROVE or problem_type == ProblemType.PROVE_AFTER_FIND:
             proof_state_render = string_utils.render_proof_env(proof_env, solution_str)
             self._log_and_add_to_history(coordinator.history, proof_state_render)
 
@@ -172,7 +172,7 @@ class CoordinationSolver(Solver):
 
                 llm_guesser.reset()
             elif tool_or_global_guess == ToolOrGlobalGuess.PROVER:
-                if problem_type == ProblemType.PROVE:
+                if problem_type == ProblemType.PROVE or problem_type == ProblemType.PROVE_AFTER_FIND:
                     try:
                         proof_state_render = string_utils.render_proof_env(proof_env, solution_str)
                         tactic = prover.solve_intermediate(problem_statement, theorem_statement, proof_state_render, tool_prompt)
@@ -183,9 +183,9 @@ class CoordinationSolver(Solver):
                     
                     prover.reset()
                 else:
-                    self._log_and_add_to_history(coordinator.history, f"Prover tool is invalid for FIND problems.") # TODO: this won't be needed later
+                    self._log_and_add_to_history(coordinator.history, f"Prover tool is invalid while the problem's answer is still being guessed.") # TODO: this won't be needed later
             elif tool_or_global_guess == ToolOrGlobalGuess.LEAN4_EXECUTOR:
-                if problem_type == ProblemType.PROVE:
+                if problem_type == ProblemType.PROVE or problem_type == ProblemType.PROVE_AFTER_FIND:
                     try:
                         tactic = tool_prompt
                         lean4_executor.solve_intermediate(proof_env, tactic)
@@ -201,7 +201,7 @@ class CoordinationSolver(Solver):
                         self.logger.info("Succesfully proved theorem, ending loop.")
                         end_loop = True
                 else:
-                    self._log_and_add_to_history(coordinator.history, f"Lean 4 executor tool is invalid for FIND problems.") # TODO: this won't be needed later
+                    self._log_and_add_to_history(coordinator.history, f"Lean 4 executor tool is invalid while the problem's answer is still being guessed.") # TODO: this won't be needed later
             elif tool_or_global_guess == ToolOrGlobalGuess.GLOBAL_GUESS:
                 if problem_type == ProblemType.FIND:
                     global_guess = global_guess_temp
@@ -209,7 +209,7 @@ class CoordinationSolver(Solver):
 
                     end_loop = True
                 else:
-                    self._log_and_add_to_history(coordinator.history, f"Globally guessing is invalid for PROVE problems.") # TODO: rephrase this later
+                    self._log_and_add_to_history(coordinator.history, f"Globally guessing is invalid while formally proving the theorem.")
             else:
                 self._log_and_add_to_history(coordinator.history, f"Coordinator-chosen tool '{tool_or_global_guess}' is invalid.")
             
@@ -262,7 +262,7 @@ class CoordinationSolver(Solver):
                 retrieval_strategy = ProofEnvReRankStrategy.NO_RE_RANK
 
                 # with ProofEnv(name, proof_exec_callback, theorem_name, retrieval_strategy=retrieval_strategy, max_proof_depth=10, always_retrieve_thms=always_retrieve_thms) as proof_env:
-                #     self._coordinator_tool_history_loop(problem_statement, theorem_statement, ProblemType.PROVE, proof_env, name, global_guess, time_allowed) # TODO: this is supposed to be uncommented but may be commented for testing purposes until the prover is good enough
+                #     self._coordinator_tool_history_loop(problem_statement, theorem_statement, ProblemType.PROVE_AFTER_FIND, proof_env, name, global_guess, time_allowed) # TODO: this is supposed to be uncommented but may be commented for testing purposes until the prover is good enough
         
         return global_guess
 
