@@ -238,6 +238,13 @@ class CoordinationSolver(Solver):
             # TODO: deal with non-numerical answers, putting in Lean format
             lean_content = lean_content.replace("sorry", global_guess, 1)
             self.logger.info(f"Lean theorem with answer filled in:\n{lean_content}")
+
+            theorem_statement_raw = lean_content
+            theorem_statement_lines = []
+            for line in theorem_statement_raw.splitlines():
+                if line and not line.isspace() and not line.startswith("import ") and not line.startswith("open ") and not line.startswith("--"):
+                    theorem_statement_lines.append(line)
+            theorem_statement = "\n".join(theorem_statement_lines) # TODO: move this duplicated code into helper file or refactor so it's not duplicated
             
             with tempfile.NamedTemporaryFile(mode="w+", suffix=".lean") as temp_lean_file:
                 temp_lean_file.write(lean_content)
@@ -255,7 +262,7 @@ class CoordinationSolver(Solver):
                 retrieval_strategy = ProofEnvReRankStrategy.NO_RE_RANK
 
                 # with ProofEnv(name, proof_exec_callback, theorem_name, retrieval_strategy=retrieval_strategy, max_proof_depth=10, always_retrieve_thms=always_retrieve_thms) as proof_env:
-                #     self._coordinator_tool_history_loop(problem_statement, ProblemType.PROVE, proof_env, name, global_guess, time_allowed) # TODO: this is supposed to be uncommented but may be commented for testing purposes until the prover is good enough
+                #     self._coordinator_tool_history_loop(problem_statement, theorem_statement, ProblemType.PROVE, proof_env, name, global_guess, time_allowed) # TODO: this is supposed to be uncommented but may be commented for testing purposes until the prover is good enough
         
         return global_guess
 
