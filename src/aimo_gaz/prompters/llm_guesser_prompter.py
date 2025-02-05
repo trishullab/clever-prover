@@ -11,6 +11,8 @@ class LLMGuesserPrompter(Prompter):
 Please write for me a guess for an answer to help solve this problem.""" # TODO: add examples
         self.problem_statement_message = "Problem Statement:\n{}\n\nLean 4 Theorem Statement:\n{}" # TODO: phrase this as a helper instead of a guesser
         self.default_user_message = "Please write your guess now."
+        
+        self.stop_tokens = []
 
     def get_prompt(self, history: list[dict[str, str]], problem_statement: str, theorem_statement: str, tool_prompt: str) -> list[dict[str, str]]:
         if not history or history[0]["role"] != "system":

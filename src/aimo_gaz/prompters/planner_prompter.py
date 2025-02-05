@@ -9,12 +9,11 @@ class PlannerPrompter(Prompter):
 
 Write for me the first couple steps you would do to solve this problem. Only write the first couple steps please.
 
-Please start your response with: '0. I would break down the problem into simpler steps, this can be done by the following:'
-Please end your response with: '[END PROCEDURE]'""" # TODO: add examples # TODO: include custom system prompt for proving?
+Please start your response with: '0. I would break down the problem into simpler steps, this can be done by the following:'""" # TODO: add examples # TODO: include custom system prompt for proving?
         self.problem_statement_message = "Problem Statement:\n{}\n\nLean 4 Theorem Statement:\n{}" # TODO: merge both user messages for all
         self.default_user_message = "Please write the steps now."
         
-        self.stop_tokens = ["[END PROCEDURE]"]
+        self.stop_tokens = []
 
     def get_prompt(self, history: list[dict[str, str]], problem_statement: str, theorem_statement: str, tool_prompt: str) -> list[dict[str, str]]:
         if not history or history[0]["role"] != "system":
