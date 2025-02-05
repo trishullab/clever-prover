@@ -17,11 +17,11 @@ class OldPlannerTool(Tool):
         self.inference_kwargs["stop"] = ["[END PROCEDURE]", "7.", "the answer is", "<｜end▁of▁sentence｜>"]
         self.history = []
 
-    def solve_intermediate(self, problem_description: str) -> str:
+    def solve_intermediate(self, problem_statement: str) -> str:
         if not self.model.is_loaded():
             self.model.__enter__()
         # Prompt the model for the plan
-        message = {"role": "user", "content": problem_description}
+        message = {"role": "user", "content": problem_statement}
         self.history.append(message)
         self.history = self.prompter.get_prompt(self.history)
         self.logger.info(f"[PLANNER] Raw prompt used:\n{self.history}")
@@ -118,14 +118,14 @@ if __name__ == "__main__":
         # }
         # model = vLLMHarness.load_from_config(model_name_or_path, vllm_model_args, vllm_inference_args)
         # prompt = OldPlannerPrompter(system_prompt="", example_prompt="")  # These are hard-coded in the class anyway
-        # problem_description = "There exists a unique increasing geometric sequence of five 2-digit positive integers. What is their sum?"
+        # problem_statement = "There exists a unique increasing geometric sequence of five 2-digit positive integers. What is their sum?"
         # tool = OldPlannerTool(model, prompt)
         assert False
     else:
         # model = GptModel(model_name_or_path, model_logging_dir, **model_args)
         model = GptModel(model_name)
         prompter = OldPlannerPrompter(system_prompt="", example_prompt="")  # These are hard-coded in the class anyway
-        problem_description = "There exists a unique increasing geometric sequence of five 2-digit positive integers. What is their sum?"
+        problem_statement = "There exists a unique increasing geometric sequence of five 2-digit positive integers. What is their sum?"
         tool = OldPlannerTool(model, prompter, logger, **inference_args)
 
     with tool:
@@ -135,7 +135,7 @@ if __name__ == "__main__":
         while not is_solved and current_tries < max_tries:
             current_tries += 1
             start = time.time()
-            plan = tool.solve_intermediate(problem_description)
+            plan = tool.solve_intermediate(problem_statement)
             end = time.time()
             print(f"Time taken to generate the plan: {end - start} seconds.")
             print(plan)
@@ -150,5 +150,5 @@ if __name__ == "__main__":
             #     output = f.read()
             # new_plan = plan + "\n```python code:\n" + code + "\n```output:\n" + output
             # # Now prompt the model with the new plan
-            # problem_description = new_plan
+            # problem_statement = new_plan
             # is_solved = input("Is the problem solved? (y/n): ").lower() == "y"

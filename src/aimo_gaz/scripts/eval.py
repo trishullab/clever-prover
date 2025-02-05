@@ -2,8 +2,8 @@ import json
 import csv
 import logging
 import time
-import matplotlib.pyplot as plt
 import math
+import matplotlib.pyplot as plt
 from enum import Enum
 from itp_interface.rl.simple_proof_env import ProofExecutorCallback, ProofAction, ProofEnvReRankStrategy, ProofEnv
 from aimo_gaz.solver.abs_solver_and_tool import Solver
@@ -26,7 +26,7 @@ class ProblemType(Enum):
     FIND = "FIND"
     PROVE = "PROVE"
 
-def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger : logging.Logger = None):
+def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: logging.Logger = None):
     logger = logger if logger is not None else logging.getLogger(__name__)
     solver = solver_cls() if solver is None else solver
 
@@ -50,6 +50,16 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger : logg
         category = ex.get("Tag")
         name = ex.get("name")
 
+        lean4_project_folder = "../../data/test/lean4_proj/"
+        theorem_file_path = lean4_project_folder + f"Lean4Proj/HarmonicTest/{name}.lean" # TODO: use file path join?
+        with open(theorem_file_path, "r") as theorem_file:
+            theorem_statement_raw = theorem_file.read()
+        theorem_statement_lines = []
+        for line in theorem_statement_raw.splitlines():
+            if line and not line.isspace() and not line.startswith("import ") and not line.startswith("open ") and not line.startswith("--"):
+                theorem_statement_lines.append(line)
+        theorem_statement = "\n".join(theorem_statement_lines)
+        
         solver_is_correct = False
 
         if problem_type == ProblemType.FIND: # TODO: maybe refactor to avoid separation of FIND and PROVE (since they both end up being PROVE anyways)
@@ -61,7 +71,7 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger : logg
                     logger.error(f"ERROR: Numerical answer '{numerical_answer}' is not a float or fraction for row {exidx}")
                     continue
 
-            solver_ans = solver.solve(natural_statement, problem_type, None, name, time_allowed = total_time_left // (50 - total))
+            solver_ans = solver.solve(natural_statement, theorem_statement, problem_type, None, name, time_allowed = total_time_left // (50 - total))
 
             if has_numerical_answer:
                 solver_ans_float = string_utils.parse_float(solver_ans)
@@ -75,8 +85,8 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger : logg
                 solver_is_correct = True
         else:
             proof_exec_callback = ProofExecutorCallback(
-                project_folder="../../data/test/lean4_proj",
-                file_path=f"../../data/test/lean4_proj/Lean4Proj/HarmonicTest/{name}.lean",
+                project_folder=lean4_project_folder,
+                file_path=theorem_file_path,
                 language=ProofAction.Language.LEAN4,
                 always_use_retrieval=False,
                 keep_local_context=True
@@ -86,14 +96,15 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger : logg
             retrieval_strategy = ProofEnvReRankStrategy.NO_RE_RANK
 
             with ProofEnv(name, proof_exec_callback, theorem_name, retrieval_strategy=retrieval_strategy, max_proof_depth=10, always_retrieve_thms=always_retrieve_thms) as proof_env:
-                solver.solve(natural_statement, problem_type, proof_env, name, time_allowed = total_time_left // (50 - total))
+                solver.solve(natural_statement, theorem_statement, problem_type, proof_env, name, time_allowed = total_time_left // (50 - total))
 
                 solver_is_correct = proof_env.done
 
         total += 1
         correct += solver_is_correct
-        logger.info(f"Example {exidx}:") # TODO: include formal statement here
-        logger.info(f"Problem:\n{natural_statement}")
+        logger.info(f"Example {exidx}:")
+        logger.info(f"Problem Statement:\n{natural_statement}")
+        logger.info(f"Theorem Statement:\n{theorem_statement}")
         logger.info(f"Problem type: {problem_type}")
         if problem_type == ProblemType.FIND:
             logger.info(f"Solution: {natural_solution}")

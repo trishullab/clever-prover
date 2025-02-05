@@ -7,7 +7,7 @@ class TestSolver(Solver):
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
     
-    def solve(self, problem_description: str):
+    def solve(self, problem_statement: str):
         return 1
     
     def reset(self):

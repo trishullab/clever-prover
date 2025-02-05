@@ -16,13 +16,13 @@ class OldCodeTool(Tool):
         self.history = []
         self.inference_kwargs["stop"] = ["[END CODE]", "<｜end▁of▁sentence｜>"]
 
-    def solve_intermediate(self, problem_description: str, plan: str = None) -> typing.Union[str, typing.List[str]]:
+    def solve_intermediate(self, problem_statement: str, plan: str = None) -> typing.Union[str, typing.List[str]]:
         if not self.model.is_loaded():
             self.model.__enter__()
         # Prompt the model for the code
-        if problem_description is not None and plan is not None:
+        if problem_statement is not None and plan is not None:
             assert self.history == [], "History not empty (Code Tool)"
-            message_problem = {"role": "user", "content": problem_description}
+            message_problem = {"role": "user", "content": problem_statement}
             message_plan = {"role": "user", "content": plan}
             self.history.append(message_problem)
             self.history.append(message_plan)
@@ -128,18 +128,18 @@ if __name__ == "__main__":
     model = GptModel(model_name)
     prompter = OldCodePrompter(system_prompt="", example_prompt="") # These are hard-coded in the class anyway
     tool = OldCodeTool(model, prompter, logger, **inference_args)
-    problem_description = "Find the value of x in the equation 2x + 3 = 7."
+    problem_statement = "Find the value of x in the equation 2x + 3 = 7."
     with tool:
         is_solved = False
         while not is_solved:
             # if not os.path.exists(f".logs/{time_str}/temp/plan.md"):
             #     with open(f".logs/{time_str}/temp/plan.md", "w") as f:
-            #         f.write(problem_description)
+            #         f.write(problem_statement)
             # input("Write the plan to solve the problem in file '.logs/temp/plan.md' and press enter.")
             # with open(f".logs/{time_str}/temp/plan.md", "r") as f:
             #     plan = f.read()
-            plan = problem_description
-            code = tool.solve_intermediate(problem_description, plan)
+            plan = problem_statement
+            code = tool.solve_intermediate(problem_statement, plan)
             # actual_code = code.find("```python code:")
             # actual_code = code[actual_code + len("```python code:"):].strip()
             # actual_code = actual_code[:-len("[END]")].strip() if actual_code.endswith("[END]") else actual_code

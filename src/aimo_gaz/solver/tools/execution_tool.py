@@ -107,8 +107,8 @@ except Exception as e:
 print("[OUTPUT END]")"""
         return new_code
 
-    def solve_intermediate(self, problem_description: str) -> str:
-        code = problem_description
+    def solve_intermediate(self, problem_statement: str) -> str:
+        code = problem_statement
         message = {"role": "user", "content": code}
         self.history.append(message)
         code = self.code_decorator(code)
@@ -126,8 +126,8 @@ print("[OUTPUT END]")"""
         self.history.append({"role": "assistant", "content": output})
         return output
     
-    def solve_intermediate_parallel(self, problem_descriptions: typing.List[str]) -> typing.List[str]:
-        codes = problem_descriptions
+    def solve_intermediate_parallel(self, problem_statements: typing.List[str]) -> typing.List[str]:
+        codes = problem_statements
         tempfiles = []
         for i, code in enumerate(codes):
             try:

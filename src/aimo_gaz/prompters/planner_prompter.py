@@ -5,21 +5,21 @@ class PlannerPrompter(Prompter):
                  example_prompt: str = None, append_system_prompt_after_every_message: bool = False):
         super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt,
                          append_system_prompt_after_every_message)
-        self.system_prompt = """Below is a math problem statement.
+        self.system_prompt = """Below is a math problem statement with a corresponding formal theorem statement in Lean 4.
 
 Write for me the first couple steps you would do to solve this problem. Only write the first couple steps please.
 
 Please start your response with: '0. I would break down the problem into simpler steps, this can be done by the following:'
 Please end your response with: '[END PROCEDURE]'""" # TODO: add examples # TODO: include custom system prompt for proving?
-        self.problem_statement_message = "Problem Statement:\n{}" # TODO: merge both user messages for all # TODO: include formal theorem everywhere in addition to problem statement?
+        self.problem_statement_message = "Problem Statement:\n{}\n\nLean 4 Theorem Statement:\n{}" # TODO: merge both user messages for all
         self.default_user_message = "Please write the steps now."
         
         self.stop_tokens = ["[END PROCEDURE]"]
 
-    def get_prompt(self, history: list[dict[str, str]], problem_description: str, tool_prompt: str) -> list[dict[str, str]]:
+    def get_prompt(self, history: list[dict[str, str]], problem_statement: str, theorem_statement: str, tool_prompt: str) -> list[dict[str, str]]:
         if not history or history[0]["role"] != "system":
             history.insert(0, {"role": "system", "content": self.system_prompt})
-            history.insert(1, {"role": "user", "content": self.problem_statement_message.format(problem_description)})
+            history.insert(1, {"role": "user", "content": self.problem_statement_message.format(problem_statement, theorem_statement)})
         history.append({"role": "user", "content": tool_prompt if tool_prompt else self.default_user_message})
         return history
 

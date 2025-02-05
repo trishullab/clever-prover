@@ -28,11 +28,11 @@ class CoordinatorTool(Tool):
         self.inference_kwargs["stop"] = prompter.stop_tokens
         self.history = []
 
-    def solve_intermediate(self, problem_description: str, problem_type: ProblemType) -> typing.Tuple[ToolOrGlobalGuess, str, float]:
+    def solve_intermediate(self, problem_statement: str, theorem_statement: str, problem_type: ProblemType) -> typing.Tuple[ToolOrGlobalGuess, str, float]:
         if not self.model.is_loaded():
             self.model.__enter__()
         # Prompt the model for the tool
-        self.history = self.prompter.get_prompt(self.history, problem_description, problem_type)
+        self.history = self.prompter.get_prompt(self.history, problem_statement, theorem_statement, problem_type)
         self.logger.info(f"[COORDINATOR] Raw prompt used:\n{string_utils.history_to_str(self.history)}")
         # Get the model response
         response = self.model.generate(self.history, **self.inference_kwargs)

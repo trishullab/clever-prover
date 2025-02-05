@@ -11,7 +11,7 @@ class Solver(ABC):
         pass
 
     @abstractmethod
-    def solve(self, problem_description: str, time_allowed: int) -> float:
+    def solve(self, problem_statement: str, time_allowed: int) -> float:
         pass
 
     @abstractmethod
@@ -29,7 +29,7 @@ class Tool(ABC):
         pass
 
     @abstractmethod
-    def solve_intermediate(self, problem_description: str):
+    def solve_intermediate(self, problem_statement: str):
         pass
 
     @abstractmethod

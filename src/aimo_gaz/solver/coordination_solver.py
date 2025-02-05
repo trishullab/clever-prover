@@ -98,7 +98,7 @@ class CoordinationSolver(Solver):
         history.append({"role": "user", "content": message})
 
 
-    def _coordinator_tool_history_loop(self, problem_description: str, problem_type: ProblemType, proof_env: ProofEnv, name: str, solution_str: str, time_allowed: int) -> float:
+    def _coordinator_tool_history_loop(self, problem_statement: str, theorem_statement: str, problem_type: ProblemType, proof_env: ProofEnv, name: str, solution_str: str, time_allowed: int) -> float:
         assert len(self.tools) > 0, "No tools provided."
         assert "llm_guesser" in self.tools, "LLM guesser tool not provided."
 
@@ -124,7 +124,7 @@ class CoordinationSolver(Solver):
 
             coordinator_error = False
             try:
-                tool_or_global_guess, tool_prompt, global_guess_temp = coordinator.solve_intermediate(problem_description, problem_type)
+                tool_or_global_guess, tool_prompt, global_guess_temp = coordinator.solve_intermediate(problem_statement, theorem_statement, problem_type)
                 self._log_and_add_to_history(coordinator.history, f"Loop {MAX_LOOPS - loops_left} / {MAX_LOOPS}: Coordinator chose tool: {None if tool_or_global_guess is None else tool_or_global_guess.value}")
             except Exception as e:
                 self._log_and_add_to_history(coordinator.history, f"Exception encountered in coordinator: {e}")
@@ -134,7 +134,7 @@ class CoordinationSolver(Solver):
                 pass
             elif tool_or_global_guess == ToolOrGlobalGuess.PLANNER:
                 try:
-                    plan = planner.solve_intermediate(problem_description, tool_prompt)
+                    plan = planner.solve_intermediate(problem_statement, theorem_statement, tool_prompt)
 
                     self._log_and_add_to_history(coordinator.history, f"Planner generated plan:\n{plan}")
                 except Exception as e:
@@ -144,7 +144,7 @@ class CoordinationSolver(Solver):
             elif tool_or_global_guess == ToolOrGlobalGuess.CODER:
                 code = None
                 try:
-                    code = coder.solve_intermediate(problem_description, tool_prompt)
+                    code = coder.solve_intermediate(problem_statement, theorem_statement, tool_prompt)
                 except Exception as e:
                     self._log_and_add_to_history(coordinator.history, f"Exception encountered in coder: {e}")
                 
@@ -164,7 +164,7 @@ class CoordinationSolver(Solver):
                 executor.reset()
             elif tool_or_global_guess == ToolOrGlobalGuess.LLM_GUESSER:
                 try:
-                    guess = llm_guesser.solve_intermediate(problem_description, tool_prompt)
+                    guess = llm_guesser.solve_intermediate(problem_statement, theorem_statement, tool_prompt)
 
                     self._log_and_add_to_history(coordinator.history, f"LLM guesser guessed:\n{guess}")
                 except Exception as e:
@@ -175,7 +175,7 @@ class CoordinationSolver(Solver):
                 if problem_type == ProblemType.PROVE:
                     try:
                         proof_state_render = string_utils.render_proof_env(proof_env, solution_str)
-                        tactic = prover.solve_intermediate(problem_description, proof_state_render, tool_prompt)
+                        tactic = prover.solve_intermediate(problem_statement, theorem_statement, proof_state_render, tool_prompt)
 
                         self._log_and_add_to_history(coordinator.history, f"Prover output tactic: {tactic}")
                     except Exception as e:
@@ -229,7 +229,10 @@ class CoordinationSolver(Solver):
                 self.logger.info("Failed to prove theorem.")
         
         if problem_type == ProblemType.FIND: # TODO: return both global guess and proof done?
-            with open(f"../../data/test/lean4_proj/Lean4Proj/HarmonicTest/{name}.lean", "r") as lean_file:
+            lean4_project_folder = "../../data/test/lean4_proj/"
+            theorem_file_path = lean4_project_folder + f"Lean4Proj/HarmonicTest/{name}.lean" # TODO: use file path join?
+
+            with open(theorem_file_path, "r") as lean_file:
                 lean_content = lean_file.read()
             # TODO: deal with noncomputable real division? (only an issue if guess is fraction of real numbers but actual solution is literal)
             # TODO: deal with non-numerical answers, putting in Lean format
@@ -241,7 +244,7 @@ class CoordinationSolver(Solver):
                 temp_lean_file.flush()
 
                 proof_exec_callback = ProofExecutorCallback( # TODO: maybe do this differently so we don't have basically the same code twice
-                    project_folder="../../data/test/lean4_proj",
+                    project_folder=lean4_project_folder,
                     file_path=temp_lean_file.name,
                     language=ProofAction.Language.LEAN4,
                     always_use_retrieval=False,
@@ -252,12 +255,12 @@ class CoordinationSolver(Solver):
                 retrieval_strategy = ProofEnvReRankStrategy.NO_RE_RANK
 
                 # with ProofEnv(name, proof_exec_callback, theorem_name, retrieval_strategy=retrieval_strategy, max_proof_depth=10, always_retrieve_thms=always_retrieve_thms) as proof_env:
-                #     self._coordinator_tool_history_loop(problem_description, ProblemType.PROVE, proof_env, name, global_guess, time_allowed) # TODO: this is supposed to be uncommented but may be commented for testing purposes until the prover is good enough
+                #     self._coordinator_tool_history_loop(problem_statement, ProblemType.PROVE, proof_env, name, global_guess, time_allowed) # TODO: this is supposed to be uncommented but may be commented for testing purposes until the prover is good enough
         
         return global_guess
 
 
-    def _plan_code_exec_extract_last_maj_vote(self, problem_description: str, time_allowed: int) -> float:
+    def _plan_code_exec_extract_last_maj_vote(self, problem_statement: str, time_allowed: int) -> float:
         assert len(self.tools) > 0, "No tools provided."
         assert "old_planner" in self.tools, "OldPlanner tool not provided."
         assert "old_coder" in self.tools, "OldCoder tool not provided."
@@ -288,12 +291,12 @@ class CoordinationSolver(Solver):
                 try:
                     # Plan
                     plan_start_time = time.time()
-                    plan = old_planner.solve_intermediate(problem_description)
+                    plan = old_planner.solve_intermediate(problem_statement)
                     OLD_PLANNER_AVG_TIME = (OLD_PLANNER_AVG_TIME + (time.time() - plan_start_time)) if global_attempts == 0 else (OLD_PLANNER_AVG_TIME * global_attempts + (time.time() - plan_start_time))/(global_attempts + 1)
                     # Code
                     old_coder.inference_kwargs["n"] = self.num_code_gens
                     old_coder_start_time = time.time()
-                    codes_gen = old_coder.solve_intermediate(problem_description=problem_description, plan=plan)
+                    codes_gen = old_coder.solve_intermediate(problem_statement=problem_statement, plan=plan)
                     OLD_CODER_AVG_TIME = (OLD_CODER_AVG_TIME + (time.time() - old_coder_start_time)) if global_attempts == 0 else (OLD_CODER_AVG_TIME * global_attempts + (time.time() - old_coder_start_time))/(global_attempts + 1)
                     if isinstance(codes_gen, str):
                         codes_gen = [codes_gen]
@@ -344,7 +347,7 @@ class CoordinationSolver(Solver):
 # Solve the problem by writing a python program using sympy, you can use the result of the previous program.
 # Make sure you code runs correctly! The answer to the problem should be an integer in range 0 to 999.
 # Problem Description:
-# {problem_description}
+# {problem_statement}
 
 # ```python
 # {codes[idx]}
@@ -437,7 +440,7 @@ class CoordinationSolver(Solver):
                     prompt = f"""Below is a problem description. Which answer do you think is best?
 
 Problem Description:
-{problem_description}
+{problem_statement}
 
 Choices:
 {choices}
@@ -479,16 +482,16 @@ Choices:
                     answer = random.choice(answers)
             return answer
 
-    def solve(self, problem_description: str, problem_type: ProblemType, proof_env: ProofEnv, name: str, time_allowed: int) -> float:
+    def solve(self, problem_statement: str, theorem_statement: str, problem_type: ProblemType, proof_env: ProofEnv, name: str, time_allowed: int) -> float:
         assert len(self.tools) > 0, "No tools provided."
         self.start_time = time.time()
-        self.logger.info(f"Starting to solve problem:\n{problem_description}")
+        self.logger.info(f"Starting to solve problem:\n{problem_statement}")
         answer = -1
         try:
             if self.strategy == CoordinationSolverStrategy.PLAN_CODE_EXEC_EXRACT_LAST_MAJ_VOTE:
-                answer = self._plan_code_exec_extract_last_maj_vote(problem_description, time_allowed)
+                answer = self._plan_code_exec_extract_last_maj_vote(problem_statement, time_allowed)
             elif self.strategy == CoordinationSolverStrategy.COORDINATOR_TOOL_HISTORY_LOOP:
-                answer = self._coordinator_tool_history_loop(problem_description, problem_type, proof_env, name, None, time_allowed)
+                answer = self._coordinator_tool_history_loop(problem_statement, theorem_statement, problem_type, proof_env, name, None, time_allowed)
             else:
                 raise NotImplementedError(f"Strategy {self.strategy} is not implemented.")
         except Exception as e:

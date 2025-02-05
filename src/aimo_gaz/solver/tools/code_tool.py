@@ -17,12 +17,12 @@ class CodeTool(Tool):
         self.inference_kwargs["stop"] = prompter.stop_tokens
         self.history = []
 
-    def solve_intermediate(self, problem_description: str, tool_prompt: str) -> str:
+    def solve_intermediate(self, problem_statement: str, theorem_statement: str, tool_prompt: str) -> str:
         if not self.model.is_loaded():
             self.model.__enter__()
         # Prompt the model for the code
         assert self.history == [], "History not empty (Code Tool)"
-        self.history = self.prompter.get_prompt(self.history, problem_description, tool_prompt)
+        self.history = self.prompter.get_prompt(self.history, problem_statement, theorem_statement, tool_prompt)
         self.logger.info(f"[CODER] Raw prompt used:\n{string_utils.history_to_str(self.history)}")
         # Get the model response
         response = self.model.generate(self.history, **self.inference_kwargs)
@@ -31,6 +31,7 @@ class CodeTool(Tool):
         generated_text = outs[0][0]
         self.history.append({"role": "assistant", "content": generated_text})
         self.logger.info("[CODER] Code generated.")
+        self.logger.info(f"[CODER] Code generated: {generated_text}") # TODO: delete
         return self.prompter.parse_response(generated_text)
 
     def reset(self):

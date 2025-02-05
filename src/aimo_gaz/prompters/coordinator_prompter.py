@@ -8,12 +8,12 @@ class CoordinatorPrompter(Prompter):
                  example_prompt: str = None, append_system_prompt_after_every_message: bool = False):
         super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt,
                          append_system_prompt_after_every_message)
-        self.system_prompt = """Below is a math problem statement.
+        self.system_prompt = """Below is a math problem statement with a corresponding formal theorem statement in Lean 4.
 
 You are the coordinator in charge of {} this problem. You have several tools at your disposal to help you solve it. Your tools are:
 
 (1) planner: Query an LLM to generate the first few steps of a plan for solving the problem. You can use this plan later in custom instructions for other tools.
-(2) coder: Query an LLM to generate code to help solve the problem and then run the code.
+(2) coder: Query an LLM to generate Python code to help solve the problem and then run the code.
 (3) llm_guesser: Query an LLM to guess an answer to help solve the problem.
 (4) prover: Query an LLM to guess the next tactic for proving the problem in Lean 4. The LLM will be provided the current proof state. You can later choose this tactic as input to the lean4_executor. You should only use this tool if you are formally proving the problem.
 (5) lean4_executor: Input a Lean 4 tactic to execute the next step to formally prove the problem in Lean 4. Please output the tactic between the tokens '[START TACTIC]' and '[END TACTIC]'. You should only use this tool if you are formally proving the problem.
@@ -30,14 +30,14 @@ If you choose to globally guess the answer, please output your answer between th
 Below is the problem statement and the history of actions taken so far by the coordinator (you) and the tools to solve this problem.""" # TODO: add examples
         self.system_prompt_format_find = "solving"
         self.system_prompt_format_prove = "formally proving"
-        self.problem_statement_message = "Problem Statement:\n{}"
+        self.problem_statement_message = "Problem Statement:\n{}\n\nLean 4 Theorem Statement:\n{}"
         self.user_message = "Please output your chosen tool and prompt or your global guess now."
 
         self.stop_tokens = ["[END PROMPT]", "[END TACTIC]", "[END GLOBAL GUESS]"]
 
         self.saved_problem_type = None
 
-    def get_prompt(self, history: list[dict[str, str]], problem_description: str, problem_type: ProblemType) -> list[dict[str, str]]:
+    def get_prompt(self, history: list[dict[str, str]], problem_statement: str, theorem_statement: str, problem_type: ProblemType) -> list[dict[str, str]]:
         if self.saved_problem_type is None:
             self.saved_problem_type = problem_type
         if self.saved_problem_type != problem_type:
@@ -45,7 +45,7 @@ Below is the problem statement and the history of actions taken so far by the co
             self.saved_problem_type = problem_type
         if not history or history[0]["role"] != "system":
             history.insert(0, {"role": "system", "content": self.system_prompt.format(self.system_prompt_format_find if problem_type == ProblemType.FIND else self.system_prompt_format_prove)})
-            history.insert(1, {"role": "user", "content": self.problem_statement_message.format(problem_description)})
+            history.insert(1, {"role": "user", "content": self.problem_statement_message.format(problem_statement, theorem_statement)})
         history.append({"role": "user", "content": self.user_message})
         return history
 
