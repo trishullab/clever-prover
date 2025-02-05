@@ -18,8 +18,9 @@ Please start the code with '```python' and end it with '```'""" # TODO: add exam
     def get_prompt(self, history: list[dict[str, str]], problem_statement: str, theorem_statement: str, tool_prompt: str) -> list[dict[str, str]]:
         if not history or history[0]["role"] != "system":
             history.insert(0, {"role": "system", "content": self.system_prompt})
-            history.insert(1, {"role": "user", "content": self.problem_statement_message.format(problem_statement, theorem_statement)})
-        history.append({"role": "user", "content": tool_prompt if tool_prompt else self.default_user_message})
+        problem_statements = self.problem_statement_message.format(problem_statement, theorem_statement)
+        instructions = tool_prompt if tool_prompt else self.default_user_message
+        history.append({"role": "user", "content": f"{problem_statements}\n\nInstructions:\n{instructions}"})
         return history
 
     def parse_response(self, response: str) -> str:
