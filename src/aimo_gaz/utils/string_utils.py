@@ -46,7 +46,7 @@ def render_proof_env(proof_env: ProofEnv, solution_str: str):
         "\n".join([str(s2.training_data_format.all_useful_defns_theorems[thm.lemma_idx]) 
             for thm in (goal.possible_useful_theorems_local[:visibility] + goal.possible_useful_theorems_external[:visibility])])
             for goal in s2.training_data_format.start_goals]
-    s2_goals = [((f"Solution (filled in): {solution_str}\n " if solution_str else "") +
+    s2_goals = [((f"Solution (Inserted): {solution_str}\n " if solution_str else "") +
                     f"Goal [{idx}]:\n {goal.goal}\n Hyps [{idx}]: {goal.hypotheses}\n Dfns [{idx}]:\n {s2_relevant_dfns[idx]}\n Thms [{idx}]:\n {s2_possible_thms[idx]}\n-------------------\n")
                 for idx, goal in enumerate(s2.training_data_format.start_goals)] # TODO: convey solution another way? currently doesn't convey type, so maybe include entire line
     action = a.serialize()

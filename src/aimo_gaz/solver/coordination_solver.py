@@ -205,7 +205,7 @@ class CoordinationSolver(Solver):
             elif tool_or_global_guess == ToolOrGlobalGuess.GLOBAL_GUESS:
                 if problem_type == ProblemType.FIND:
                     global_guess = global_guess_temp
-                    self.logger.info(f"Coordinator output global guess: {global_guess}")
+                    self._log_and_add_to_history(coordinator.history, f"Coordinator output global guess: {global_guess}")
 
                     end_loop = True
                 else:
@@ -215,8 +215,8 @@ class CoordinationSolver(Solver):
             
             self.logger.info(f"End of loop {MAX_LOOPS - loops_left}. Loops left: {loops_left}\n")
         
-        coordinator.reset()
-        prover.reset()
+        if problem_type != ProblemType.FIND: # TODO: this will be unconditional later
+            coordinator.reset()
 
         self.logger.info("Solver finished looping.")
 
@@ -237,7 +237,7 @@ class CoordinationSolver(Solver):
             # TODO: deal with noncomputable real division? (only an issue if guess is fraction of real numbers but actual solution is literal)
             # TODO: deal with non-numerical answers, putting in Lean format
             lean_content = lean_content.replace("sorry", global_guess, 1)
-            self.logger.info(f"Lean theorem with answer filled in:\n{lean_content}")
+            self.logger.info(f"Lean theorem with answer inserted:\n{lean_content}")
 
             theorem_statement_raw = lean_content
             theorem_statement_lines = []
@@ -245,6 +245,7 @@ class CoordinationSolver(Solver):
                 if line and not line.isspace() and not line.startswith("import ") and not line.startswith("open ") and not line.startswith("--"):
                     theorem_statement_lines.append(line)
             theorem_statement = "\n".join(theorem_statement_lines) # TODO: move this duplicated code into helper file or refactor so it's not duplicated
+            self._log_and_add_to_history(coordinator.history, f"Lean 4 Theorem Statement with Answer Inserted:\n{theorem_statement}")
             
             with tempfile.NamedTemporaryFile(mode="w+", suffix=".lean") as temp_lean_file:
                 temp_lean_file.write(lean_content)

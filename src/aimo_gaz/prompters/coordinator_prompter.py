@@ -34,7 +34,7 @@ Then for LLM tools, output custom instructions for the tool to follow between th
 If you choose to globally guess the answer, please output your answer between the tokens '[START GLOBAL GUESS]' and '[END GLOBAL GUESS]'. Only include the guessed answer, without words.
 
 Below are the problem statements and the history of actions taken so far by the coordinator (you) and the tools to solve this problem.""" # TODO: add examples
-        self.problem_statement_message = "Problem Statement:\n{}\n\nLean 4 Theorem Statement:\n{}" # TODO: handle communicating the answer being inserted
+        self.problem_statement_message = "Problem Statement:\n{}\n\nLean 4 Theorem Statement:\n{}"
         self.user_message_find = """This problem requires an answer to be inserted. Please choose tools that will help you find the answer.
 
 Please output your chosen tool and prompt or your global guess now."""
@@ -47,15 +47,7 @@ Please output your chosen tool and prompt/tactic now."""
 
         self.stop_tokens = ["[END PROMPT]", "[END TACTIC]", "[END GLOBAL GUESS]"]
 
-        self.saved_problem_type = None
-
     def get_prompt(self, history: list[dict[str, str]], problem_statement: str, theorem_statement: str, problem_type: ProblemType) -> list[dict[str, str]]:
-        if self.saved_problem_type is None:
-            self.saved_problem_type = problem_type
-        if self.saved_problem_type != problem_type:
-            history.clear() # TODO: maybe preserve history across problem_type change in the future
-            self.saved_problem_type = problem_type
-        
         if not history or history[0]["role"] != "system":
             history.insert(0, {"role": "system", "content": self.system_prompt})
             history.insert(1, {"role": "user", "content": self.problem_statement_message.format(problem_statement, theorem_statement)})
