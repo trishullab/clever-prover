@@ -12,7 +12,9 @@ class CoordinatorPrompter(Prompter):
 
 You are the coordinator in charge of solving and formally proving this problem.
 
-{}
+Some problems require an answer to be inserted. Before you can formally prove these problems, you must first guess the answer. Once you do so, the formal theorem statement will automatically fill in your answer and you can start proving it in Lean 4.
+
+Other problems do not require an answer to be inserted. Your only task for these problems is to formally prove them in Lean 4.
 
 You have several tools at your disposal to help you with your task. Utilize a diversity of tools to increase confidence in your solution. Your tools are:
 
@@ -32,11 +34,16 @@ Then for LLM tools, output custom instructions for the tool to follow between th
 If you choose to globally guess the answer, please output your answer between the tokens '[START GLOBAL GUESS]' and '[END GLOBAL GUESS]'. Only include the guessed answer, without words.
 
 Below are the problem statements and the history of actions taken so far by the coordinator (you) and the tools to solve this problem.""" # TODO: add examples
-        self.system_prompt_format_find = "This problem requires an answer to be inserted. Before you can formally prove this problem, you must first guess the answer. Once you do so, the formal theorem statement will automatically fill in your answer and you can start proving it."
-        self.system_prompt_format_prove = "This problem does not require an answer to be inserted. Your only task is to formally prove the problem in Lean 4."
-        self.system_prompt_format_prove_after_find = "Your guess for the answer to this problem has been inserted. You are now formally proving the problem in Lean 4."
-        self.problem_statement_message = "Problem Statement:\n{}\n\nLean 4 Theorem Statement:\n{}"
-        self.user_message = "Please output your chosen tool and prompt or your global guess now."
+        self.problem_statement_message = "Problem Statement:\n{}\n\nLean 4 Theorem Statement:\n{}" # TODO: handle communicating the answer being inserted
+        self.user_message_find = """This problem requires an answer to be inserted. Please choose tools that will help you find the answer.
+
+Please output your chosen tool and prompt or your global guess now."""
+        self.user_message_prove = """This problem does not require an answer to be inserted. Please choose tools that will help you formally prove the problem.
+
+Please output your chosen tool and prompt/tactic now."""
+        self.user_message_prove_after_find = """Your guess for the answer to this problem has been inserted. Please choose tools that will help you formally prove the problem.
+
+Please output your chosen tool and prompt/tactic now."""
 
         self.stop_tokens = ["[END PROMPT]", "[END TACTIC]", "[END GLOBAL GUESS]"]
 
@@ -48,16 +55,19 @@ Below are the problem statements and the history of actions taken so far by the 
         if self.saved_problem_type != problem_type:
             history.clear() # TODO: maybe preserve history across problem_type change in the future
             self.saved_problem_type = problem_type
+        
         if not history or history[0]["role"] != "system":
-            if problem_type == ProblemType.FIND:
-                system_prompt_format = self.system_prompt_format_find
-            elif problem_type == ProblemType.PROVE:
-                system_prompt_format = self.system_prompt_format_prove
-            else:
-                system_prompt_format = self.system_prompt_format_prove_after_find
-            history.insert(0, {"role": "system", "content": self.system_prompt.format(system_prompt_format)})
+            history.insert(0, {"role": "system", "content": self.system_prompt})
             history.insert(1, {"role": "user", "content": self.problem_statement_message.format(problem_statement, theorem_statement)})
-        history.append({"role": "user", "content": self.user_message})
+        
+        if problem_type == ProblemType.FIND:
+            user_message = self.user_message_find
+        elif problem_type == ProblemType.PROVE:
+            user_message = self.user_message_prove
+        else:
+            user_message = self.user_message_prove_after_find
+        history.append({"role": "user", "content": user_message})
+
         return history
 
     def parse_response(self, response: str) -> typing.Tuple[ToolOrGlobalGuess, str, str]:
