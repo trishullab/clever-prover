@@ -33,11 +33,15 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: loggi
 
     problem_type_statistics = {}
     category_statistics = {}
+    proved = 0
     total = 0
-    correct = 0
+    numerical_correct = 0
+    numerical_total = 0
     total_time_left = 9 * 60 * 60 - 1.5 * 650 # 600 is an upper bound on the startup time, as seen from kaggle test logs
     for exidx, ex in enumerate(data):
         start_timer = time.time()
+
+        logger.info("---Starting Problem---")
 
         natural_statement = ex.get("natural_statement", ex.get("problem", ex.get("Question")))
         assert natural_statement is not None, f"Natural statement not found in example: {ex}"
@@ -60,21 +64,20 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: loggi
             if line and not line.isspace() and not line.startswith("import ") and not line.startswith("open ") and not line.startswith("--"):
                 theorem_statement_lines.append(line)
         theorem_statement = "\n".join(theorem_statement_lines)
-        
-        solver_is_correct = False
 
         if problem_type == ProblemType.FIND: # TODO: maybe refactor to avoid separation of FIND and PROVE (since they both end up being PROVE anyways)
             assert natural_solution is not None, f"Natural solution not found in example: {ex}"
 
             if has_numerical_answer:
-                numerical_answer = string_utils.parse_float(numerical_answer) # TODO: handle non-numerical answers
+                numerical_answer = string_utils.parse_float(numerical_answer)
                 if numerical_answer is None:
                     logger.error(f"ERROR: Numerical answer '{numerical_answer}' is not a float or fraction for row {exidx}")
                     continue
 
-            solver_ans = solver.solve(natural_statement, theorem_statement, problem_type, None, name, time_allowed = total_time_left // (50 - total))
+            proof_env_done, solver_ans = solver.solve(natural_statement, theorem_statement, problem_type, None, name, time_allowed = total_time_left // (50 - total))
 
             if has_numerical_answer:
+                solver_is_correct = False
                 solver_ans_float = string_utils.parse_float(solver_ans)
                 if solver_ans_float is None:
                     logger.info(f"ERROR: Solver answer '{solver_ans}' is not a float or fraction.")
@@ -82,8 +85,6 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: loggi
                 else:
                     eps = 1e-6
                     solver_is_correct = (abs(solver_ans_float - numerical_answer) < eps)
-            else:
-                solver_is_correct = True
         else:
             proof_exec_callback = ProofExecutorCallback(
                 project_folder=lean4_project_folder,
@@ -97,34 +98,43 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: loggi
             retrieval_strategy = ProofEnvReRankStrategy.NO_RE_RANK
 
             with ProofEnv(name, proof_exec_callback, theorem_name, retrieval_strategy=retrieval_strategy, max_proof_depth=10, always_retrieve_thms=always_retrieve_thms) as proof_env:
-                solver.solve(natural_statement, theorem_statement, problem_type, proof_env, name, time_allowed = total_time_left // (50 - total))
+                proof_env_done, _ = solver.solve(natural_statement, theorem_statement, problem_type, proof_env, name, time_allowed = total_time_left // (50 - total))
 
-                solver_is_correct = proof_env.done
-
+        proved += int(proof_env_done) # TODO: maybe use actual proof_env.done in future
         total += 1
-        correct += solver_is_correct
+        if problem_type == ProblemType.FIND and has_numerical_answer:
+            numerical_correct += int(solver_is_correct)
+            numerical_total += 1
+        logger.info("---Problem Result---")
         logger.info(f"Example {exidx}:")
         logger.info(f"Problem Statement:\n{natural_statement}")
         logger.info(f"Theorem Statement:\n{theorem_statement}")
-        logger.info(f"Problem type: {problem_type}")
+        logger.info(f"Problem Type: {problem_type}")
+        logger.info(f"Proved: {proof_env_done}")
         if problem_type == ProblemType.FIND:
+            logger.info("---FIND Result---")
             logger.info(f"Solution: {natural_solution}")
-            logger.info(f"Numerical answer: {numerical_answer}")
-            logger.info(f"Solver answer: {solver_ans}")
-        logger.info(f"Correct: {solver_is_correct}")
+            logger.info(f"Solver Answer: {solver_ans}")
+            if has_numerical_answer:
+                logger.info(f"Numerical Answer: {numerical_answer}")
+                logger.info(f"Numerical Correct: {solver_is_correct}")
 
-        problem_type_statistics.setdefault(problem_type, {"correct": 0, "total": 0})["total"] += 1
-        problem_type_statistics[problem_type]["correct"] += solver_is_correct
+        problem_type_statistics.setdefault(problem_type, {"proved": 0, "total": 0})
+        problem_type_statistics[problem_type]["proved"] += int(proof_env_done)
+        problem_type_statistics[problem_type]["total"] += 1
 
         if category:
-            category_statistics.setdefault(category, {"correct": 0, "total": 0})["total"] += 1
-            category_statistics[category]["correct"] += solver_is_correct
-        
+            category_statistics.setdefault(category, {"proved": 0, "total": 0})
+            category_statistics[category]["proved"] += int(proof_env_done)
+            category_statistics[category]["total"] += 1
+
         total_time_left -= math.ceil(time.time()-start_timer)
 
     return {
+        "proved": proved,
         "total": total,
-        "correct": correct,
+        "numerical_correct": numerical_correct,
+        "numerical_total": numerical_total,
         "problem_type_statistics": problem_type_statistics,
         "category_statistics": category_statistics,
     }
@@ -132,7 +142,7 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: loggi
 
 def plot_category_statistics(category_statistics, time_str, benchmark):
     categories = list(category_statistics.keys())
-    accuracies = [category_statistics[cat]["correct"] / category_statistics[cat]["total"] for cat in categories]
+    accuracies = [(category_statistics[cat]["proved"] / category_statistics[cat]["total"]) for cat in categories]
 
     # Plot the accuracies per category
     plt.bar(categories, accuracies)
@@ -157,14 +167,19 @@ def evaluate_on_benchmarks(benchmark, benchmark_ext, valid_path, solver, time_st
 
     stats = evaluate(data, solver=solver, logger=logger)
 
+    logger.info("---Final Results---")
     logger.info(f"Benchmark: {benchmark}")
-    logger.info(f"Accuracy: {stats['correct']} / {stats['total']} = {stats['correct'] / stats['total']:.2f}")
+    logger.info(f"Prove Accuracy: {stats['proved']} / {stats['total']} = {stats['proved'] / stats['total']:.2f}")
+    if stats["numerical_total"] > 0:
+        logger.info(f"Numerical Accuracy: {stats['numerical_correct']} / {stats['numerical_total']} = {stats['numerical_correct'] / stats['numerical_total']:.2f}")
     for problem_type, problem_type_stats in stats["problem_type_statistics"].items():
-        logger.info(f"Problem type: {problem_type.value} ({problem_type_stats['correct']} / {problem_type_stats['total']} = {problem_type_stats['correct'] / problem_type_stats['total']:.2f})")
+        logger.info(f"Problem Type: {problem_type.value} ({problem_type_stats['proved']} / {problem_type_stats['total']} = {problem_type_stats['proved'] / problem_type_stats['total']:.2f})")
     for category, category_stats in stats["category_statistics"].items():
-        logger.info(f"Category: {category} ({category_stats['correct']} / {category_stats['total']} = {category_stats['correct'] / category_stats['total']:.2f})")
+        logger.info(f"Category: {category} ({category_stats['proved']} / {category_stats['total']} = {category_stats['proved'] / category_stats['total']:.2f})")
     logger.info("\n\n")
+
     time_str = time.strftime("%Y%m%d-%H%M%S") if time_str is None else time_str
+
     if len(stats["category_statistics"]) != 0:
         plot_category_statistics(stats["category_statistics"], time_str, benchmark)
 
@@ -194,11 +209,13 @@ if __name__ == "__main__":
         stats = evaluate(data, solver_cls=TestSolver)
 
         print(f"Benchmark: {benchmark}")
-        print(f"Accuracy: {stats['correct']} / {stats['total']} = {stats['correct'] / stats['total']:.2f}")
+        print(f"Prove Accuracy: {stats['proved']} / {stats['total']} = {stats['proved'] / stats['total']:.2f}")
+        if stats["numerical_total"] > 0:
+            print(f"Numerical Accuracy: {stats['numerical_correct']} / {stats['numerical_total']} = {stats['numerical_correct'] / stats['numerical_total']:.2f}")
         for problem_type, problem_type_stats in stats["problem_type_statistics"].items():
-            print(f"Problem type: {problem_type.value} ({problem_type_stats['correct']} / {problem_type_stats['total']} = {problem_type_stats['correct'] / problem_type_stats['total']:.2f})")
+            print(f"Problem Type: {problem_type.value} ({problem_type_stats['proved']} / {problem_type_stats['total']} = {problem_type_stats['proved'] / problem_type_stats['total']:.2f})")
         for category, category_stats in stats["category_statistics"].items():
-            print(f"Category: {category} ({category_stats['correct']} / {category_stats['total']} = {category_stats['correct'] / category_stats['total']:.2f})")
+            print(f"Category: {category} ({category_stats['proved']} / {category_stats['total']} = {category_stats['proved'] / category_stats['total']:.2f})")
         print("\n\n")
 
         if len(stats["category_statistics"]) != 0:

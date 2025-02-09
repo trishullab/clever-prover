@@ -228,6 +228,7 @@ class CoordinationSolver(Solver):
             else:
                 self.logger.info("Failed to prove theorem.")
         
+        proof_env_done = False
         if problem_type == ProblemType.FIND: # TODO: return both global guess and proof done?
             lean4_project_folder = "../../data/test/lean4_proj/"
             theorem_file_path = lean4_project_folder + f"Lean4Proj/HarmonicTest/{name}.lean" # TODO: use file path join?
@@ -264,8 +265,11 @@ class CoordinationSolver(Solver):
 
                 with ProofEnv(name, proof_exec_callback, theorem_name, retrieval_strategy=retrieval_strategy, max_proof_depth=10, always_retrieve_thms=always_retrieve_thms) as proof_env:
                     self._coordinator_tool_history_loop(problem_statement, theorem_statement, ProblemType.PROVE_AFTER_FIND, proof_env, name, global_guess, time_allowed)
+                    proof_env_done = proof_env.done
+        else:
+            proof_env_done = proof_env.done
         
-        return global_guess
+        return proof_env_done, global_guess
 
 
     def _plan_code_exec_extract_last_maj_vote(self, problem_statement: str, time_allowed: int) -> float:

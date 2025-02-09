@@ -42,6 +42,7 @@ def main(cfg):
         # benchmark = "harmonic_test_insert_4"
         # benchmark_ext = "csv"
         benchmark_ext = "json"
+        logger.info("---Starting Run---")
         logger.info(f"Running on {benchmark}")
         os.makedirs(f".logs/{time_str}/{benchmark}", exist_ok=True)
         evaluate_on_benchmarks(benchmark, benchmark_ext, os.path.join(data_dir, f"{benchmark}.{benchmark_ext}"), solver, time_str, logger)
