@@ -1,7 +1,7 @@
 import typing
 from aimo_gaz.prompters.prompter import Prompter
 from aimo_gaz.solver.tools.coordinator_tool import ToolOrGlobalGuess
-from aimo_gaz.scripts.eval import ProblemType
+from aimo_gaz.scripts.eval import ProblemState
 
 class CoordinatorPrompter(Prompter):
     def __init__(self, system_prompt_path: str = None, example_prompt_path: str = None, system_prompt: str = None,
@@ -47,14 +47,14 @@ Please output your chosen tool and prompt/tactic now."""
 
         self.stop_tokens = ["[END PROMPT]", "[END TACTIC]", "[END GLOBAL GUESS]"]
 
-    def get_prompt(self, history: list[dict[str, str]], problem_statement: str, theorem_statement: str, problem_type: ProblemType) -> list[dict[str, str]]:
+    def get_prompt(self, history: list[dict[str, str]], problem_statement: str, theorem_statement: str, problem_state: ProblemState) -> list[dict[str, str]]:
         if not history or history[0]["role"] != "system":
             history.insert(0, {"role": "system", "content": self.system_prompt})
             history.insert(1, {"role": "user", "content": self.problem_statement_message.format(problem_statement, theorem_statement)})
         
-        if problem_type == ProblemType.FIND:
+        if problem_state == ProblemState.FINDING:
             user_message = self.user_message_find
-        elif problem_type == ProblemType.PROVE:
+        elif problem_state == ProblemState.PROVING:
             user_message = self.user_message_prove
         else:
             user_message = self.user_message_prove_after_find

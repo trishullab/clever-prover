@@ -3,7 +3,7 @@ import typing
 from aimo_gaz.solver.abs_solver_and_tool import Tool
 from aimo_gaz.models.abs_model import Model
 from aimo_gaz.prompters.prompter import Prompter
-from aimo_gaz.scripts.eval import ProblemType
+from aimo_gaz.scripts.eval import ProblemState
 from aimo_gaz.utils import string_utils
 import logging
 
@@ -28,11 +28,11 @@ class CoordinatorTool(Tool):
         self.inference_kwargs["stop"] = prompter.stop_tokens
         self.history = []
 
-    def solve_intermediate(self, problem_statement: str, theorem_statement: str, problem_type: ProblemType) -> typing.Tuple[ToolOrGlobalGuess, str, float]:
+    def solve_intermediate(self, problem_statement: str, theorem_statement: str, problem_state: ProblemState) -> typing.Tuple[ToolOrGlobalGuess, str, float]:
         if not self.model.is_loaded():
             self.model.__enter__()
         # Prompt the model for the tool
-        self.history = self.prompter.get_prompt(self.history, problem_statement, theorem_statement, problem_type)
+        self.history = self.prompter.get_prompt(self.history, problem_statement, theorem_statement, problem_state)
         self.logger.info(f"[COORDINATOR] Raw prompt used:\n{string_utils.history_to_str(self.history)}")
         # Get the model response
         response = self.model.generate(self.history, **self.inference_kwargs)

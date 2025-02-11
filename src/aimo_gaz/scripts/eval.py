@@ -23,9 +23,14 @@ def get_csv_data(path: str):
 
 
 class ProblemType(Enum):
-    FIND = "FIND"
+    FIND_NUMERICAL = "FIND_NUMERICAL"
+    FIND_NONNUMERICAL = "FIND_NONNUMERICAL"
     PROVE = "PROVE"
-    PROVE_AFTER_FIND = "PROVE_AFTER_FIND"
+
+class ProblemState(Enum):
+    FINDING = "FINDING"
+    PROVING = "PROVING"
+    PROVING_AFTER_FINDING = "PROVING_AFTER_FINDING"
 
 def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: logging.Logger = None):
     logger = logger if logger is not None else logging.getLogger(__name__)
@@ -49,8 +54,13 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: loggi
         natural_solution = ex.get("natural_solution")
         numerical_answer = ex.get("numerical_answer", ex.get("answer", ex.get("Answer")))
 
-        problem_type = ProblemType.FIND if natural_solution != "None." else ProblemType.PROVE
-        has_numerical_answer = (numerical_answer != "None")
+        if natural_solution != "None.":
+            if numerical_answer != "None":
+                problem_type = ProblemType.FIND_NUMERICAL
+            else:
+                problem_type = ProblemType.FIND_NONNUMERICAL
+        else:
+            problem_type = ProblemType.PROVE
 
         category = ex.get("Tag")
         name = ex.get("name")
@@ -65,18 +75,18 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: loggi
                 theorem_statement_lines.append(line)
         theorem_statement = "\n".join(theorem_statement_lines)
 
-        if problem_type == ProblemType.FIND: # TODO: maybe refactor to avoid separation of FIND and PROVE (since they both end up being PROVE anyways)
+        if problem_type == ProblemType.FIND_NUMERICAL or problem_type == ProblemType.FIND_NONNUMERICAL: # TODO: maybe refactor to avoid separation of FIND and PROVE (since they both end up being PROVE anyways)
             assert natural_solution is not None, f"Natural solution not found in example: {ex}"
 
-            if has_numerical_answer:
+            if problem_type == ProblemType.FIND_NUMERICAL:
                 numerical_answer = string_utils.parse_float(numerical_answer)
                 if numerical_answer is None:
                     logger.error(f"ERROR: Numerical answer '{numerical_answer}' is not a float or fraction for row {exidx}")
                     continue
 
-            proof_env_done, solver_ans = solver.solve(natural_statement, theorem_statement, problem_type, None, name, time_allowed = total_time_left // (50 - total))
+            proof_env_done, solver_ans = solver.solve(natural_statement, theorem_statement, ProblemState.FINDING, None, name, time_allowed = total_time_left // (50 - total))
 
-            if has_numerical_answer:
+            if problem_type == ProblemType.FIND_NUMERICAL:
                 solver_is_correct = False
                 solver_ans_float = string_utils.parse_float(solver_ans)
                 if solver_ans_float is None:
@@ -98,11 +108,11 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: loggi
             retrieval_strategy = ProofEnvReRankStrategy.NO_RE_RANK
 
             with ProofEnv(name, proof_exec_callback, theorem_name, retrieval_strategy=retrieval_strategy, max_proof_depth=10, always_retrieve_thms=always_retrieve_thms) as proof_env:
-                proof_env_done, _ = solver.solve(natural_statement, theorem_statement, problem_type, proof_env, name, time_allowed = total_time_left // (50 - total))
+                proof_env_done, _ = solver.solve(natural_statement, theorem_statement, ProblemState.PROVING, proof_env, name, time_allowed = total_time_left // (50 - total))
 
         proved += int(proof_env_done) # TODO: maybe use actual proof_env.done in future
         total += 1
-        if problem_type == ProblemType.FIND and has_numerical_answer:
+        if problem_type == ProblemType.FIND_NUMERICAL:
             numerical_correct += int(solver_is_correct)
             numerical_total += 1
         logger.info("---Problem Result---")
@@ -111,11 +121,11 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: loggi
         logger.info(f"Theorem Statement:\n{theorem_statement}")
         logger.info(f"Problem Type: {problem_type}")
         logger.info(f"Proved: {proof_env_done}")
-        if problem_type == ProblemType.FIND:
+        if problem_type == ProblemType.FIND_NUMERICAL or problem_type == ProblemType.FIND_NONNUMERICAL:
             logger.info("---FIND Result---")
             logger.info(f"Solution: {natural_solution}")
             logger.info(f"Solver Answer: {solver_ans}")
-            if has_numerical_answer:
+            if problem_type == ProblemType.FIND_NUMERICAL:
                 logger.info(f"Numerical Answer: {numerical_answer}")
                 logger.info(f"Numerical Correct: {solver_is_correct}")
 
