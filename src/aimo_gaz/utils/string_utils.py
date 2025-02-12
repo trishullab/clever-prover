@@ -20,7 +20,7 @@ def history_to_str(history):
 def render_proof_env(proof_env: ProofEnv, solution_str: str):
     if len(proof_env._history) == 0:
         current_state = proof_env.state
-        s_goals = [((f"Solution (filled in): {solution_str}\n " if solution_str else "") +
+        s_goals = [((f"Solution (Inserted): {solution_str}\n " if solution_str else "") +
                     f"Goal [{idx}]:\n {goal.goal}\n Hyps [{idx}]:\n {goal.hypotheses}\n Dfns [{idx}]:\n {goal.relevant_defns}\n Thms [{idx}]:\n {goal.possible_useful_theorems_local}\n------------------\n")
                     for idx, goal in enumerate(current_state.training_data_format.start_goals)]
         s_goal = '\n'.join(s_goals)

@@ -78,7 +78,7 @@ Please output your chosen tool and prompt/tactic now."""
                 return None, None, None
             
             tool_prompt = None
-            start_prompt_token = "[START TACTIC]" if tool == ToolOrGlobalGuess.LEAN4_EXECUTOR else "[START PROMPT]"
+            start_prompt_token = "[START TACTIC]" if tool == ToolOrGlobalGuess.LEAN4_EXECUTOR else "[START PROMPT]" # TODO: output error if lean4_executor doesn't have TACTIC token
             actual_tool_prompt_ind = response.rfind(start_prompt_token)
             if actual_tool_prompt_ind != -1:
                 tool_prompt_response = response[actual_tool_prompt_ind + len(start_prompt_token):]

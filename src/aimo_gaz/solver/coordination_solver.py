@@ -4,6 +4,7 @@ import time
 import math
 import random
 import copy
+import os
 import tempfile
 from sympy import *
 from itp_interface.rl.simple_proof_env import ProofEnv, ProofExecutorCallback, ProofAction, ProofEnvReRankStrategy
@@ -18,7 +19,7 @@ from aimo_gaz.solver.tools.llm_guesser_tool import LLMGuesserTool
 from aimo_gaz.solver.tools.prover_tool import ProverTool
 from aimo_gaz.solver.tools.lean4_executor_tool import Lean4ExecutorTool
 from aimo_gaz.solver.tools.coordinator_tool import ToolOrGlobalGuess
-from aimo_gaz.scripts.eval import ProblemState
+from aimo_gaz.scripts.eval import ProblemState, ProofEnvWrapper
 from aimo_gaz.utils import string_utils
 from enum import Enum
 from collections import Counter
@@ -98,7 +99,7 @@ class CoordinationSolver(Solver):
         history.append({"role": "user", "content": message})
 
 
-    def _coordinator_tool_history_loop(self, problem_statement: str, theorem_statement: str, problem_state: ProblemState, proof_env: ProofEnv, name: str, solution_str: str, time_allowed: int) -> float:
+    def _coordinator_tool_history_loop(self, problem_statement: str, theorem_statement: str, problem_state: ProblemState, proof_env_wrapper: ProofEnvWrapper, name: str, solution_str: str, time_allowed: int) -> float:
         assert len(self.tools) > 0, "No tools provided."
         assert "llm_guesser" in self.tools, "LLM guesser tool not provided."
 
@@ -113,10 +114,10 @@ class CoordinationSolver(Solver):
         global_guess = None
 
         if problem_state == ProblemState.PROVING or problem_state == ProblemState.PROVING_AFTER_FINDING:
-            proof_state_render = string_utils.render_proof_env(proof_env, solution_str)
+            proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env, solution_str)
             self._log_and_add_to_history(coordinator.history, proof_state_render)
 
-        MAX_LOOPS = 10 # TODO: maybe keep track of global loops per problem, so pass in an optional 'curr_loops_left' parameter
+        MAX_LOOPS = 10
         loops_left = MAX_LOOPS
         end_loop = False
         while loops_left > 0 and not end_loop:
@@ -174,7 +175,7 @@ class CoordinationSolver(Solver):
             elif tool_or_global_guess == ToolOrGlobalGuess.PROVER:
                 if problem_state == ProblemState.PROVING or problem_state == ProblemState.PROVING_AFTER_FINDING:
                     try:
-                        proof_state_render = string_utils.render_proof_env(proof_env, solution_str)
+                        proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env, solution_str)
                         tactic = prover.solve_intermediate(problem_statement, theorem_statement, proof_state_render, tool_prompt)
 
                         self._log_and_add_to_history(coordinator.history, f"Prover output tactic: {tactic}")
@@ -188,16 +189,16 @@ class CoordinationSolver(Solver):
                 if problem_state == ProblemState.PROVING or problem_state == ProblemState.PROVING_AFTER_FINDING:
                     try:
                         tactic = tool_prompt
-                        lean4_executor.solve_intermediate(proof_env, tactic)
+                        lean4_executor.solve_intermediate(proof_env_wrapper.proof_env, tactic)
                         
-                        proof_state_render = string_utils.render_proof_env(proof_env, solution_str)
+                        proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env, solution_str)
                         self._log_and_add_to_history(coordinator.history, f"Lean 4 executor executed tactic: {tactic}\n\n{proof_state_render}")
                     except Exception as e:
                         self._log_and_add_to_history(coordinator.history, f"Exception encountered in Lean 4 executor: {e}")
                     
                     lean4_executor.reset()
                     
-                    if proof_env.done:
+                    if proof_env_wrapper.proof_env.done:
                         self.logger.info("Succesfully proved theorem, ending loop.")
                         end_loop = True
                 else:
@@ -207,7 +208,48 @@ class CoordinationSolver(Solver):
                     global_guess = global_guess_temp
                     self._log_and_add_to_history(coordinator.history, f"Coordinator output global guess: {global_guess}")
 
-                    end_loop = True
+                    lean4_project_folder = "../../data/test/lean4_proj/"
+                    theorem_file_path = os.path.join(lean4_project_folder, f"Lean4Proj/HarmonicTest/{name}.lean")
+
+                    with open(theorem_file_path, "r") as lean_file:
+                        lean_content = lean_file.read()
+                    # TODO: deal with noncomputable real division? (only an issue if guess is fraction of real numbers but actual solution is literal)
+                    # TODO: deal with non-numerical answers, putting in Lean format
+                    lean_content = lean_content.replace("sorry", global_guess, 1)
+                    self.logger.info(f"Lean theorem with answer inserted:\n{lean_content}")
+
+                    theorem_statement_raw = lean_content
+                    theorem_statement_lines = []
+                    for line in theorem_statement_raw.splitlines():
+                        if line and not line.isspace() and not line.startswith("import ") and not line.startswith("open ") and not line.startswith("--"):
+                            theorem_statement_lines.append(line)
+                    theorem_statement = "\n".join(theorem_statement_lines) # TODO: move this duplicated code into helper file or refactor so it's not duplicated
+                    self._log_and_add_to_history(coordinator.history, f"Lean 4 Theorem Statement with Answer Inserted:\n{theorem_statement}")
+
+                    temp_lean_file = tempfile.NamedTemporaryFile(mode="w+", suffix=".lean")
+
+                    temp_lean_file.write(lean_content)
+                    temp_lean_file.flush()
+
+                    proof_exec_callback = ProofExecutorCallback( # TODO: maybe do this differently so we don't have basically the same code twice
+                        project_folder=lean4_project_folder,
+                        file_path=temp_lean_file.name,
+                        language=ProofAction.Language.LEAN4,
+                        always_use_retrieval=False,
+                        keep_local_context=True
+                    )
+                    theorem_name = name
+                    always_retrieve_thms = False
+                    retrieval_strategy = ProofEnvReRankStrategy.NO_RE_RANK
+
+                    temp_proof_env = ProofEnv(name, proof_exec_callback, theorem_name, retrieval_strategy=retrieval_strategy, max_proof_depth=10, always_retrieve_thms=always_retrieve_thms)
+                    proof_env_wrapper.swap_proof_env(temp_proof_env, temp_lean_file)
+
+                    problem_state = ProblemState.PROVING_AFTER_FINDING
+                    solution_str = global_guess
+
+                    proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env, solution_str)
+                    self._log_and_add_to_history(coordinator.history, proof_state_render)
                 else:
                     self._log_and_add_to_history(coordinator.history, f"Globally guessing is invalid while formally proving the theorem.")
             else:
@@ -215,61 +257,19 @@ class CoordinationSolver(Solver):
             
             self.logger.info(f"End of loop {MAX_LOOPS - loops_left}. Loops left: {loops_left}\n")
         
-        if problem_state != ProblemState.FINDING: # TODO: this will be unconditional later
-            coordinator.reset()
+        coordinator.reset()
 
         self.logger.info("Solver finished looping.")
 
         if problem_state == ProblemState.FINDING:
-            self.logger.info(f"Solver returning: {global_guess}")
-        else:
-            if proof_env.done:
-                self.logger.info("Succesfully proved theorem.")
-            else:
-                self.logger.info("Failed to prove theorem.")
+            self.logger.info("Failed to output global guess.")
         
-        proof_env_done = False
-        if problem_state == ProblemState.FINDING: # TODO: return both global guess and proof done?
-            lean4_project_folder = "../../data/test/lean4_proj/"
-            theorem_file_path = lean4_project_folder + f"Lean4Proj/HarmonicTest/{name}.lean" # TODO: use file path join?
-
-            with open(theorem_file_path, "r") as lean_file:
-                lean_content = lean_file.read()
-            # TODO: deal with noncomputable real division? (only an issue if guess is fraction of real numbers but actual solution is literal)
-            # TODO: deal with non-numerical answers, putting in Lean format
-            lean_content = lean_content.replace("sorry", global_guess, 1)
-            self.logger.info(f"Lean theorem with answer inserted:\n{lean_content}")
-
-            theorem_statement_raw = lean_content
-            theorem_statement_lines = []
-            for line in theorem_statement_raw.splitlines():
-                if line and not line.isspace() and not line.startswith("import ") and not line.startswith("open ") and not line.startswith("--"):
-                    theorem_statement_lines.append(line)
-            theorem_statement = "\n".join(theorem_statement_lines) # TODO: move this duplicated code into helper file or refactor so it's not duplicated
-            self._log_and_add_to_history(coordinator.history, f"Lean 4 Theorem Statement with Answer Inserted:\n{theorem_statement}")
-            
-            with tempfile.NamedTemporaryFile(mode="w+", suffix=".lean") as temp_lean_file:
-                temp_lean_file.write(lean_content)
-                temp_lean_file.flush()
-
-                proof_exec_callback = ProofExecutorCallback( # TODO: maybe do this differently so we don't have basically the same code twice
-                    project_folder=lean4_project_folder,
-                    file_path=temp_lean_file.name,
-                    language=ProofAction.Language.LEAN4,
-                    always_use_retrieval=False,
-                    keep_local_context=True
-                )
-                theorem_name = name
-                always_retrieve_thms = False
-                retrieval_strategy = ProofEnvReRankStrategy.NO_RE_RANK
-
-                with ProofEnv(name, proof_exec_callback, theorem_name, retrieval_strategy=retrieval_strategy, max_proof_depth=10, always_retrieve_thms=always_retrieve_thms) as proof_env:
-                    self._coordinator_tool_history_loop(problem_statement, theorem_statement, ProblemState.PROVING_AFTER_FINDING, proof_env, name, global_guess, time_allowed)
-                    proof_env_done = proof_env.done
+        if proof_env_wrapper.proof_env.done:
+            self.logger.info("Succesfully proved theorem.")
         else:
-            proof_env_done = proof_env.done
+            self.logger.info("Failed to prove theorem.")
         
-        return proof_env_done, global_guess
+        return global_guess
 
 
     def _plan_code_exec_extract_last_maj_vote(self, problem_statement: str, time_allowed: int) -> float:
@@ -494,7 +494,7 @@ Choices:
                     answer = random.choice(answers)
             return answer
 
-    def solve(self, problem_statement: str, theorem_statement: str, problem_state: ProblemState, proof_env: ProofEnv, name: str, time_allowed: int) -> float:
+    def solve(self, problem_statement: str, theorem_statement: str, problem_state: ProblemState, proof_env_wrapper: ProofEnvWrapper, name: str, time_allowed: int) -> typing.Tuple[bool, str]:
         assert len(self.tools) > 0, "No tools provided."
         self.start_time = time.time()
         self.logger.info(f"Starting to solve problem:\n{problem_statement}")
@@ -503,7 +503,7 @@ Choices:
             if self.strategy == CoordinationSolverStrategy.PLAN_CODE_EXEC_EXRACT_LAST_MAJ_VOTE:
                 answer = self._plan_code_exec_extract_last_maj_vote(problem_statement, time_allowed)
             elif self.strategy == CoordinationSolverStrategy.COORDINATOR_TOOL_HISTORY_LOOP:
-                answer = self._coordinator_tool_history_loop(problem_statement, theorem_statement, problem_state, proof_env, name, None, time_allowed)
+                answer = self._coordinator_tool_history_loop(problem_statement, theorem_statement, problem_state, proof_env_wrapper, name, None, time_allowed)
             else:
                 raise NotImplementedError(f"Strategy {self.strategy} is not implemented.")
         except Exception as e:
