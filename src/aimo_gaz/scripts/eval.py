@@ -7,10 +7,10 @@ import os
 import math
 import matplotlib.pyplot as plt
 from enum import Enum
-from itp_interface.rl.simple_proof_env import ProofExecutorCallback, ProofAction, ProofEnvReRankStrategy, ProofEnv
+from itp_interface.rl.simple_proof_env import ProofEnv
 from aimo_gaz.solver.abs_solver_and_tool import Solver
 from aimo_gaz.solver.test_solver import TestSolver
-from aimo_gaz.utils import string_utils
+from aimo_gaz.utils import string_utils, proof_utils
 
 
 def get_json_data(path: str):
@@ -96,14 +96,9 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: loggi
 
         lean4_project_folder = "../../data/test/lean4_proj/"
         theorem_file_path = os.path.join(lean4_project_folder, f"Lean4Proj/HarmonicTest/{name}.lean")
-        print(theorem_file_path)
         with open(theorem_file_path, "r") as theorem_file:
             theorem_statement_raw = theorem_file.read()
-        theorem_statement_lines = []
-        for line in theorem_statement_raw.splitlines():
-            if line and not line.isspace() and not line.startswith("import ") and not line.startswith("open ") and not line.startswith("--"):
-                theorem_statement_lines.append(line)
-        theorem_statement = "\n".join(theorem_statement_lines)
+        theorem_statement = string_utils.filter_theorem_statement(theorem_statement_raw)
 
         # Calling Solver
 
@@ -115,24 +110,13 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: loggi
             if numerical_answer is None:
                 logger.error(f"ERROR: Numerical answer '{numerical_answer}' is not a float or fraction for row {exidx}")
                 continue
-        
-        proof_exec_callback = ProofExecutorCallback(
-            project_folder=lean4_project_folder,
-            file_path=theorem_file_path,
-            language=ProofAction.Language.LEAN4,
-            always_use_retrieval=False,
-            keep_local_context=True
-        )
-        theorem_name = name
-        always_retrieve_thms = False
-        retrieval_strategy = ProofEnvReRankStrategy.NO_RE_RANK
 
         if problem_type == ProblemType.FIND_NUMERICAL or problem_type == ProblemType.FIND_NONNUMERICAL:
             problem_state = ProblemState.FINDING
         else:
             problem_state = ProblemState.PROVING
 
-        temp_proof_env = ProofEnv(name, proof_exec_callback, theorem_name, retrieval_strategy=retrieval_strategy, max_proof_depth=10, always_retrieve_thms=always_retrieve_thms)
+        temp_proof_env = proof_utils.get_proof_env(lean4_project_folder, theorem_file_path, name)
         with ProofEnvWrapper(temp_proof_env) as proof_env_wrapper:
             solver_ans = solver.solve(natural_statement, theorem_statement, problem_state, proof_env_wrapper, name, time_allowed = total_time_left // (50 - total))
             proof_env_done = proof_env_wrapper.proof_env.done

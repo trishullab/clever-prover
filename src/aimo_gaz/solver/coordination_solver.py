@@ -7,7 +7,6 @@ import copy
 import os
 import tempfile
 from sympy import *
-from itp_interface.rl.simple_proof_env import ProofEnv, ProofExecutorCallback, ProofAction, ProofEnvReRankStrategy
 from aimo_gaz.solver.abs_solver_and_tool import Solver, Tool
 from aimo_gaz.solver.tools.old_planner_tool import OldPlannerTool
 from aimo_gaz.solver.tools.old_code_tool import OldCodeTool
@@ -20,7 +19,7 @@ from aimo_gaz.solver.tools.prover_tool import ProverTool
 from aimo_gaz.solver.tools.lean4_executor_tool import Lean4ExecutorTool
 from aimo_gaz.solver.tools.coordinator_tool import ToolOrGlobalGuess
 from aimo_gaz.scripts.eval import ProblemState, ProofEnvWrapper
-from aimo_gaz.utils import string_utils
+from aimo_gaz.utils import string_utils, proof_utils
 from enum import Enum
 from collections import Counter
 
@@ -218,12 +217,7 @@ class CoordinationSolver(Solver):
                     lean_content = lean_content.replace("sorry", global_guess, 1)
                     self.logger.info(f"Lean theorem with answer inserted:\n{lean_content}")
 
-                    theorem_statement_raw = lean_content
-                    theorem_statement_lines = []
-                    for line in theorem_statement_raw.splitlines():
-                        if line and not line.isspace() and not line.startswith("import ") and not line.startswith("open ") and not line.startswith("--"):
-                            theorem_statement_lines.append(line)
-                    theorem_statement = "\n".join(theorem_statement_lines) # TODO: move this duplicated code into helper file or refactor so it's not duplicated
+                    theorem_statement = string_utils.filter_theorem_statement(lean_content)
                     self._log_and_add_to_history(coordinator.history, f"Lean 4 Theorem Statement with Answer Inserted:\n{theorem_statement}")
 
                     temp_lean_file = tempfile.NamedTemporaryFile(mode="w+", suffix=".lean")
@@ -231,18 +225,7 @@ class CoordinationSolver(Solver):
                     temp_lean_file.write(lean_content)
                     temp_lean_file.flush()
 
-                    proof_exec_callback = ProofExecutorCallback( # TODO: maybe do this differently so we don't have basically the same code twice
-                        project_folder=lean4_project_folder,
-                        file_path=temp_lean_file.name,
-                        language=ProofAction.Language.LEAN4,
-                        always_use_retrieval=False,
-                        keep_local_context=True
-                    )
-                    theorem_name = name
-                    always_retrieve_thms = False
-                    retrieval_strategy = ProofEnvReRankStrategy.NO_RE_RANK
-
-                    temp_proof_env = ProofEnv(name, proof_exec_callback, theorem_name, retrieval_strategy=retrieval_strategy, max_proof_depth=10, always_retrieve_thms=always_retrieve_thms)
+                    temp_proof_env = proof_utils.get_proof_env(lean4_project_folder, temp_lean_file.name, name)
                     proof_env_wrapper.swap_proof_env(temp_proof_env, temp_lean_file)
 
                     problem_state = ProblemState.PROVING_AFTER_FINDING

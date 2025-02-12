@@ -1,6 +1,6 @@
 from itp_interface.rl.simple_proof_env import ProofEnv
 
-def parse_float(input):
+def parse_float(input: str):
     try:
         return float(input)
     except:
@@ -11,7 +11,14 @@ def parse_float(input):
         pass
     return None
 
-def history_to_str(history):
+def filter_theorem_statement(theorem_statement_raw: str):
+    theorem_statement_lines = []
+    for line in theorem_statement_raw.splitlines():
+        if line and not line.isspace() and not line.startswith("import ") and not line.startswith("open ") and not line.startswith("--"):
+            theorem_statement_lines.append(line)
+    return "\n".join(theorem_statement_lines)
+
+def history_to_str(history: list[dict[str, str]]):
     if len(history) > 10:
         return "[...,\n{}]".format(",\n".join(map(str, history[-10:])))
     else:
