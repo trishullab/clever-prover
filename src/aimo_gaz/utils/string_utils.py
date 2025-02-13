@@ -11,9 +11,9 @@ def parse_float(input: str):
         pass
     return None
 
-def filter_theorem_statement(theorem_statement_raw: str):
+def filter_theorem_statement(raw_theorem_statement: str):
     theorem_statement_lines = []
-    for line in theorem_statement_raw.splitlines():
+    for line in raw_theorem_statement.splitlines():
         if line and not line.isspace() and not line.startswith("import ") and not line.startswith("open ") and not line.startswith("--"):
             theorem_statement_lines.append(line)
     return "\n".join(theorem_statement_lines)

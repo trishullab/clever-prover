@@ -98,7 +98,7 @@ class CoordinationSolver(Solver):
         history.append({"role": "user", "content": message})
 
 
-    def _coordinator_tool_history_loop(self, problem_statement: str, theorem_statement: str, problem_state: ProblemState, proof_env_wrapper: ProofEnvWrapper, name: str, solution_str: str, time_allowed: int) -> float:
+    def _coordinator_tool_history_loop(self, problem_statement: str, raw_theorem_statement: str, theorem_statement: str, problem_state: ProblemState, proof_env_wrapper: ProofEnvWrapper, name: str, solution_str: str, time_allowed: int) -> float:
         assert len(self.tools) > 0, "No tools provided."
         assert "llm_guesser" in self.tools, "LLM guesser tool not provided."
 
@@ -207,25 +207,20 @@ class CoordinationSolver(Solver):
                     global_guess = global_guess_temp
                     self._log_and_add_to_history(coordinator.history, f"Coordinator output global guess: {global_guess}")
 
-                    lean4_project_folder = "../../data/test/lean4_proj/"
-                    theorem_file_path = os.path.join(lean4_project_folder, f"Lean4Proj/HarmonicTest/{name}.lean")
-                    # theorem_file_path = os.path.join(lean4_project_folder, f"Lean4Proj/{name}.lean")
-
-                    with open(theorem_file_path, "r") as lean_file:
-                        lean_content = lean_file.read()
                     # TODO: deal with noncomputable real division? (only an issue if guess is fraction of real numbers but actual solution is literal)
                     # TODO: deal with non-numerical answers, putting in Lean format
-                    lean_content = lean_content.replace("sorry", global_guess, 1)
-                    self.logger.info(f"Lean theorem with answer inserted:\n{lean_content}")
+                    new_raw_theorem_statement = raw_theorem_statement.replace("sorry", global_guess, 1)
+                    self.logger.info(f"Lean theorem with answer inserted:\n{new_raw_theorem_statement}")
 
-                    theorem_statement = string_utils.filter_theorem_statement(lean_content)
+                    theorem_statement = string_utils.filter_theorem_statement(new_raw_theorem_statement)
                     self._log_and_add_to_history(coordinator.history, f"Lean 4 Theorem Statement with Answer Inserted:\n{theorem_statement}")
 
                     temp_lean_file = tempfile.NamedTemporaryFile(mode="w+", suffix=".lean")
 
-                    temp_lean_file.write(lean_content)
+                    temp_lean_file.write(new_raw_theorem_statement)
                     temp_lean_file.flush()
 
+                    lean4_project_folder = proof_env_wrapper.proof_env.dynamic_proof_executor_callback.project_folder
                     temp_proof_env = proof_utils.get_proof_env(lean4_project_folder, temp_lean_file.name, name)
                     proof_env_wrapper.swap_proof_env(temp_proof_env, temp_lean_file)
 
@@ -478,7 +473,7 @@ Choices:
                     answer = random.choice(answers)
             return answer
 
-    def solve(self, problem_statement: str, theorem_statement: str, problem_state: ProblemState, proof_env_wrapper: ProofEnvWrapper, name: str, time_allowed: int) -> typing.Tuple[bool, str]:
+    def solve(self, problem_statement: str, raw_theorem_statement: str, theorem_statement: str, problem_state: ProblemState, proof_env_wrapper: ProofEnvWrapper, name: str, time_allowed: int) -> typing.Tuple[bool, str]:
         assert len(self.tools) > 0, "No tools provided."
         self.start_time = time.time()
         self.logger.info(f"Starting to solve problem:\n{problem_statement}")
@@ -487,7 +482,7 @@ Choices:
             if self.strategy == CoordinationSolverStrategy.PLAN_CODE_EXEC_EXRACT_LAST_MAJ_VOTE:
                 answer = self._plan_code_exec_extract_last_maj_vote(problem_statement, time_allowed)
             elif self.strategy == CoordinationSolverStrategy.COORDINATOR_TOOL_HISTORY_LOOP:
-                answer = self._coordinator_tool_history_loop(problem_statement, theorem_statement, problem_state, proof_env_wrapper, name, None, time_allowed)
+                answer = self._coordinator_tool_history_loop(problem_statement, raw_theorem_statement, theorem_statement, problem_state, proof_env_wrapper, name, None, time_allowed)
             else:
                 raise NotImplementedError(f"Strategy {self.strategy} is not implemented.")
         except Exception as e:

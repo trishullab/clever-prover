@@ -95,11 +95,11 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: loggi
         name = ex.get("name")
 
         lean4_project_folder = "../../data/test/lean4_proj/"
-        theorem_file_path = os.path.join(lean4_project_folder, f"Lean4Proj/HarmonicTest/{name}.lean")
-        # theorem_file_path = os.path.join(lean4_project_folder, f"Lean4Proj/{name}.lean")
+        project_subfolder = ex.get("project_subfolder", "HarmonicTest/")
+        theorem_file_path = os.path.join(lean4_project_folder, "Lean4Proj/", project_subfolder, f"{name}.lean")
         with open(theorem_file_path, "r") as theorem_file:
-            theorem_statement_raw = theorem_file.read()
-        theorem_statement = string_utils.filter_theorem_statement(theorem_statement_raw)
+            raw_theorem_statement = theorem_file.read()
+        theorem_statement = string_utils.filter_theorem_statement(raw_theorem_statement)
 
         # Calling Solver
 
@@ -119,7 +119,7 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: loggi
 
         temp_proof_env = proof_utils.get_proof_env(lean4_project_folder, theorem_file_path, name)
         with ProofEnvWrapper(temp_proof_env) as proof_env_wrapper:
-            solver_ans = solver.solve(natural_statement, theorem_statement, problem_state, proof_env_wrapper, name, time_allowed = total_time_left // (50 - total))
+            solver_ans = solver.solve(natural_statement, raw_theorem_statement, theorem_statement, problem_state, proof_env_wrapper, name, time_allowed = total_time_left // (50 - total))
             proof_env_done = proof_env_wrapper.proof_env.done
 
         if problem_type == ProblemType.FIND_NUMERICAL:
