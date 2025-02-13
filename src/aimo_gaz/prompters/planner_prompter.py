@@ -10,8 +10,8 @@ class PlannerPrompter(Prompter):
 Write for me the first couple steps you would do to solve this problem. Only write the first couple steps please.
 
 Please start your response with: '0. I would break down the problem into simpler steps, this can be done by the following:'""" # TODO: add examples # TODO: include custom system prompt for proving?
-        self.problem_statement_message = "Problem Statement:\n{}\n\nLean 4 Theorem Statement:\n{}"
-        self.default_user_message = "Please write the steps now."
+        self.problem_statement_message = "[PROBLEM STATEMENT]\n{}\n\n[LEAN 4 THEOREM STATEMENT]\n{}" # TODO: move this into string_utils method?
+        self.default_user_instructions = "Please write the steps now."
         
         self.stop_tokens = []
 
@@ -19,8 +19,8 @@ Please start your response with: '0. I would break down the problem into simpler
         if not history or history[0]["role"] != "system":
             history.insert(0, {"role": "system", "content": self.system_prompt})
         problem_statements = self.problem_statement_message.format(problem_statement, theorem_statement)
-        instructions = tool_prompt if tool_prompt else self.default_user_message
-        history.append({"role": "user", "content": f"{problem_statements}\n\nInstructions:\n{instructions}"})
+        instructions = tool_prompt if tool_prompt else self.default_user_instructions
+        history.append({"role": "user", "content": f"{problem_statements}\n\n[INSTRUCTIONS]\n{instructions}"})
         return history
 
     def parse_response(self, response: str) -> str:

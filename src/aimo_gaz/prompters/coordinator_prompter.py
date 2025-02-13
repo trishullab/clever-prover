@@ -34,30 +34,36 @@ Then for LLM tools, output custom instructions for the tool to follow between th
 If you choose to globally guess the answer, please output your answer between the tokens '[START GLOBAL GUESS]' and '[END GLOBAL GUESS]'. Only include the guessed answer, without words.
 
 Below are the problem statements and the history of actions taken so far by the coordinator (you) and the tools to solve this problem.""" # TODO: add examples
-        self.problem_statement_message = "Problem Statement:\n{}\n\nLean 4 Theorem Statement:\n{}"
-        self.user_message_find = """This problem requires an answer to be inserted. Please choose tools that will help you find the answer.
+        self.problem_statement_message = "[PROBLEM STATEMENT]\n{}\n\n[LEAN 4 THEOREM STATEMENT]\n{}"
+        self.user_instructions_find = """This problem requires an answer to be inserted. Please choose tools that will help you find the answer.
 
 Please output your chosen tool and prompt or your global guess now."""
-        self.user_message_prove = """This problem does not require an answer to be inserted. Please choose tools that will help you formally prove the problem.
+        self.user_instructions_prove = """This problem does not require an answer to be inserted. Please choose tools that will help you formally prove the problem.
 
 Please output your chosen tool and prompt/tactic now."""
-        self.user_message_prove_after_find = """Your guess for the answer to this problem has been inserted. Please choose tools that will help you formally prove the problem.
+        self.user_instructions_prove_after_find = """Your guess for the answer to this problem has been inserted. Please choose tools that will help you formally prove the problem.
 
 Please output your chosen tool and prompt/tactic now."""
 
         self.stop_tokens = ["[END PROMPT]", "[END TACTIC]", "[END GLOBAL GUESS]"]
 
-    def get_prompt(self, history: list[dict[str, str]], problem_statement: str, theorem_statement: str, problem_state: ProblemState) -> list[dict[str, str]]:
+    def get_prompt(self, history: list[dict[str, str]], history_buffer: list[str], problem_statement: str, theorem_statement: str, problem_state: ProblemState) -> list[dict[str, str]]:
+        user_message = ""
         if not history or history[0]["role"] != "system":
             history.insert(0, {"role": "system", "content": self.system_prompt})
-            history.insert(1, {"role": "user", "content": self.problem_statement_message.format(problem_statement, theorem_statement)})
+            user_message += self.problem_statement_message.format(problem_statement, theorem_statement)
         
+        if history_buffer:
+            user_message += "[MESSAGE]\n" + "\n\n[MESSAGE]\n".join(history_buffer)
+
         if problem_state == ProblemState.FINDING:
-            user_message = self.user_message_find
+            user_instructions = self.user_instructions_find
         elif problem_state == ProblemState.PROVING:
-            user_message = self.user_message_prove
+            user_instructions = self.user_instructions_prove
         else:
-            user_message = self.user_message_prove_after_find
+            user_instructions = self.user_instructions_prove_after_find
+        user_message += "\n\n[INSTRUCTIONS]\n" + user_instructions
+
         history.append({"role": "user", "content": user_message})
 
         return history

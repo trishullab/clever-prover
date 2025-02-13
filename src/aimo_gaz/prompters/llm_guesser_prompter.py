@@ -9,8 +9,8 @@ class LLMGuesserPrompter(Prompter):
         self.system_prompt = """Below is a math problem statement with a corresponding formal theorem statement in Lean 4.
 
 Please write for me a guess for an answer to help solve this problem.""" # TODO: add examples
-        self.problem_statement_message = "Problem Statement:\n{}\n\nLean 4 Theorem Statement:\n{}" # TODO: phrase this as a helper instead of a guesser
-        self.default_user_message = "Please write your guess now."
+        self.problem_statement_message = "[PROBLEM STATEMENT]\n{}\n\n[LEAN 4 THEOREM STATEMENT]\n{}" # TODO: phrase this as a helper instead of a guesser
+        self.default_user_instructions = "Please write your guess now."
         
         self.stop_tokens = []
 
@@ -18,8 +18,8 @@ Please write for me a guess for an answer to help solve this problem.""" # TODO:
         if not history or history[0]["role"] != "system":
             history.insert(0, {"role": "system", "content": self.system_prompt})
         problem_statements = self.problem_statement_message.format(problem_statement, theorem_statement)
-        instructions = tool_prompt if tool_prompt else self.default_user_message
-        history.append({"role": "user", "content": f"{problem_statements}\n\nInstructions:\n{instructions}"})
+        instructions = tool_prompt if tool_prompt else self.default_user_instructions
+        history.append({"role": "user", "content": f"{problem_statements}\n\n[INSTRUCTIONS]\n{instructions}"})
         return history
 
     def parse_response(self, response: str) -> typing.Tuple[str, float]:
