@@ -209,6 +209,7 @@ class CoordinationSolver(Solver):
 
                     lean4_project_folder = "../../data/test/lean4_proj/"
                     theorem_file_path = os.path.join(lean4_project_folder, f"Lean4Proj/HarmonicTest/{name}.lean")
+                    # theorem_file_path = os.path.join(lean4_project_folder, f"Lean4Proj/{name}.lean")
 
                     with open(theorem_file_path, "r") as lean_file:
                         lean_content = lean_file.read()

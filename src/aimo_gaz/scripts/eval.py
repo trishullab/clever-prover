@@ -96,6 +96,7 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: loggi
 
         lean4_project_folder = "../../data/test/lean4_proj/"
         theorem_file_path = os.path.join(lean4_project_folder, f"Lean4Proj/HarmonicTest/{name}.lean")
+        # theorem_file_path = os.path.join(lean4_project_folder, f"Lean4Proj/{name}.lean")
         with open(theorem_file_path, "r") as theorem_file:
             theorem_statement_raw = theorem_file.read()
         theorem_statement = string_utils.filter_theorem_statement(theorem_statement_raw)

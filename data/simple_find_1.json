@@ -1,0 +1,8 @@
+[
+    {
+        "name": "simple_find",
+        "natural_statement": "Given the equation $12+x=30$, find $x$.",
+        "natural_solution": "Show that $x=18$.",
+        "numerical_answer": "18"
+    }
+]
