@@ -20,9 +20,9 @@ def filter_theorem_statement(raw_theorem_statement: str):
 
 def history_to_str(history: list[dict[str, str]]):
     if len(history) > 10:
-        return "[...,\n{}]".format(",\n".join(map(str, history[-10:])))
+        return "[...,\n{}]".format(",\n".join(map(str, history[-10:]))) + "\n" + history[-1]["content"]
     else:
-        return "[{}]".format(",\n".join(map(str, history)))
+        return "[{}]".format(",\n".join(map(str, history))) + "\n" + history[-1]["content"]
 
 def render_proof_env(proof_env: ProofEnv, solution_str: str):
     if len(proof_env._history) == 0:
