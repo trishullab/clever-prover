@@ -84,6 +84,7 @@ from aimo_gaz.models.gpt_model import GptModel
 from aimo_gaz.prompters.old_code_prompter import OldCodePrompter
 from aimo_gaz.prompters.old_planner_prompter import OldPlannerPrompter
 from aimo_gaz.prompters.coordinator_prompter import CoordinatorPrompter
+from aimo_gaz.prompters.coordinator_format_answer_prompter import CoordinatorFormatAnswerPrompter
 from aimo_gaz.prompters.planner_prompter import PlannerPrompter
 from aimo_gaz.prompters.code_prompter import CodePrompter
 from aimo_gaz.prompters.llm_guesser_prompter import LLMGuesserPrompter
@@ -95,7 +96,7 @@ class PrompterType(Enum):
     CoTPrompter = "CoTPrompter"
     OldCodePrompter = "OldCodePrompter"
     OldPlannerPrompter = "OldPlannerPrompter"
-    CoordinatorPrompter = "CoordinatorPrompter"
+    CoordinatorPrompters = "CoordinatorPrompters"
     PlannerPrompter = "PlannerPrompter"
     CodePrompter = "CodePrompter"
     LLMGuesserPrompter = "LLMGuesserPrompter"
@@ -128,15 +129,16 @@ class PrompterConfig:
     system_prompt_path: str
     example_prompt_path: str
     
-    def get_prompter(self) -> Prompter:
+    def get_prompter(self) -> typing.Union[Prompter, typing.Tuple[Prompter, Prompter]]:
         if self.prompter_type == PrompterType.CoTPrompter:
             return CoTPrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
         elif self.prompter_type == PrompterType.OldCodePrompter:
             return OldCodePrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
         elif self.prompter_type == PrompterType.OldPlannerPrompter:
             return OldPlannerPrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
-        elif self.prompter_type == PrompterType.CoordinatorPrompter:
-            return CoordinatorPrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
+        elif self.prompter_type == PrompterType.CoordinatorPrompters:
+            return CoordinatorPrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path), \
+                CoordinatorFormatAnswerPrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
         elif self.prompter_type == PrompterType.PlannerPrompter:
             return PlannerPrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
         elif self.prompter_type == PrompterType.CodePrompter:
@@ -253,8 +255,8 @@ class SolverOrToolConfig:
                 GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
             else:
                 model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
-            prompter = self.prompter_config.get_prompter()
-            return CoordinatorTool(model, prompter, logger, **self.inference_settings.to_dict())
+            prompter, format_answer_prompter = self.prompter_config.get_prompter()
+            return CoordinatorTool(model, prompter, format_answer_prompter, logger, **self.inference_settings.to_dict())
         elif self.solver_or_tool_type == SolverOrToolType.PlannerTool:
             if self.model_settings.name_or_path not in GLOBAL_MODEL_CACHE:
                 model = GptModel(self.model_settings.name_or_path)

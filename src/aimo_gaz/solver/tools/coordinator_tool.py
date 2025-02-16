@@ -16,12 +16,13 @@ class ToolOrGlobalGuess(Enum):
     LEAN4_EXECUTOR = "lean4_executor"
 
 class CoordinatorTool(Tool):
-    def __init__(self, model: Model, prompter: Prompter, logger: logging.Logger = None, **inference_kwargs):
+    def __init__(self, model: Model, prompter: Prompter, format_answer_prompter: Prompter, logger: logging.Logger = None, **inference_kwargs):
         assert model is not None, "Model must be provided."
         assert prompter is not None, "Prompter must be provided."
         assert logger is not None, "Logger must be provided."
         self.model = model
         self.prompter = prompter
+        self.format_answer_prompter = format_answer_prompter
         self.logger = logger
         self.inference_kwargs = inference_kwargs
         self.inference_kwargs["n"] = 1 # Only one response is needed from coordinator tool
@@ -35,6 +36,7 @@ class CoordinatorTool(Tool):
         self.history = self.prompter.get_prompt(self.history, history_buffer, problem_statement, theorem_statement, problem_state)
         self.logger.info(f"[COORDINATOR] Raw prompt used:\n{string_utils.history_to_str(self.history)}")
         # Get the model response
+        self.inference_kwargs["stop"] = self.prompter.stop_tokens
         response = self.model.generate(self.history, **self.inference_kwargs)
         outs = self.model.parse_out(response)
         assert len(outs) == 1, "No response (or too many responses) from the model."
@@ -42,6 +44,22 @@ class CoordinatorTool(Tool):
         self.history.append({"role": "assistant", "content": generated_text})
         self.logger.info(f"[COORDINATOR] Output generated: {generated_text}")
         return self.prompter.parse_response(generated_text)
+
+    def solve_intermediate_format_answer(self, history_buffer: list[str], theorem_statement: str) -> str:
+        if not self.model.is_loaded():
+            self.model.__enter__()
+        # Prompt the model for the tool
+        self.history = self.format_answer_prompter.get_prompt(self.history, history_buffer, theorem_statement)
+        self.logger.info(f"[COORDINATOR] Raw prompt used:\n{string_utils.history_to_str(self.history)}")
+        # Get the model response
+        self.inference_kwargs["stop"] = self.format_answer_prompter.stop_tokens
+        response = self.model.generate(self.history, **self.inference_kwargs)
+        outs = self.model.parse_out(response)
+        assert len(outs) == 1, "No response (or too many responses) from the model."
+        generated_text = outs[0][0]
+        self.history.append({"role": "assistant", "content": generated_text})
+        self.logger.info(f"[COORDINATOR] Output generated: {generated_text}")
+        return self.format_answer_prompter.parse_response(generated_text)
 
     def reset(self):
         self.history = []

@@ -8,7 +8,7 @@ defaults:
 solver_or_tool_type: CoordinatorTool
 solver_or_tool_args:
 prompter_config:
-  prompter_type: CoordinatorPrompter
+  prompter_type: CoordinatorPrompters
 # inference_settings:
 #   stop:
 #     - '[END COORDINATOR]'

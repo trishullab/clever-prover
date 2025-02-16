@@ -119,7 +119,7 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: loggi
 
         temp_proof_env = proof_utils.get_proof_env(lean4_project_folder, theorem_file_path, name)
         with ProofEnvWrapper(temp_proof_env) as proof_env_wrapper:
-            solver_ans = solver.solve(natural_statement, raw_theorem_statement, theorem_statement, problem_state, proof_env_wrapper, name, time_allowed = total_time_left // (50 - total))
+            solver_ans, solver_formatted_ans = solver.solve(natural_statement, raw_theorem_statement, theorem_statement, problem_state, proof_env_wrapper, name, time_allowed = total_time_left // (50 - total))
             proof_env_done = proof_env_wrapper.proof_env.done
 
         if problem_type == ProblemType.FIND_NUMERICAL:
@@ -149,6 +149,7 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: loggi
             logger.info("---FIND Result---")
             logger.info(f"Solution: {natural_solution}")
             logger.info(f"Solver Answer: {solver_ans}")
+            logger.info(f"Solver Formatted Answer: {solver_formatted_ans}")
             if problem_type == ProblemType.FIND_NUMERICAL:
                 logger.info(f"Numerical Answer: {numerical_answer}")
                 logger.info(f"Numerical Correct: {solver_is_correct}")

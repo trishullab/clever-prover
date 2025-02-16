@@ -40,7 +40,8 @@ def main(cfg):
         # benchmark = "harmonic_test_prove_1"
         # benchmark = "harmonic_test_find_prove_2"
         # benchmark = "harmonic_test_insert_4"
-        benchmark = "simple_find_1"
+        benchmark = "harmonic_test_48"
+        # benchmark = "simple_find_1"
         # benchmark_ext = "csv"
         benchmark_ext = "json"
         logger.info("---Starting Run---")

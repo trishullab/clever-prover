@@ -97,7 +97,7 @@ class CoordinationSolver(Solver):
         self.history_buffer.append(message)
 
 
-    def _coordinator_tool_history_loop(self, problem_statement: str, raw_theorem_statement: str, theorem_statement: str, problem_state: ProblemState, proof_env_wrapper: ProofEnvWrapper, name: str, solution_str: str, time_allowed: int) -> float:
+    def _coordinator_tool_history_loop(self, problem_statement: str, raw_theorem_statement: str, theorem_statement: str, problem_state: ProblemState, proof_env_wrapper: ProofEnvWrapper, name: str, time_allowed: int) -> float:
         assert len(self.tools) > 0, "No tools provided."
         assert "llm_guesser" in self.tools, "LLM guesser tool not provided."
 
@@ -110,6 +110,8 @@ class CoordinationSolver(Solver):
         lean4_executor: Lean4ExecutorTool = self.tools["lean4_executor"]
 
         global_guess = None
+        formatted_answer = None
+        solution_str = None
 
         if problem_state == ProblemState.PROVING or problem_state == ProblemState.PROVING_AFTER_FINDING:
             proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env, solution_str)
@@ -209,8 +211,11 @@ class CoordinationSolver(Solver):
                     self._log_and_add_to_history_buffer(f"Coordinator output global guess: {global_guess}")
 
                     # TODO: deal with noncomputable real division? (only an issue if guess is fraction of real numbers but actual solution is literal)
-                    # TODO: deal with non-numerical answers, putting in Lean format
-                    new_raw_theorem_statement = raw_theorem_statement.replace("sorry", global_guess, 1)
+                    formatted_answer = coordinator.solve_intermediate_format_answer(self.history_buffer, theorem_statement)
+                    self.history_buffer.clear()
+                    self._log_and_add_to_history_buffer(f"Coordinator output formatted answer: {formatted_answer}")
+
+                    new_raw_theorem_statement = raw_theorem_statement.replace("sorry", formatted_answer, 1)
                     self.logger.info(f"Lean theorem with answer inserted:\n{new_raw_theorem_statement}")
 
                     theorem_statement = string_utils.filter_theorem_statement(new_raw_theorem_statement)
@@ -226,7 +231,7 @@ class CoordinationSolver(Solver):
                     proof_env_wrapper.swap_proof_env(temp_proof_env, temp_lean_file)
 
                     problem_state = ProblemState.PROVING_AFTER_FINDING
-                    solution_str = global_guess
+                    solution_str = formatted_answer
 
                     proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env, solution_str)
                     self._log_and_add_to_history_buffer(proof_state_render)
@@ -249,7 +254,7 @@ class CoordinationSolver(Solver):
         else:
             self.logger.info("Failed to prove theorem.")
         
-        return global_guess
+        return global_guess, formatted_answer
 
 
     def _plan_code_exec_extract_last_maj_vote(self, problem_statement: str, time_allowed: int) -> float:
@@ -483,7 +488,7 @@ Choices:
             if self.strategy == CoordinationSolverStrategy.PLAN_CODE_EXEC_EXRACT_LAST_MAJ_VOTE:
                 answer = self._plan_code_exec_extract_last_maj_vote(problem_statement, time_allowed)
             elif self.strategy == CoordinationSolverStrategy.COORDINATOR_TOOL_HISTORY_LOOP:
-                answer = self._coordinator_tool_history_loop(problem_statement, raw_theorem_statement, theorem_statement, problem_state, proof_env_wrapper, name, None, time_allowed)
+                answer = self._coordinator_tool_history_loop(problem_statement, raw_theorem_statement, theorem_statement, problem_state, proof_env_wrapper, name, time_allowed)
             else:
                 raise NotImplementedError(f"Strategy {self.strategy} is not implemented.")
         except Exception as e:

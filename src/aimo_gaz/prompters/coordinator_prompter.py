@@ -49,12 +49,13 @@ Please output your chosen tool and prompt/tactic now."""
 
     def get_prompt(self, history: list[dict[str, str]], history_buffer: list[str], problem_statement: str, theorem_statement: str, problem_state: ProblemState) -> list[dict[str, str]]:
         user_message = ""
+        
         if not history or history[0]["role"] != "system":
             history.insert(0, {"role": "system", "content": self.system_prompt})
-            user_message += self.problem_statement_message.format(problem_statement, theorem_statement)
+            user_message += self.problem_statement_message.format(problem_statement, theorem_statement) + "\n\n"
         
         if history_buffer:
-            user_message += "[MESSAGE]\n" + "\n\n[MESSAGE]\n".join(history_buffer)
+            user_message += "[MESSAGE]\n" + "\n\n[MESSAGE]\n".join(history_buffer) + "\n\n"
 
         if problem_state == ProblemState.FINDING:
             user_instructions = self.user_instructions_find
@@ -62,7 +63,7 @@ Please output your chosen tool and prompt/tactic now."""
             user_instructions = self.user_instructions_prove
         else:
             user_instructions = self.user_instructions_prove_after_find
-        user_message += "\n\n[INSTRUCTIONS]\n" + user_instructions
+        user_message += "[INSTRUCTIONS]\n" + user_instructions
 
         history.append({"role": "user", "content": user_message})
 
