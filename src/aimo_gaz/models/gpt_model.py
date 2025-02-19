@@ -1,10 +1,12 @@
 import typing
 from aimo_gaz.models.abs_model import GenerationResult, GenerationResults, Model
 from aimo_gaz.models.gpt_access import GptAccess
+import logging
 
 class GptModel(Model):
-    def __init__(self, name: str, *, secret_filepath: str = "../../.secrets/openai_key.json"):
+    def __init__(self, name: str, logger: logging.Logger = None, *, secret_filepath: str = "../../.secrets/openai_key.json"):
         self._gpt_access = GptAccess(secret_filepath, model_name=name)
+        self.logger = logger
     
     def is_loaded(self):
         return True
@@ -14,6 +16,25 @@ class GptModel(Model):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
+    
+    def run_prompt(self, text: typing.List[typing.Dict[str, str]], **kwargs) -> list:
+        success = False
+        retries = 3
+        tokens_factor = 1.75
+        generated_text = None
+        while not success and retries > 0:
+            generated_text, usage = self._gpt_access.complete_chat(text, **kwargs)
+            reason = usage["reason"]
+            success = (reason != "length")
+            if not success:
+                old_max_tokens = kwargs["max_tokens"]
+                kwargs["max_tokens"] = int(kwargs["max_tokens"] * tokens_factor)
+                self.logger.info(f"Response cut off at {old_max_tokens} tokens. Retrying with {kwargs['max_tokens']} tokens.")
+                self.logger.info(f"Incomplete response:\n{generated_text}")
+            else:
+                self.logger.info(f"Got a valid response. Reason: {reason}")
+            retries -= 1
+        return generated_text
 
     def generate(self,
                  inputs: typing.Union[typing.List[typing.List[typing.Dict[str, str]]], typing.List[typing.Dict[str, str]]],
@@ -34,7 +55,7 @@ Expected kwargs: {expected_kwargs}"""
         
         generation_results = GenerationResults()
         for text in inputs:
-            generated_text, _ = self._gpt_access.complete_chat(text, **kwargs)
+            generated_text = self.run_prompt(text, **kwargs)
             generated_text = [response["content"] for response in generated_text]
             result = GenerationResult(input_text=text, generated_text=generated_text)
             generation_results.results.append(result)

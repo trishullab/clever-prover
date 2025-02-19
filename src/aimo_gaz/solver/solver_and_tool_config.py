@@ -204,8 +204,10 @@ class SolverOrToolConfig:
                     GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
 
                 else:
-                    model = GptModel(self.model_settings.name_or_path, self.model_settings.logging_dir,
-                                  **self.model_settings.model_args)
+                    model = GptModel(self.model_settings.name_or_path,
+                                     self.model_settings.logging_dir,
+                                    #  **self.model_settings.model_args
+                                    )
                     GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
             else:
                 model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
@@ -223,7 +225,7 @@ class SolverOrToolConfig:
 
                 else:
                     model = GptModel(self.model_settings.name_or_path,
-                                    #  self.model_settings.logging_dir,
+                                     self.model_settings.logging_dir,
                                     #  **self.model_settings.model_args,
                                     )
                     GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
@@ -241,7 +243,7 @@ class SolverOrToolConfig:
 
                 else:
                     model = GptModel(self.model_settings.name_or_path,
-                                    #  self.model_settings.logging_dir,
+                                     self.model_settings.logging_dir,
                                     #  **self.model_settings.model_args,
                                     )
                     GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
@@ -251,7 +253,7 @@ class SolverOrToolConfig:
             return OldPlannerTool(model, prompter, logger, **self.inference_settings.to_dict())
         elif self.solver_or_tool_type == SolverOrToolType.CoordinatorTool:
             if self.model_settings.name_or_path not in GLOBAL_MODEL_CACHE:
-                model = GptModel(self.model_settings.name_or_path)
+                model = GptModel(self.model_settings.name_or_path, logger)
                 GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
             else:
                 model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
@@ -259,7 +261,7 @@ class SolverOrToolConfig:
             return CoordinatorTool(model, prompter, format_answer_prompter, logger, **self.inference_settings.to_dict())
         elif self.solver_or_tool_type == SolverOrToolType.PlannerTool:
             if self.model_settings.name_or_path not in GLOBAL_MODEL_CACHE:
-                model = GptModel(self.model_settings.name_or_path)
+                model = GptModel(self.model_settings.name_or_path, logger)
                 GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
             else:
                 model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
@@ -267,7 +269,7 @@ class SolverOrToolConfig:
             return PlannerTool(model, prompter, logger, **self.inference_settings.to_dict())
         elif self.solver_or_tool_type == SolverOrToolType.CodeTool:
             if self.model_settings.name_or_path not in GLOBAL_MODEL_CACHE:
-                model = GptModel(self.model_settings.name_or_path)
+                model = GptModel(self.model_settings.name_or_path, logger)
                 GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
             else:
                 model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
@@ -277,7 +279,7 @@ class SolverOrToolConfig:
             return ExecutionTool(logger, **self.solver_or_tool_args)
         elif self.solver_or_tool_type == SolverOrToolType.LLMGuesserTool:
             if self.model_settings.name_or_path not in GLOBAL_MODEL_CACHE:
-                model = GptModel(self.model_settings.name_or_path)
+                model = GptModel(self.model_settings.name_or_path, logger)
                 GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
             else:
                 model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
@@ -285,7 +287,7 @@ class SolverOrToolConfig:
             return LLMGuesserTool(model, prompter, logger, **self.inference_settings.to_dict())
         elif self.solver_or_tool_type == SolverOrToolType.ProverTool:
             if self.model_settings.name_or_path not in GLOBAL_MODEL_CACHE:
-                model = GptModel(self.model_settings.name_or_path)
+                model = GptModel(self.model_settings.name_or_path, logger)
                 GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
             else:
                 model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
