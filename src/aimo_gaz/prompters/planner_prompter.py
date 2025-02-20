@@ -6,11 +6,7 @@ class PlannerPrompter(Prompter):
                  example_prompt: str = None, append_system_prompt_after_every_message: bool = False):
         super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt,
                          append_system_prompt_after_every_message)
-        self.system_prompt = """Below is a math problem statement with a corresponding formal theorem statement in Lean 4.
-
-Write for me the first couple steps you would do to solve this problem. Only write the first couple steps please.
-
-Please start your response with: '0. I would break down the problem into simpler steps, this can be done by the following:'""" # TODO: add examples # TODO: include custom system prompt for proving?
+        assert self.system_prompt is not None # TODO: add examples # TODO: include custom system prompt for proving?
         self.default_user_instructions = "Please write the steps now."
         
         self.stop_tokens = []

@@ -1,0 +1,7 @@
+Below is the informal problem statement, the corresponding formal theorem statement, and the current proof state of the theorem in Lean 4.
+
+Please write for me the next tactic to prove this theorem in Lean 4. Only write one tactic.
+
+Be sure to use correct Lean 4 notation; do not use Lean 3 notation.
+
+Please start your response with '[START TACTIC]' and end it with '[END TACTIC]'

@@ -6,13 +6,7 @@ class ProverPrompter(Prompter):
                  example_prompt: str = None, append_system_prompt_after_every_message: bool = False):
         super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt,
                          append_system_prompt_after_every_message)
-        self.system_prompt = """Below is the informal problem statement, the corresponding formal theorem statement, and the current proof state of the theorem in Lean 4.
-
-Please write for me the next tactic to prove this theorem in Lean 4. Only write one tactic.
-
-Be sure to use correct Lean 4 notation; do not use Lean 3 notation.
-
-Please start your response with '[START TACTIC]' and end it with '[END TACTIC]'""" # TODO: add examples
+        assert self.system_prompt is not None # TODO: add examples
         self.default_user_instructions = "Please write the next tactic now."
         
         self.stop_tokens = ["[END TACTIC]"]

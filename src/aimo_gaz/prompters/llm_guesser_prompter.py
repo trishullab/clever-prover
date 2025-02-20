@@ -7,9 +7,7 @@ class LLMGuesserPrompter(Prompter):
                  example_prompt: str = None, append_system_prompt_after_every_message: bool = False):
         super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt,
                          append_system_prompt_after_every_message)
-        self.system_prompt = """Below is a math problem statement with a corresponding formal theorem statement in Lean 4.
-
-Please write for me a guess for an answer to help solve this problem.""" # TODO: add examples # TODO: phrase this as a helper instead of a guesser
+        assert self.system_prompt is not None # TODO: add examples # TODO: phrase this as a helper instead of a guesser
         self.default_user_instructions = "Please write your guess now."
         
         self.stop_tokens = []

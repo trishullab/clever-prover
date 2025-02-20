@@ -243,7 +243,7 @@ class CoordinationSolver(Solver):
 
             time_left -= math.ceil(time.time() - start_time)
             
-            self.logger.info(f"End of loop {loop_num}. Time left: {time_left}\n")
+            self.logger.info(f"End of loop {loop_num}. Time left: {time_left}\n") # TODO: let coordinator know time left?
         
         coordinator.reset()
 

@@ -1,0 +1,3 @@
+Below is a math problem statement with a corresponding formal theorem statement in Lean 4.
+
+Please write for me a guess for an answer to help solve this problem.

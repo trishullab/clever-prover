@@ -6,11 +6,7 @@ class CodePrompter(Prompter):
                  example_prompt: str = None, append_system_prompt_after_every_message: bool = False):
         super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt,
                          append_system_prompt_after_every_message)
-        self.system_prompt = """Below is a math problem statement with a corresponding formal theorem statement in Lean 4.
-
-Can you write a Python program to help solve the problem using SymPy? The code can print a guess for the answer or some other helpful output. Make sure it runs correctly!
-
-Please start the code with '```python' and end it with '```'""" # TODO: add examples
+        assert self.system_prompt is not None # TODO: add examples
         self.default_user_instructions = "Please write the code now." # TODO: maybe adjust '```python' and '```' scaffolding
         
         self.stop_tokens = []

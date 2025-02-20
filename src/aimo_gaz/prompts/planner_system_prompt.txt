@@ -1,0 +1,5 @@
+Below is a math problem statement with a corresponding formal theorem statement in Lean 4.
+
+Write for me the first couple steps you would do to solve this problem. Only write the first couple steps please.
+
+Please start your response with: '0. I would break down the problem into simpler steps, this can be done by the following:'
