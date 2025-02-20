@@ -1,4 +1,5 @@
 from aimo_gaz.prompters.prompter import Prompter
+from aimo_gaz.utils import string_utils
 
 class CodePrompter(Prompter):
     def __init__(self, system_prompt_path: str = None, example_prompt_path: str = None, system_prompt: str = None,
@@ -10,7 +11,6 @@ class CodePrompter(Prompter):
 Can you write a Python program to help solve the problem using SymPy? The code can print a guess for the answer or some other helpful output. Make sure it runs correctly!
 
 Please start the code with '```python' and end it with '```'""" # TODO: add examples
-        self.problem_statement_message = "[PROBLEM STATEMENT]\n{}\n\n[LEAN 4 THEOREM STATEMENT]\n{}"
         self.default_user_instructions = "Please write the code now." # TODO: maybe adjust '```python' and '```' scaffolding
         
         self.stop_tokens = []
@@ -18,7 +18,7 @@ Please start the code with '```python' and end it with '```'""" # TODO: add exam
     def get_prompt(self, history: list[dict[str, str]], problem_statement: str, theorem_statement: str, tool_prompt: str) -> list[dict[str, str]]:
         if not history or history[0]["role"] != "system":
             history.insert(0, {"role": "system", "content": self.system_prompt})
-        problem_statements = self.problem_statement_message.format(problem_statement, theorem_statement)
+        problem_statements = string_utils.format_problem_statements(problem_statement, theorem_statement)
         instructions = tool_prompt if tool_prompt else self.default_user_instructions
         history.append({"role": "user", "content": f"{problem_statements}\n\n[INSTRUCTIONS]\n{instructions}"})
         return history

@@ -11,20 +11,23 @@ def parse_float(input: str):
         pass
     return None
 
-def filter_theorem_statement(raw_theorem_statement: str):
+def filter_theorem_statement(raw_theorem_statement: str) -> str:
     theorem_statement_lines = []
     for line in raw_theorem_statement.splitlines():
         if line and not line.isspace() and not line.startswith("import ") and not line.startswith("open ") and not line.startswith("--"):
             theorem_statement_lines.append(line)
     return "\n".join(theorem_statement_lines)
 
-def history_to_str(history: list[dict[str, str]]):
+def history_to_str(history: list[dict[str, str]]) -> str:
     if len(history) > 10:
         return "[...,\n{}]".format(",\n".join(map(str, history[-10:]))) + "\n" + history[-1]["content"]
     else:
         return "[{}]".format(",\n".join(map(str, history))) + "\n" + history[-1]["content"]
 
-def render_proof_env(proof_env: ProofEnv, solution_str: str):
+def format_problem_statements(problem_statement: str, theorem_statement: str) -> str:
+    return f"[PROBLEM STATEMENT]\n{problem_statement}\n\n[LEAN 4 THEOREM STATEMENT]\n{theorem_statement}"
+
+def render_proof_env(proof_env: ProofEnv, solution_str: str) -> str:
     if len(proof_env._history) == 0:
         current_state = proof_env.state
         s_goals = [((f"Solution (Inserted): {solution_str}\n " if solution_str else "") +

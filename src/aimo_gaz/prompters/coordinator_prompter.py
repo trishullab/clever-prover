@@ -2,6 +2,7 @@ import typing
 from aimo_gaz.prompters.prompter import Prompter
 from aimo_gaz.solver.tools.coordinator_tool import ToolOrGlobalGuess
 from aimo_gaz.scripts.eval import ProblemState
+from aimo_gaz.utils import string_utils
 
 class CoordinatorPrompter(Prompter):
     def __init__(self, system_prompt_path: str = None, example_prompt_path: str = None, system_prompt: str = None,
@@ -34,7 +35,6 @@ Then for LLM tools, output custom instructions for the tool to follow between th
 If you choose to globally guess the answer, please output your answer between the tokens '[START GLOBAL GUESS]' and '[END GLOBAL GUESS]'. Only include the guessed answer, without words.
 
 Below are the problem statements and the history of actions taken so far by the coordinator (you) and the tools to solve this problem.""" # TODO: add examples
-        self.problem_statement_message = "[PROBLEM STATEMENT]\n{}\n\n[LEAN 4 THEOREM STATEMENT]\n{}"
         self.user_instructions_find = """This problem requires an answer to be inserted. Please choose tools that will help you find the answer.
 
 Please output your chosen tool and prompt or your global guess now."""
@@ -52,7 +52,7 @@ Please output your chosen tool and prompt/tactic now."""
         
         if not history or history[0]["role"] != "system":
             history.insert(0, {"role": "system", "content": self.system_prompt})
-            user_message += self.problem_statement_message.format(problem_statement, theorem_statement) + "\n\n"
+            user_message += string_utils.format_problem_statements(problem_statement, theorem_statement) + "\n\n"
         
         if history_buffer:
             user_message += "[MESSAGE]\n" + "\n\n[MESSAGE]\n".join(history_buffer) + "\n\n"

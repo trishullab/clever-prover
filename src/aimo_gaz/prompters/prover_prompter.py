@@ -1,4 +1,5 @@
 from aimo_gaz.prompters.prompter import Prompter
+from aimo_gaz.utils import string_utils
 
 class ProverPrompter(Prompter):
     def __init__(self, system_prompt_path: str = None, example_prompt_path: str = None, system_prompt: str = None,
@@ -12,7 +13,6 @@ Please write for me the next tactic to prove this theorem in Lean 4. Only write 
 Be sure to use correct Lean 4 notation; do not use Lean 3 notation.
 
 Please start your response with '[START TACTIC]' and end it with '[END TACTIC]'""" # TODO: add examples
-        self.problem_statement_message = "[PROBLEM STATEMENT]\n{}\n\n[LEAN 4 THEOREM STATEMENT]\n{}"
         self.default_user_instructions = "Please write the next tactic now."
         
         self.stop_tokens = ["[END TACTIC]"]
@@ -20,7 +20,7 @@ Please start your response with '[START TACTIC]' and end it with '[END TACTIC]'"
     def get_prompt(self, history: list[dict[str, str]], problem_statement: str, theorem_statement: str, proof_state_render: str, tool_prompt: str) -> list[dict[str, str]]:
         if not history or history[0]["role"] != "system":
             history.insert(0, {"role": "system", "content": self.system_prompt})
-        problem_statements = self.problem_statement_message.format(problem_statement, theorem_statement)
+        problem_statements = string_utils.format_problem_statements(problem_statement, theorem_statement)
         instructions = tool_prompt if tool_prompt else self.default_user_instructions
         history.append({"role": "user", "content": f"{problem_statements}\n\n[CURRENT PROOF STATE]\n{proof_state_render}\n\n[INSTRUCTIONS]\n{instructions}"})
         return history
