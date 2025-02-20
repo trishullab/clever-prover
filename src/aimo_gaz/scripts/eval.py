@@ -4,7 +4,6 @@ import typing
 import logging
 import time
 import os
-import math
 import matplotlib.pyplot as plt
 from enum import Enum
 from itp_interface.rl.simple_proof_env import ProofEnv
@@ -63,19 +62,18 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: loggi
     logger = logger if logger is not None else logging.getLogger(__name__)
     solver = solver_cls() if solver is None else solver
 
+    TIME_ALLOWED_PER_PROBLEM = 600
+
     problem_type_statistics = {}
     category_statistics = {}
     proved = 0
     total = 0
     numerical_correct = 0
     numerical_total = 0
-    total_time_left = 9 * 60 * 60 - 1.5 * 650 # 600 is an upper bound on the startup time, as seen from kaggle test logs
     for exidx, ex in enumerate(data):
-        start_timer = time.time()
+        logger.info("---Starting Problem---")
 
         # Parsing Problem
-
-        logger.info("---Starting Problem---")
 
         natural_statement = ex.get("natural_statement", ex.get("problem", ex.get("Question")))
         assert natural_statement is not None, f"Natural statement not found in example: {ex}"
@@ -119,7 +117,7 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: loggi
 
         temp_proof_env = proof_utils.get_proof_env(lean4_project_folder, theorem_file_path, name)
         with ProofEnvWrapper(temp_proof_env) as proof_env_wrapper:
-            solver_ans, solver_formatted_ans = solver.solve(natural_statement, raw_theorem_statement, theorem_statement, problem_state, proof_env_wrapper, name, time_allowed = total_time_left // (50 - total))
+            solver_ans, solver_formatted_ans = solver.solve(natural_statement, raw_theorem_statement, theorem_statement, problem_state, proof_env_wrapper, name, time_allowed=TIME_ALLOWED_PER_PROBLEM)
             proof_env_done = proof_env_wrapper.proof_env.done
 
         if problem_type == ProblemType.FIND_NUMERICAL:
@@ -162,8 +160,6 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: loggi
             category_statistics.setdefault(category, {"proved": 0, "total": 0})
             category_statistics[category]["proved"] += int(proof_env_done)
             category_statistics[category]["total"] += 1
-
-        total_time_left -= math.ceil(time.time()-start_timer)
 
     return {
         "proved": proved,

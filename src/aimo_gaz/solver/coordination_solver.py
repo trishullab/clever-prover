@@ -117,18 +117,19 @@ class CoordinationSolver(Solver):
             proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env, solution_str)
             self._log_and_add_to_history_buffer(proof_state_render)
 
-        MAX_LOOPS = 10
-        loops_left = MAX_LOOPS
+        time_left = time_allowed
         end_loop = False
-        while loops_left > 0 and not end_loop:
-            loops_left -= 1
+        loop_num = 0
+        while time_left > 0 and not end_loop:
+            start_time = time.time()
+            loop_num += 1
 
             coordinator_error = False
             try:
                 tool_or_global_guess, tool_prompt, global_guess_temp = coordinator.solve_intermediate(self.history_buffer, problem_statement, theorem_statement, problem_state)
                 self.history_buffer.clear()
 
-                self._log_and_add_to_history_buffer(f"Loop {MAX_LOOPS - loops_left} / {MAX_LOOPS}: Coordinator chose tool: {None if tool_or_global_guess is None else tool_or_global_guess.value}")
+                self._log_and_add_to_history_buffer(f"Loop {loop_num}: Coordinator chose tool: {None if tool_or_global_guess is None else tool_or_global_guess.value}")
             except Exception as e:
                 self._log_and_add_to_history_buffer(f"Exception encountered in coordinator: {e}")
                 coordinator_error = True
@@ -239,8 +240,10 @@ class CoordinationSolver(Solver):
                     self._log_and_add_to_history_buffer(f"Globally guessing is invalid while formally proving the theorem.")
             else:
                 self._log_and_add_to_history_buffer(f"Coordinator-chosen tool '{tool_or_global_guess}' is invalid.")
+
+            time_left -= math.ceil(time.time() - start_time)
             
-            self.logger.info(f"End of loop {MAX_LOOPS - loops_left}. Loops left: {loops_left}\n")
+            self.logger.info(f"End of loop {loop_num}. Time left: {time_left}\n")
         
         coordinator.reset()
 
