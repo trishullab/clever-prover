@@ -187,7 +187,7 @@ class CoordinationSolver(Solver):
                     
                     prover.reset()
                 else:
-                    self._log_and_add_to_history_buffer(f"Prover tool is invalid while the problem's answer is still being guessed.") # TODO: this won't be needed later
+                    self._log_and_add_to_history_buffer(f"Exception: Prover tool is invalid while the problem's answer is still being guessed.") # TODO: this won't be needed later
             elif tool_or_global_guess == ToolOrGlobalGuess.LEAN4_EXECUTOR:
                 if problem_state == ProblemState.PROVING or problem_state == ProblemState.PROVING_AFTER_FINDING:
                     try:
@@ -205,7 +205,7 @@ class CoordinationSolver(Solver):
                         self.logger.info("Succesfully proved theorem, ending loop.")
                         end_loop = True
                 else:
-                    self._log_and_add_to_history_buffer(f"Lean 4 executor tool is invalid while the problem's answer is still being guessed.") # TODO: this won't be needed later
+                    self._log_and_add_to_history_buffer(f"Exception: Lean 4 executor tool is invalid while the problem's answer is still being guessed.") # TODO: this won't be needed later
             elif tool_or_global_guess == ToolOrGlobalGuess.GLOBAL_GUESS:
                 if problem_state == ProblemState.FINDING:
                     global_guess = global_guess_temp
@@ -237,13 +237,37 @@ class CoordinationSolver(Solver):
                     proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env, solution_str)
                     self._log_and_add_to_history_buffer(proof_state_render)
                 else:
-                    self._log_and_add_to_history_buffer(f"Globally guessing is invalid while formally proving the theorem.")
+                    self._log_and_add_to_history_buffer(f"Exception: Globally guessing is invalid while formally proving the theorem.")
+            elif tool_or_global_guess == ToolOrGlobalGuess.RE_GUESS:
+                if problem_state == ProblemState.PROVING_AFTER_FINDING:
+                    self._log_and_add_to_history_buffer(f"Coordinator chose to re-guess the answer.")
+
+                    problem_state = ProblemState.FINDING
+                    global_guess = None
+                    formatted_answer = None
+                    solution_str = None
+
+                    theorem_statement = string_utils.filter_theorem_statement(raw_theorem_statement) # TODO: don't redo this?
+
+                    temp_lean_file = tempfile.NamedTemporaryFile(mode="w+", suffix=".lean") # TODO: use original file?
+
+                    temp_lean_file.write(raw_theorem_statement)
+                    temp_lean_file.flush()
+
+                    lean4_project_folder = proof_env_wrapper.proof_env.dynamic_proof_executor_callback.project_folder
+                    temp_proof_env = proof_utils.get_proof_env(lean4_project_folder, temp_lean_file.name, name)
+                    proof_env_wrapper.swap_proof_env(temp_proof_env, temp_lean_file)
+                else:
+                    if problem_state == ProblemState.FINDING:
+                        self._log_and_add_to_history_buffer(f"Exception: Re-guessing is invalid while the problem's answer is still being guessed.")
+                    else:
+                        self._log_and_add_to_history_buffer(f"Exception: Re-guessing is invalid when the problem does not require an answer to be guessed.")
             else:
-                self._log_and_add_to_history_buffer(f"Coordinator-chosen tool '{tool_or_global_guess}' is invalid.")
+                self._log_and_add_to_history_buffer(f"Exception: Coordinator-chosen tool '{tool_or_global_guess}' is invalid.")
 
             time_left -= math.ceil(time.time() - start_time)
             
-            self.logger.info(f"End of loop {loop_num}. Time left: {time_left}\n") # TODO: let coordinator know time left?
+            self.logger.info(f"End of loop {loop_num}. Time left: {time_left} s\n") # TODO: let coordinator know time left?
         
         coordinator.reset()
 

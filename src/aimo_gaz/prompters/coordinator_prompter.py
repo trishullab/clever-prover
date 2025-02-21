@@ -56,6 +56,7 @@ Please output your chosen tool and prompt/tactic now."""
             for iter_tool in ToolOrGlobalGuess:
                 if tool_response == iter_tool.value:
                     tool = iter_tool
+                    break
             if not tool:
                 return None, None, None
             
@@ -68,10 +69,14 @@ Please output your chosen tool and prompt/tactic now."""
             
             return tool, tool_prompt, None
 
-        actual_guess_ind = response.rfind("[START GLOBAL GUESS]")
-        if actual_guess_ind != -1:
-            response = response[actual_guess_ind + len("[START GLOBAL GUESS]"):]
+        actual_global_guess_ind = response.rfind("[START GLOBAL GUESS]")
+        if actual_global_guess_ind != -1:
+            response = response[actual_global_guess_ind + len("[START GLOBAL GUESS]"):]
             return ToolOrGlobalGuess.GLOBAL_GUESS, None, response.strip()
+        
+        actual_re_guess_ind = response.rfind("[RE-GUESS]")
+        if actual_re_guess_ind != -1:
+            return ToolOrGlobalGuess.RE_GUESS, None, None
         
         return None, None, None
 

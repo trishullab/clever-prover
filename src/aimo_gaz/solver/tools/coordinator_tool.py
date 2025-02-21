@@ -7,13 +7,14 @@ from aimo_gaz.scripts.eval import ProblemState
 from aimo_gaz.utils import string_utils
 import logging
 
-class ToolOrGlobalGuess(Enum):
+class ToolOrGlobalGuess(Enum): # TODO: rename now due to re-guess?
     PLANNER = "planner"
     CODER = "coder"
     LLM_GUESSER = "llm_guesser"
-    GLOBAL_GUESS = "global_guess"
     PROVER = "prover"
     LEAN4_EXECUTOR = "lean4_executor"
+    GLOBAL_GUESS = "global_guess"
+    RE_GUESS = "re-guess"
 
 class CoordinatorTool(Tool):
     def __init__(self, model: Model, prompter: Prompter, format_answer_prompter: Prompter, logger: logging.Logger = None, **inference_kwargs):
