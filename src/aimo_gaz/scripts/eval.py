@@ -63,7 +63,7 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: loggi
     solver = solver_cls() if solver is None else solver
 
     # TIME_ALLOWED_PER_PROBLEM = 600
-    TIME_ALLOWED_PER_PROBLEM = 180
+    TIME_ALLOWED_PER_PROBLEM = 120
 
     problem_type_statistics = {}
     category_statistics = {}
@@ -118,7 +118,7 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: loggi
 
         temp_proof_env = proof_utils.get_proof_env(lean4_project_folder, theorem_file_path, name)
         with ProofEnvWrapper(temp_proof_env) as proof_env_wrapper:
-            solver_ans, solver_formatted_ans = solver.solve(natural_statement, raw_theorem_statement, theorem_statement, problem_state, proof_env_wrapper, name, time_allowed=TIME_ALLOWED_PER_PROBLEM)
+            solver_ans, solver_formatted_ans = solver.solve(natural_statement, raw_theorem_statement, theorem_statement, problem_state, proof_env_wrapper, theorem_file_path, name, time_allowed=TIME_ALLOWED_PER_PROBLEM)
             proof_env_done = proof_env_wrapper.proof_env.done
 
         if problem_type == ProblemType.FIND_NUMERICAL:

@@ -1,6 +1,6 @@
 import typing
 from aimo_gaz.prompters.prompter import Prompter
-from aimo_gaz.solver.tools.coordinator_tool import ToolOrGlobalGuess
+from aimo_gaz.solver.tools.coordinator_tool import ToolOrOther
 from aimo_gaz.scripts.eval import ProblemState
 from aimo_gaz.utils import string_utils
 
@@ -44,7 +44,7 @@ Please output your chosen tool and prompt/tactic now."""
 
         return history
 
-    def parse_response(self, response: str) -> typing.Tuple[ToolOrGlobalGuess, str, str]:
+    def parse_response(self, response: str) -> typing.Tuple[ToolOrOther, str, str]:
         actual_tool_ind = response.find("[START TOOL]")
         if actual_tool_ind != -1:
             tool_response = response[actual_tool_ind + len("[START TOOL]"):]
@@ -53,7 +53,7 @@ Please output your chosen tool and prompt/tactic now."""
                 tool_response = tool_response[:actual_tool_ind]
             tool_response = tool_response.strip()
             tool = None
-            for iter_tool in ToolOrGlobalGuess:
+            for iter_tool in ToolOrOther:
                 if tool_response == iter_tool.value:
                     tool = iter_tool
                     break
@@ -61,7 +61,7 @@ Please output your chosen tool and prompt/tactic now."""
                 return None, None, None
             
             tool_prompt = None
-            start_prompt_token = "[START TACTIC]" if tool == ToolOrGlobalGuess.LEAN4_EXECUTOR else "[START PROMPT]" # TODO: output error if lean4_executor doesn't have TACTIC token
+            start_prompt_token = "[START TACTIC]" if tool == ToolOrOther.LEAN4_EXECUTOR else "[START PROMPT]" # TODO: output error if lean4_executor doesn't have TACTIC token
             actual_tool_prompt_ind = response.rfind(start_prompt_token)
             if actual_tool_prompt_ind != -1:
                 tool_prompt_response = response[actual_tool_prompt_ind + len(start_prompt_token):]
@@ -72,11 +72,11 @@ Please output your chosen tool and prompt/tactic now."""
         actual_global_guess_ind = response.rfind("[START GLOBAL GUESS]")
         if actual_global_guess_ind != -1:
             response = response[actual_global_guess_ind + len("[START GLOBAL GUESS]"):]
-            return ToolOrGlobalGuess.GLOBAL_GUESS, None, response.strip()
+            return ToolOrOther.GLOBAL_GUESS, None, response.strip()
         
         actual_re_guess_ind = response.rfind("[RE-GUESS]")
         if actual_re_guess_ind != -1:
-            return ToolOrGlobalGuess.RE_GUESS, None, None
+            return ToolOrOther.RE_GUESS, None, None
         
         return None, None, None
 

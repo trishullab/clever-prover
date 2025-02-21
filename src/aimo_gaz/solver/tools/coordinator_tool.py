@@ -7,7 +7,7 @@ from aimo_gaz.scripts.eval import ProblemState
 from aimo_gaz.utils import string_utils
 import logging
 
-class ToolOrGlobalGuess(Enum): # TODO: rename now due to re-guess?
+class ToolOrOther(Enum):
     PLANNER = "planner"
     CODER = "coder"
     LLM_GUESSER = "llm_guesser"
@@ -30,7 +30,7 @@ class CoordinatorTool(Tool):
         self.inference_kwargs["stop"] = prompter.stop_tokens
         self.history = []
 
-    def solve_intermediate(self, history_buffer: list[str], problem_statement: str, theorem_statement: str, problem_state: ProblemState) -> typing.Tuple[ToolOrGlobalGuess, str, float]:
+    def solve_intermediate(self, history_buffer: list[str], problem_statement: str, theorem_statement: str, problem_state: ProblemState) -> typing.Tuple[ToolOrOther, str, float]:
         if not self.model.is_loaded():
             self.model.__enter__()
         # Prompt the model for the tool

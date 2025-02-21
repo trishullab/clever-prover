@@ -16,7 +16,7 @@ from aimo_gaz.solver.tools.code_tool import CodeTool
 from aimo_gaz.solver.tools.llm_guesser_tool import LLMGuesserTool
 from aimo_gaz.solver.tools.prover_tool import ProverTool
 from aimo_gaz.solver.tools.lean4_executor_tool import Lean4ExecutorTool
-from aimo_gaz.solver.tools.coordinator_tool import ToolOrGlobalGuess
+from aimo_gaz.solver.tools.coordinator_tool import ToolOrOther
 from aimo_gaz.scripts.eval import ProblemState, ProofEnvWrapper
 from aimo_gaz.utils import string_utils, proof_utils
 from enum import Enum
@@ -97,7 +97,7 @@ class CoordinationSolver(Solver):
         self.history_buffer.append(message)
 
 
-    def _coordinator_tool_history_loop(self, problem_statement: str, raw_theorem_statement: str, theorem_statement: str, problem_state: ProblemState, proof_env_wrapper: ProofEnvWrapper, name: str, time_allowed: int) -> float:
+    def _coordinator_tool_history_loop(self, problem_statement: str, raw_theorem_statement: str, orig_theorem_statement: str, problem_state: ProblemState, proof_env_wrapper: ProofEnvWrapper, orig_theorem_file_path: str, name: str, time_allowed: int) -> float:
         assert len(self.tools) > 0, "No tools provided."
         assert "llm_guesser" in self.tools, "LLM guesser tool not provided."
 
@@ -113,6 +113,8 @@ class CoordinationSolver(Solver):
         formatted_answer = None
         solution_str = None
 
+        theorem_statement = orig_theorem_statement
+
         if problem_state == ProblemState.PROVING or problem_state == ProblemState.PROVING_AFTER_FINDING:
             proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env, solution_str)
             self._log_and_add_to_history_buffer(proof_state_render)
@@ -126,17 +128,17 @@ class CoordinationSolver(Solver):
 
             coordinator_error = False
             try:
-                tool_or_global_guess, tool_prompt, global_guess_temp = coordinator.solve_intermediate(self.history_buffer, problem_statement, theorem_statement, problem_state)
+                tool_or_other, tool_prompt, global_guess_temp = coordinator.solve_intermediate(self.history_buffer, problem_statement, theorem_statement, problem_state)
                 self.history_buffer.clear()
 
-                self._log_and_add_to_history_buffer(f"Loop {loop_num}: Coordinator chose tool: {None if tool_or_global_guess is None else tool_or_global_guess.value}")
+                self._log_and_add_to_history_buffer(f"Loop {loop_num}: Coordinator chose: {None if tool_or_other is None else tool_or_other.value}")
             except Exception as e:
                 self._log_and_add_to_history_buffer(f"Exception encountered in coordinator: {e}")
                 coordinator_error = True
 
             if coordinator_error:
                 pass
-            elif tool_or_global_guess == ToolOrGlobalGuess.PLANNER:
+            elif tool_or_other == ToolOrOther.PLANNER:
                 try:
                     plan = planner.solve_intermediate(problem_statement, theorem_statement, tool_prompt)
 
@@ -145,7 +147,7 @@ class CoordinationSolver(Solver):
                     self._log_and_add_to_history_buffer(f"Exception encountered in planner: {e}")
 
                 planner.reset()
-            elif tool_or_global_guess == ToolOrGlobalGuess.CODER:
+            elif tool_or_other == ToolOrOther.CODER:
                 code = None
                 try:
                     code = coder.solve_intermediate(problem_statement, theorem_statement, tool_prompt)
@@ -166,7 +168,7 @@ class CoordinationSolver(Solver):
                 
                 coder.reset()
                 executor.reset()
-            elif tool_or_global_guess == ToolOrGlobalGuess.LLM_GUESSER:
+            elif tool_or_other == ToolOrOther.LLM_GUESSER:
                 try:
                     guess = llm_guesser.solve_intermediate(problem_statement, theorem_statement, tool_prompt)
 
@@ -175,7 +177,7 @@ class CoordinationSolver(Solver):
                     self._log_and_add_to_history_buffer(f"Exception encountered in LLM guesser: {e}")
 
                 llm_guesser.reset()
-            elif tool_or_global_guess == ToolOrGlobalGuess.PROVER:
+            elif tool_or_other == ToolOrOther.PROVER:
                 if problem_state == ProblemState.PROVING or problem_state == ProblemState.PROVING_AFTER_FINDING:
                     try:
                         proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env, solution_str)
@@ -188,7 +190,7 @@ class CoordinationSolver(Solver):
                     prover.reset()
                 else:
                     self._log_and_add_to_history_buffer(f"Exception: Prover tool is invalid while the problem's answer is still being guessed.") # TODO: this won't be needed later
-            elif tool_or_global_guess == ToolOrGlobalGuess.LEAN4_EXECUTOR:
+            elif tool_or_other == ToolOrOther.LEAN4_EXECUTOR:
                 if problem_state == ProblemState.PROVING or problem_state == ProblemState.PROVING_AFTER_FINDING:
                     try:
                         tactic = tool_prompt
@@ -206,7 +208,7 @@ class CoordinationSolver(Solver):
                         end_loop = True
                 else:
                     self._log_and_add_to_history_buffer(f"Exception: Lean 4 executor tool is invalid while the problem's answer is still being guessed.") # TODO: this won't be needed later
-            elif tool_or_global_guess == ToolOrGlobalGuess.GLOBAL_GUESS:
+            elif tool_or_other == ToolOrOther.GLOBAL_GUESS:
                 if problem_state == ProblemState.FINDING:
                     global_guess = global_guess_temp
                     self._log_and_add_to_history_buffer(f"Coordinator output global guess: {global_guess}")
@@ -238,7 +240,7 @@ class CoordinationSolver(Solver):
                     self._log_and_add_to_history_buffer(proof_state_render)
                 else:
                     self._log_and_add_to_history_buffer(f"Exception: Globally guessing is invalid while formally proving the theorem.")
-            elif tool_or_global_guess == ToolOrGlobalGuess.RE_GUESS:
+            elif tool_or_other == ToolOrOther.RE_GUESS:
                 if problem_state == ProblemState.PROVING_AFTER_FINDING:
                     self._log_and_add_to_history_buffer(f"Coordinator chose to re-guess the answer.")
 
@@ -247,23 +249,18 @@ class CoordinationSolver(Solver):
                     formatted_answer = None
                     solution_str = None
 
-                    theorem_statement = string_utils.filter_theorem_statement(raw_theorem_statement) # TODO: don't redo this?
-
-                    temp_lean_file = tempfile.NamedTemporaryFile(mode="w+", suffix=".lean") # TODO: use original file?
-
-                    temp_lean_file.write(raw_theorem_statement)
-                    temp_lean_file.flush()
+                    theorem_statement = orig_theorem_statement
 
                     lean4_project_folder = proof_env_wrapper.proof_env.dynamic_proof_executor_callback.project_folder
-                    temp_proof_env = proof_utils.get_proof_env(lean4_project_folder, temp_lean_file.name, name)
-                    proof_env_wrapper.swap_proof_env(temp_proof_env, temp_lean_file)
+                    orig_proof_env = proof_utils.get_proof_env(lean4_project_folder, orig_theorem_file_path, name)
+                    proof_env_wrapper.swap_proof_env(orig_proof_env, None)
                 else:
                     if problem_state == ProblemState.FINDING:
                         self._log_and_add_to_history_buffer(f"Exception: Re-guessing is invalid while the problem's answer is still being guessed.")
                     else:
                         self._log_and_add_to_history_buffer(f"Exception: Re-guessing is invalid when the problem does not require an answer to be guessed.")
             else:
-                self._log_and_add_to_history_buffer(f"Exception: Coordinator-chosen tool '{tool_or_global_guess}' is invalid.")
+                self._log_and_add_to_history_buffer(f"Exception: Coordinator-chosen tool '{tool_or_other}' is invalid.")
 
             time_left -= math.ceil(time.time() - start_time)
             
@@ -506,7 +503,7 @@ Choices:
                     answer = random.choice(answers)
             return answer
 
-    def solve(self, problem_statement: str, raw_theorem_statement: str, theorem_statement: str, problem_state: ProblemState, proof_env_wrapper: ProofEnvWrapper, name: str, time_allowed: int) -> typing.Tuple[bool, str]:
+    def solve(self, problem_statement: str, raw_theorem_statement: str, orig_theorem_statement: str, problem_state: ProblemState, proof_env_wrapper: ProofEnvWrapper, orig_theorem_file_path: str, name: str, time_allowed: int) -> typing.Tuple[bool, str]:
         assert len(self.tools) > 0, "No tools provided."
         self.start_time = time.time()
         self.logger.info(f"Starting to solve problem:\n{problem_statement}")
@@ -515,7 +512,7 @@ Choices:
             if self.strategy == CoordinationSolverStrategy.PLAN_CODE_EXEC_EXRACT_LAST_MAJ_VOTE:
                 answer = self._plan_code_exec_extract_last_maj_vote(problem_statement, time_allowed)
             elif self.strategy == CoordinationSolverStrategy.COORDINATOR_TOOL_HISTORY_LOOP:
-                answer = self._coordinator_tool_history_loop(problem_statement, raw_theorem_statement, theorem_statement, problem_state, proof_env_wrapper, name, time_allowed)
+                answer = self._coordinator_tool_history_loop(problem_statement, raw_theorem_statement, orig_theorem_statement, problem_state, proof_env_wrapper, orig_theorem_file_path, name, time_allowed)
             else:
                 raise NotImplementedError(f"Strategy {self.strategy} is not implemented.")
         except Exception as e:
