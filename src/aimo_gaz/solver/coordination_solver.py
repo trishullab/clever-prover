@@ -138,6 +138,8 @@ class CoordinationSolver(Solver):
 
             if coordinator_error:
                 pass
+            elif tool_or_other is None:
+                self._log_and_add_to_history_buffer("Exception: Coordinator output must include the token '[START TOOL]' (with a valid tool name), '[START GLOBAL GUESS]', or '[RE-GUESS]'") # TODO: maybe move this error inside coordinator prompter
             elif tool_or_other == ToolOrOther.PLANNER:
                 try:
                     plan = planner.solve_intermediate(problem_statement, theorem_statement, tool_prompt)
@@ -189,25 +191,28 @@ class CoordinationSolver(Solver):
                     
                     prover.reset()
                 else:
-                    self._log_and_add_to_history_buffer(f"Exception: Prover tool is invalid while the problem's answer is still being guessed.") # TODO: this won't be needed later
+                    self._log_and_add_to_history_buffer("Exception: Prover tool is invalid while the problem's answer is still being guessed.") # TODO: this won't be needed later
             elif tool_or_other == ToolOrOther.LEAN4_EXECUTOR:
                 if problem_state == ProblemState.PROVING or problem_state == ProblemState.PROVING_AFTER_FINDING:
-                    try:
-                        tactic = tool_prompt
-                        lean4_executor.solve_intermediate(proof_env_wrapper.proof_env, tactic)
+                    if tool_prompt is not None:
+                        try:
+                            tactic = tool_prompt
+                            lean4_executor.solve_intermediate(proof_env_wrapper.proof_env, tactic)
+                            
+                            proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env, solution_str)
+                            self._log_and_add_to_history_buffer(f"Lean 4 executor executed tactic: {tactic}\n\n{proof_state_render}")
+                        except Exception as e:
+                            self._log_and_add_to_history_buffer(f"Exception encountered in Lean 4 executor: {e}")
                         
-                        proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env, solution_str)
-                        self._log_and_add_to_history_buffer(f"Lean 4 executor executed tactic: {tactic}\n\n{proof_state_render}")
-                    except Exception as e:
-                        self._log_and_add_to_history_buffer(f"Exception encountered in Lean 4 executor: {e}")
-                    
-                    lean4_executor.reset()
-                    
-                    if proof_env_wrapper.proof_env.done:
-                        self.logger.info("Succesfully proved theorem, ending loop.")
-                        end_loop = True
+                        lean4_executor.reset()
+                        
+                        if proof_env_wrapper.proof_env.done:
+                            self.logger.info("Succesfully proved theorem, ending loop.")
+                            end_loop = True
+                    else:
+                        self._log_and_add_to_history_buffer("Exception: When using the Lean 4 executor tool, you must output the tactic between the tokens '[START TACTIC]' and '[END TACTIC]'") # TODO: maybe move this error inside coordinator prompter
                 else:
-                    self._log_and_add_to_history_buffer(f"Exception: Lean 4 executor tool is invalid while the problem's answer is still being guessed.") # TODO: this won't be needed later
+                    self._log_and_add_to_history_buffer("Exception: Lean 4 executor tool is invalid while the problem's answer is still being guessed.") # TODO: this won't be needed later
             elif tool_or_other == ToolOrOther.GLOBAL_GUESS:
                 if problem_state == ProblemState.FINDING:
                     global_guess = global_guess_temp
@@ -238,6 +243,7 @@ class CoordinationSolver(Solver):
 
                     proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env, solution_str)
                     self._log_and_add_to_history_buffer(proof_state_render)
+                    self._log_and_add_to_history_buffer("Please proceed by first using the 'lean4_executor' tool with the 'rw' tactic to rewrite the solution into the proof statement like so: 'rw [solution]'")
                 else:
                     self._log_and_add_to_history_buffer(f"Exception: Globally guessing is invalid while formally proving the theorem.")
             elif tool_or_other == ToolOrOther.RE_GUESS:
