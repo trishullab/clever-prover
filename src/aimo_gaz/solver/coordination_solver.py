@@ -6,6 +6,7 @@ import random
 import copy
 import tempfile
 from sympy import *
+from itp_interface.rl.simple_proof_env import ProofAction
 from aimo_gaz.solver.abs_solver_and_tool import Solver, Tool
 from aimo_gaz.solver.tools.old_planner_tool import OldPlannerTool
 from aimo_gaz.solver.tools.old_code_tool import OldCodeTool
@@ -240,7 +241,14 @@ class CoordinationSolver(Solver):
 
                     proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env)
                     self._log_and_add_to_history_buffer(proof_state_render)
-                    # self._log_and_add_to_history_buffer("Please proceed by first using the 'rw' tactic to rewrite the solution into the proof statement like so: 'rw [solution]'") # TODO: replace this
+
+                    rw_tactic = f"rw [{name}_solution]"
+                    self._log_and_add_to_history_buffer(f"Automatically executing tactic '{rw_tactic}' to rewrite the solution into the proof statement.")
+                    action = ProofAction(ProofAction.ActionType.RUN_TACTIC, ProofAction.Language.LEAN4, tactics=[rw_tactic]) # TODO: take solution name from theorem statement instead of hardcoding
+                    proof_env_wrapper.proof_env.step(action)
+
+                    proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env)
+                    self._log_and_add_to_history_buffer(proof_state_render)
                 else:
                     self._log_and_add_to_history_buffer(f"Exception: Globally guessing is invalid while formally proving the theorem.")
             elif tool_or_other == ToolOrOther.RE_GUESS:

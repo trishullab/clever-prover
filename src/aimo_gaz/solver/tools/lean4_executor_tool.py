@@ -1,4 +1,4 @@
-from itp_interface.rl.simple_proof_env import ProofAction, ProofEnv
+from itp_interface.rl.simple_proof_env import ProofEnv, ProofAction
 from aimo_gaz.solver.abs_solver_and_tool import Tool
 import logging
 import hydra
