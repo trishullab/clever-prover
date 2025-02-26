@@ -240,7 +240,7 @@ class CoordinationSolver(Solver):
 
                     proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env)
                     self._log_and_add_to_history_buffer(proof_state_render)
-                    # self._log_and_add_to_history_buffer("Please proceed by first using the 'rw' tactic to rewrite the solution into the proof statement like so: 'rw [solution]'")
+                    # self._log_and_add_to_history_buffer("Please proceed by first using the 'rw' tactic to rewrite the solution into the proof statement like so: 'rw [solution]'") # TODO: replace this
                 else:
                     self._log_and_add_to_history_buffer(f"Exception: Globally guessing is invalid while formally proving the theorem.")
             elif tool_or_other == ToolOrOther.RE_GUESS:
