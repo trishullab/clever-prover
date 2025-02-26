@@ -58,7 +58,7 @@ def render_proof_env(proof_env: ProofEnv) -> str:
     if proof_env._history: # TODO: pass in info instead of taking from history
         _, _, _, _, _, info = proof_env._history[-1]
         render_list.append("")
-        render_list.append(f"Info: {info.to_json()}")
+        render_list.append(f"Info: {info.to_json()}") # TODO: improve this formatting to be clearer, include previous tactic?
     return "\n".join(render_list)
 
     # if len(proof_env._history) == 0:
