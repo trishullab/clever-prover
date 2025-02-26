@@ -46,7 +46,7 @@ def parse_example_prompt_list(example_prompt_str: str) -> list[dict[str, str]]:
     return example_prompt_list
 
 def render_proof_env(proof_env: ProofEnv) -> str:
-    render_list = ["[PROOF STATE]"] # TODO: maybe remove [MESSAGE] or [CURRENT PROOF STATE] that always appears before this
+    render_list = ["[PROOF STATE]"] # TODO: maybe remove [MESSAGE] that appears before this
     goals_list = proof_env.state.training_data_format.start_goals
     for i in range(len(goals_list)):
         if i > 0:
