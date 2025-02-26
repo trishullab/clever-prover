@@ -45,7 +45,7 @@ Please output your chosen tool and prompt/tactic now."""
         return history
 
     def parse_response(self, response: str) -> typing.Tuple[ToolOrOther, str, str]:
-        # this silently fixes a common error
+        # this silently fixes a common error # TODO: maybe delete this special case after adjusting rewrite command?
         has_tactic = False
         if response.find("[START TACTIC]") != -1:
             has_tactic = True
