@@ -1,26 +1,29 @@
 import typing
 from abc import ABC, abstractmethod
+from aimo_gaz.utils import string_utils
 
 class Prompter(ABC):
     def __init__(self,
         system_prompt_path: str = None,
         example_prompt_path: str = None,
         system_prompt: str = None,
-        example_prompt: str = None,
-        append_system_prompt_after_every_message: bool = False
+        example_prompt_list: list[dict[str, str]] = None,
+        append_system_prompt_after_every_message: bool = False,
     ):
-        # assert not all([_ is None for _ in [system_prompt_path, system_prompt]]) and not all([_ is None for _ in [example_prompt_path, example_prompt]]), "Either system_prompt_path or system_prompt must be provided, and either example_prompt_path or example_prompt must be provided."
+        # assert not all([_ is None for _ in [system_prompt_path, system_prompt]]) and not all([_ is None for _ in [example_prompt_path, example_prompt_list]]), "Either system_prompt_path or system_prompt must be provided, and either example_prompt_path or example_prompt_list must be provided."
+        assert not all([_ is None for _ in [system_prompt_path, system_prompt]]), "Either system_prompt_path or system_prompt must be provided."
         self.system_prompt_path = system_prompt_path
         self.example_prompt_path = example_prompt_path
         self.system_prompt = system_prompt
         self.append_system_prompt_after_every_message = append_system_prompt_after_every_message
-        self.example_prompt = example_prompt
+        self.example_prompt_list = example_prompt_list
         if self.system_prompt is None and self.system_prompt_path is not None:
             with open(self.system_prompt_path, "r") as f:
                 self.system_prompt = f.read()
-        if self.example_prompt is None and self.example_prompt_path is not None:
+        if self.example_prompt_list is None and self.example_prompt_path is not None:
             with open(self.example_prompt_path, "r") as f:
-                self.example_prompt = f.read()
+                example_prompt_str = f.read()
+                self.example_prompt_list = string_utils.parse_example_prompt_list(example_prompt_str)
         
         self.stop_tokens = []
 
@@ -64,13 +67,13 @@ class Prompter(ABC):
     def parse_response(self, response: str):
         pass
 
-    def reset_example_prompt(self, example_prompt: str = None, example_prompt_path: str = None):
-        assert not all([_ is None for _ in [example_prompt_path, example_prompt]]), "Either example_prompt_path or example_prompt must be provided."
+    def reset_example_prompt(self, example_prompt_list: list[dict[str, str]] = None, example_prompt_path: str = None):
+        assert not all([_ is None for _ in [example_prompt_path, example_prompt_list]]), "Either example_prompt_path or example_prompt_list must be provided."
         self.example_prompt_path = example_prompt_path
-        self.example_prompt = example_prompt
-        if self.example_prompt is None:
+        self.example_prompt_list = example_prompt_list
+        if self.example_prompt_list is None:
             with open(self.example_prompt_path, "r") as f:
-                self.example_prompt = f.read()
+                self.example_prompt_list = f.read()
     
     def reset_system_prompt(self, system_prompt: str = None, system_prompt_path: str = None):
         assert not all([_ is None for _ in [system_prompt_path, system_prompt]]), "Either system_prompt_path or system_prompt must be provided."

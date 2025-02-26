@@ -62,7 +62,6 @@ class CoordinationSolver(Solver):
     def __exit__(self, exc_type, exc_val, exc_tb):
         for tool in self.tools.values():
             tool.__exit__(exc_type, exc_val, exc_tb)
-        pass
 
     def reset(self):
         for tool in self.tools.values():
@@ -111,12 +110,11 @@ class CoordinationSolver(Solver):
 
         global_guess = None
         formatted_answer = None
-        solution_str = None
 
         theorem_statement = orig_theorem_statement
 
         if problem_state == ProblemState.PROVING or problem_state == ProblemState.PROVING_AFTER_FINDING:
-            proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env, solution_str)
+            proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env)
             self._log_and_add_to_history_buffer(proof_state_render)
 
         time_left = time_allowed
@@ -182,7 +180,7 @@ class CoordinationSolver(Solver):
             elif tool_or_other == ToolOrOther.PROVER:
                 if problem_state == ProblemState.PROVING or problem_state == ProblemState.PROVING_AFTER_FINDING:
                     try:
-                        proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env, solution_str)
+                        proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env)
                         tactic = prover.solve_intermediate(problem_statement, theorem_statement, proof_state_render, tool_prompt)
 
                         self._log_and_add_to_history_buffer(f"Prover output tactic: {tactic}")
@@ -199,7 +197,7 @@ class CoordinationSolver(Solver):
                             tactic = tool_prompt
                             lean4_executor.solve_intermediate(proof_env_wrapper.proof_env, tactic)
                             
-                            proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env, solution_str)
+                            proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env)
                             self._log_and_add_to_history_buffer(f"Lean 4 executor executed tactic: {tactic}\n\n{proof_state_render}")
                         except Exception as e:
                             self._log_and_add_to_history_buffer(f"Exception encountered in Lean 4 executor: {e}")
@@ -239,11 +237,10 @@ class CoordinationSolver(Solver):
                     proof_env_wrapper.swap_proof_env(temp_proof_env, temp_lean_file)
 
                     problem_state = ProblemState.PROVING_AFTER_FINDING
-                    solution_str = formatted_answer
 
-                    proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env, solution_str)
+                    proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env)
                     self._log_and_add_to_history_buffer(proof_state_render)
-                    self._log_and_add_to_history_buffer("Please proceed by first using the 'lean4_executor' tool with the 'rw' tactic to rewrite the solution into the proof statement like so: 'rw [solution]'")
+                    # self._log_and_add_to_history_buffer("Please proceed by first using the 'rw' tactic to rewrite the solution into the proof statement like so: 'rw [solution]'")
                 else:
                     self._log_and_add_to_history_buffer(f"Exception: Globally guessing is invalid while formally proving the theorem.")
             elif tool_or_other == ToolOrOther.RE_GUESS:
@@ -253,7 +250,6 @@ class CoordinationSolver(Solver):
                     problem_state = ProblemState.FINDING
                     global_guess = None
                     formatted_answer = None
-                    solution_str = None
 
                     theorem_statement = orig_theorem_statement
 

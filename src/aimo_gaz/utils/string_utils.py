@@ -1,6 +1,6 @@
 from itp_interface.rl.simple_proof_env import ProofEnv
 
-def parse_float(input: str):
+def parse_float(input: str) -> float:
     try:
         return float(input)
     except:
@@ -27,8 +27,26 @@ def history_to_str(history: list[dict[str, str]]) -> str:
 def format_problem_statements(problem_statement: str, theorem_statement: str) -> str:
     return f"[PROBLEM STATEMENT]\n{problem_statement}\n\n[LEAN 4 THEOREM STATEMENT]\n{theorem_statement}"
 
-def render_proof_env(proof_env: ProofEnv, solution_str: str) -> str:
-    render_list = ["[PROOF STATE]"] # TODO: maybe remove [MESSAGE] that always appears before this
+def parse_example_prompt_list(example_prompt_str: str) -> list[dict[str, str]]:
+    example_prompt_list = []
+    curr_ind = example_prompt_str.find("`example_user`")
+    i = 0
+    while curr_ind != -1:
+        curr_name = "example_user" if i % 2 == 0 else "example_assistant"
+        curr_ind += len(f"`{curr_name}`")
+        next_name = "example_assistant" if i % 2 == 0 else "example_user"
+        next_ind = example_prompt_str.find(f"`{next_name}`", curr_ind)
+        if next_ind != -1:
+            content = example_prompt_str[curr_ind:next_ind].strip()
+        else:
+            content = example_prompt_str[curr_ind:].strip()
+        example_prompt_list.append({"role": "system", "name": curr_name, "content": content})
+        curr_ind = next_ind
+        i += 1
+    return example_prompt_list
+
+def render_proof_env(proof_env: ProofEnv) -> str:
+    render_list = ["[PROOF STATE]"] # TODO: maybe remove [MESSAGE] or [CURRENT PROOF STATE] that always appears before this
     goals_list = proof_env.state.training_data_format.start_goals
     for i in range(len(goals_list)):
         if i > 0:

@@ -126,7 +126,7 @@ if __name__ == "__main__":
     }
     # model = Model(model_name_or_path, model_logging_dir, **model_args)
     model = GptModel(model_name)
-    prompter = OldCodePrompter(system_prompt="", example_prompt="") # These are hard-coded in the class anyway
+    prompter = OldCodePrompter(system_prompt="", example_prompt_list=[]) # These are hard-coded in the class anyway
     tool = OldCodeTool(model, prompter, logger, **inference_args)
     problem_statement = "Find the value of x in the equation 2x + 3 = 7."
     with tool:

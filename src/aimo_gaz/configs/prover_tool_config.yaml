@@ -10,6 +10,7 @@ solver_or_tool_args:
 prompter_config:
   prompter_type: ProverPrompter
   system_prompt_path: prompts/prover_system_prompt.txt
+  example_prompt_path: prompts/prover_example_prompt.md
 # inference_settings:
 #   stop:
 #     - '[END TACTIC]'

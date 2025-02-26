@@ -12,7 +12,6 @@ def test_solver(solver: Solver):
         ans = solver.solve(problem)
         print(ans)
         problem = input("Enter a math problem to solve: ")
-    pass
 
 # @hydra.main(config_path="configs/", config_name="coordination_solver_config_pceelmv", version_base="1.2")
 @hydra.main(config_path="configs/", config_name="coordination_solver_config_cthl", version_base="1.2")

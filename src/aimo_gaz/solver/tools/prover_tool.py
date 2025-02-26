@@ -19,7 +19,7 @@ class ProverTool(Tool): # TODO: ignoring all actions other than RUN_TACTIC for n
         self.inference_kwargs["stop"] = prompter.stop_tokens
         self.history = []
 
-    def solve_intermediate(self, problem_statement: str, theorem_statement: str, proof_state_render: str, tool_prompt: str) -> str: # TODO: maybe make solution_str part of proof_env instead of passing it separately
+    def solve_intermediate(self, problem_statement: str, theorem_statement: str, proof_state_render: str, tool_prompt: str) -> str:
         if not self.model.is_loaded():
             self.model.__enter__()
         # Prompt the model for the tactic

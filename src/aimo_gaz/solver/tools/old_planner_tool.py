@@ -117,14 +117,14 @@ if __name__ == "__main__":
         #     "speculative_model": "deepseek-ai/deepseek-coder-1.3b-instruct", "num_speculative_tokens": 5, "use_v2_block_manager": True
         # }
         # model = vLLMHarness.load_from_config(model_name_or_path, vllm_model_args, vllm_inference_args)
-        # prompt = OldPlannerPrompter(system_prompt="", example_prompt="")  # These are hard-coded in the class anyway
+        # prompt = OldPlannerPrompter(system_prompt="", example_prompt=[])  # These are hard-coded in the class anyway
         # problem_statement = "There exists a unique increasing geometric sequence of five 2-digit positive integers. What is their sum?"
         # tool = OldPlannerTool(model, prompt)
         assert False
     else:
         # model = GptModel(model_name_or_path, model_logging_dir, **model_args)
         model = GptModel(model_name)
-        prompter = OldPlannerPrompter(system_prompt="", example_prompt="")  # These are hard-coded in the class anyway
+        prompter = OldPlannerPrompter(system_prompt="", example_prompt=[])  # These are hard-coded in the class anyway
         problem_statement = "There exists a unique increasing geometric sequence of five 2-digit positive integers. What is their sum?"
         tool = OldPlannerTool(model, prompter, logger, **inference_args)
 

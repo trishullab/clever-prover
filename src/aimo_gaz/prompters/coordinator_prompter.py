@@ -6,8 +6,8 @@ from aimo_gaz.utils import string_utils
 
 class CoordinatorPrompter(Prompter):
     def __init__(self, system_prompt_path: str = None, example_prompt_path: str = None, system_prompt: str = None,
-                 example_prompt: str = None, append_system_prompt_after_every_message: bool = False):
-        super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt,
+                 example_prompt_list: list[dict[str, str]] = None, append_system_prompt_after_every_message: bool = False):
+        super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt_list,
                          append_system_prompt_after_every_message)
         assert self.system_prompt is not None # TODO: add examples
         self.user_instructions_find = """This problem requires an answer to be inserted. Please choose tools that will help you find the answer.
@@ -45,20 +45,27 @@ Please output your chosen tool and prompt/tactic now."""
         return history
 
     def parse_response(self, response: str) -> typing.Tuple[ToolOrOther, str, str]:
+        # this silently fixes a common error
+        has_tactic = False
+        if response.find("[START TACTIC]") != -1:
+            has_tactic = True
+            tool = ToolOrOther.LEAN4_EXECUTOR
+        
         actual_tool_ind = response.find("[START TOOL]")
-        if actual_tool_ind != -1:
-            tool_response = response[actual_tool_ind + len("[START TOOL]"):]
-            actual_tool_ind = tool_response.find("[END TOOL]")
-            if actual_tool_ind != -1:
-                tool_response = tool_response[:actual_tool_ind]
-            tool_response = tool_response.strip()
-            tool = None
-            for iter_tool in ToolOrOther:
-                if tool_response == iter_tool.value:
-                    tool = iter_tool
-                    break
-            if not tool:
-                return None, None, None
+        if actual_tool_ind != -1 or has_tactic:
+            if not has_tactic:
+                tool_response = response[actual_tool_ind + len("[START TOOL]"):]
+                actual_tool_ind = tool_response.find("[END TOOL]")
+                if actual_tool_ind != -1:
+                    tool_response = tool_response[:actual_tool_ind]
+                tool_response = tool_response.strip()
+                tool = None
+                for iter_tool in ToolOrOther:
+                    if tool_response == iter_tool.value:
+                        tool = iter_tool
+                        break
+                if not tool:
+                    return None, None, None
             
             tool_prompt = None
             start_prompt_token = "[START TACTIC]" if tool == ToolOrOther.LEAN4_EXECUTOR else "[START PROMPT]"
