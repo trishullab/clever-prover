@@ -18,7 +18,8 @@ class ProverPrompter(Prompter):
             history[1:1] = self.example_prompt_list
         problem_statements = string_utils.format_problem_statements(problem_statement, theorem_statement)
         instructions = tool_prompt if tool_prompt else self.default_user_instructions
-        history.append({"role": "user", "content": f"{problem_statements}\n\n{proof_state_render}\n\n[INSTRUCTIONS]\n{instructions}"})
+        # history.append({"role": "user", "content": f"{problem_statements}\n\n{proof_state_render}\n\n[INSTRUCTIONS]\n{instructions}"}) # TODO: decide whether to include problem_statements (in which case we need to adjust examples)
+        history.append({"role": "user", "content": f"{proof_state_render}\n\n[INSTRUCTIONS]\n{instructions}"})
         return history
 
     def parse_response(self, response: str) -> str:
