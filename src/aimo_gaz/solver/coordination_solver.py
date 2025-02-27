@@ -184,7 +184,7 @@ class CoordinationSolver(Solver):
                         proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env)
                         tactic = prover.solve_intermediate(problem_statement, theorem_statement, proof_state_render, tool_prompt)
 
-                        self._log_and_add_to_history_buffer(f"Prover output tactic: {tactic}")
+                        self._log_and_add_to_history_buffer(f"Prover output tactic:\n[TACTIC]\n{tactic}") # TODO: add this type of token scaffolding to all other output messages (and exceptions?)
                     except Exception as e:
                         self._log_and_add_to_history_buffer(f"Exception encountered in prover: {e}")
                     
@@ -199,7 +199,7 @@ class CoordinationSolver(Solver):
                             lean4_executor.solve_intermediate(proof_env_wrapper.proof_env, tactic)
                             
                             proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env)
-                            self._log_and_add_to_history_buffer(f"Lean 4 executor executed tactic: {tactic}\n\n{proof_state_render}")
+                            self._log_and_add_to_history_buffer(f"Lean 4 executor executed tactic:\n[TACTIC]\n{tactic}\n\n{proof_state_render}")
                         except Exception as e:
                             self._log_and_add_to_history_buffer(f"Exception encountered in Lean 4 executor: {e}")
                         

@@ -55,10 +55,19 @@ def render_proof_env(proof_env: ProofEnv) -> str:
         render_list.extend(goal.hypotheses)
         render_list.append("⊢")
         render_list.append(goal.goal)
-    if proof_env._history: # TODO: pass in info instead of taking from history
-        _, _, _, _, _, info = proof_env._history[-1]
+    if proof_env._history: # TODO: pass in tactic and info instead of taking from history
+        _, a, _, _, _, info = proof_env._history[-1]
         render_list.append("")
-        render_list.append(f"Info: {info.to_json()}") # TODO: improve this formatting to be clearer, include previous tactic?
+        tactic_str = "; ".join(a.kwargs["tactics"])
+        render_list.append(f"[LAST TACTIC]\n{tactic_str}")
+        if info.progress == "StateChanged":
+            render_list.append(f"[STATE CHANGED]")
+        elif info.progress == "StateUnchanged":
+            render_list.append(f"[STATE UNCHANGED]")
+        elif info.progress == "Failed":
+            render_list.append(f"[FAILED]")
+        if info.error_message is not None:
+            render_list.append(f"[ERROR MESSAGE]\n{info.error_message}")
     return "\n".join(render_list)
 
     # if len(proof_env._history) == 0:
