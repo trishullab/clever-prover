@@ -43,17 +43,28 @@ class GptAccess(object):
             stop: list = []) -> typing.Tuple[list, dict]:
         model = self.model_name if model is None else model
         if self.is_open_ai_model:
-            response = self.client.chat.completions.create(
-                model=model,
-                messages=messages,
-                max_tokens=max_tokens,
-                temperature=temperature,
-                top_p=top_p,
-                frequency_penalty=frequency_penalty,
-                presence_penalty=presence_penalty,
-                stop=stop,
-                n=n
-            )
+            if self.model_name == "o1-mini" or self.model_name == "o3-mini": # TODO: find a less hacky way to do this
+                response = self.client.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    max_completion_tokens=max_tokens*3, # TODO: find a less hacky way to do this (that prints the right token size)
+                    frequency_penalty=frequency_penalty,
+                    presence_penalty=presence_penalty,
+                    stop=stop,
+                    n=n
+                )
+            else:
+                response = self.client.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                    top_p=top_p,
+                    frequency_penalty=frequency_penalty,
+                    presence_penalty=presence_penalty,
+                    stop=stop,
+                    n=n
+                )
             usage = response.usage
             self.usage["prompt_tokens"] += usage.prompt_tokens
             self.usage["completion_tokens"] += usage.completion_tokens

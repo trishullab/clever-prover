@@ -1,4 +1,5 @@
 import typing
+import copy
 from aimo_gaz.models.abs_model import GenerationResult, GenerationResults, Model
 from aimo_gaz.models.gpt_access import GptAccess
 import logging
@@ -29,7 +30,7 @@ class GptModel(Model):
             if not success:
                 old_max_tokens = kwargs["max_tokens"]
                 kwargs["max_tokens"] = int(kwargs["max_tokens"] * tokens_factor)
-                self.logger.info(f"Response cut off at {old_max_tokens} tokens. Retrying with {kwargs['max_tokens']} tokens.")
+                self.logger.info(f"Response cut off at {old_max_tokens} tokens. Retrying with {kwargs['max_tokens']} tokens.") # TODO: print something different when not retrying
                 self.logger.info(f"Incomplete response:\n{generated_text}")
             else:
                 self.logger.info(f"Got a valid response. Reason: {reason}")
@@ -52,6 +53,15 @@ Expected kwargs: {expected_kwargs}"""
 
         if isinstance(inputs[0], dict):
             inputs = [inputs]
+        
+        if self._gpt_access.model_name == "o1-mini": # TODO: find a less hacky way to do this
+            inputs = copy.deepcopy(inputs)
+            for input in inputs:
+                for i in range(len(input)):
+                    if input[i]["role"] == "system":
+                        input[i]["role"] = "user"
+                    else:
+                        break
         
         generation_results = GenerationResults()
         for text in inputs:
