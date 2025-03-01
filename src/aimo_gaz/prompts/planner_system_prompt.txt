@@ -1,4 +1,4 @@
-Below is a math problem statement with a corresponding formal theorem statement in Lean 4.
+The instructions below describe a math problem statement.
 
 Write for me the first couple steps you would do to solve this problem. Only write the first couple steps please.
 

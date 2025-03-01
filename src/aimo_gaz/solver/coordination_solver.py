@@ -141,7 +141,7 @@ class CoordinationSolver(Solver):
                 self._log_and_add_to_history_buffer("Exception: Coordinator output must include the token '[START TOOL]' (with a valid tool name), '[START GLOBAL GUESS]', or '[RE-GUESS]'") # TODO: maybe move this error inside coordinator prompter
             elif tool_or_other == ToolOrOther.PLANNER:
                 try:
-                    plan = planner.solve_intermediate(problem_statement, theorem_statement, tool_prompt)
+                    plan = planner.solve_intermediate(tool_prompt)
 
                     self._log_and_add_to_history_buffer(f"Planner generated plan:\n{plan}")
                 except Exception as e:
@@ -151,7 +151,7 @@ class CoordinationSolver(Solver):
             elif tool_or_other == ToolOrOther.CODER:
                 code = None
                 try:
-                    code = coder.solve_intermediate(problem_statement, theorem_statement, tool_prompt)
+                    code = coder.solve_intermediate(tool_prompt)
                 except Exception as e:
                     self._log_and_add_to_history_buffer(f"Exception encountered in coder: {e}")
                 
@@ -171,7 +171,7 @@ class CoordinationSolver(Solver):
                 executor.reset()
             elif tool_or_other == ToolOrOther.LLM_GUESSER:
                 try:
-                    guess = llm_guesser.solve_intermediate(problem_statement, theorem_statement, tool_prompt)
+                    guess = llm_guesser.solve_intermediate(tool_prompt)
 
                     self._log_and_add_to_history_buffer(f"LLM guesser guessed:\n{guess}")
                 except Exception as e:
