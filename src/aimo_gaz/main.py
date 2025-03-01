@@ -35,7 +35,7 @@ def main(cfg):
         data_dir = os.path.join(data_dir, "data")
         # benchmark = "valid"
         # benchmark = "kaggle_train_1"
-        benchmark = "harmonic_test_find_hard_10"
+        benchmark = "harmonic_test_find_1"
         # benchmark = "harmonic_test_prove_1"
         # benchmark = "harmonic_test_find_prove_2"
         # benchmark = "harmonic_test_insert_4"

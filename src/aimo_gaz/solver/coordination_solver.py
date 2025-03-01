@@ -182,7 +182,7 @@ class CoordinationSolver(Solver):
                 if problem_state == ProblemState.PROVING or problem_state == ProblemState.PROVING_AFTER_FINDING:
                     try:
                         proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env)
-                        tactic = prover.solve_intermediate(problem_statement, theorem_statement, proof_state_render, tool_prompt)
+                        tactic = prover.solve_intermediate(proof_state_render, tool_prompt)
 
                         self._log_and_add_to_history_buffer(f"Prover output tactic:\n[TACTIC]\n{tactic}") # TODO: add this type of token scaffolding to all other output messages (and exceptions?)
                     except Exception as e:

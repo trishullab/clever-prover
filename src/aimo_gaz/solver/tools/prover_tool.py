@@ -19,11 +19,11 @@ class ProverTool(Tool): # TODO: ignoring all actions other than RUN_TACTIC for n
         self.inference_kwargs["stop"] = prompter.stop_tokens
         self.history = []
 
-    def solve_intermediate(self, problem_statement: str, theorem_statement: str, proof_state_render: str, tool_prompt: str) -> str:
+    def solve_intermediate(self, proof_state_render: str, tool_prompt: str) -> str:
         if not self.model.is_loaded():
             self.model.__enter__()
         # Prompt the model for the tactic
-        self.history = self.prompter.get_prompt(self.history, problem_statement, theorem_statement, proof_state_render, tool_prompt)
+        self.history = self.prompter.get_prompt(self.history, proof_state_render, tool_prompt)
         self.logger.info(f"[PROVER] Raw prompt used:\n{string_utils.history_to_str(self.history)}")
         # Get the model response
         response = self.model.generate(self.history, **self.inference_kwargs)
