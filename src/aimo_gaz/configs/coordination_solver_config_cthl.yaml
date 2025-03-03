@@ -5,7 +5,6 @@ tools:
   executor: execution_tool_config.yaml
   llm_guesser: llm_guesser_tool_config.yaml
   prover: prover_tool_config.yaml
-  lean4_executor: lean4_executor_tool_config.yaml
 
 strategy: coordinator_tool_history_loop
 

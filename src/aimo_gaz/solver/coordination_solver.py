@@ -16,7 +16,6 @@ from aimo_gaz.solver.tools.planner_tool import PlannerTool
 from aimo_gaz.solver.tools.code_tool import CodeTool
 from aimo_gaz.solver.tools.llm_guesser_tool import LLMGuesserTool
 from aimo_gaz.solver.tools.prover_tool import ProverTool
-from aimo_gaz.solver.tools.lean4_executor_tool import Lean4ExecutorTool
 from aimo_gaz.solver.tools.coordinator_tool import ToolOrOther
 from aimo_gaz.scripts.eval import ProblemState, ProofEnvWrapper
 from aimo_gaz.utils import string_utils, proof_utils
@@ -107,7 +106,6 @@ class CoordinationSolver(Solver):
         executor: ExecutionTool = self.tools["executor"]
         llm_guesser: LLMGuesserTool = self.tools["llm_guesser"]
         prover: ProverTool = self.tools["prover"]
-        lean4_executor: Lean4ExecutorTool = self.tools["lean4_executor"]
 
         global_guess = None
         formatted_answer = None
@@ -184,34 +182,22 @@ class CoordinationSolver(Solver):
                         proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env)
                         tactic = prover.solve_intermediate(proof_state_render, tool_prompt)
 
-                        self._log_and_add_to_history_buffer(f"Prover output tactic:\n[TACTIC]\n{tactic}") # TODO: add this type of token scaffolding to all other output messages (and exceptions?)
+                        tactic_list = tactic.split(";")
+                        action = ProofAction(ProofAction.ActionType.RUN_TACTIC, ProofAction.Language.LEAN4, tactics=tactic_list)
+                        proof_env_wrapper.proof_env.step(action)
+
+                        proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env)
+                        self._log_and_add_to_history_buffer(f"Prover generated and executed tactic:\n[TACTIC]\n{tactic}\n\n{proof_state_render}") # TODO: add this type of [TACTIC] token scaffolding to all other output messages (and exceptions?)
                     except Exception as e:
                         self._log_and_add_to_history_buffer(f"Exception encountered in prover: {e}")
                     
                     prover.reset()
+                    
+                    if proof_env_wrapper.proof_env.done:
+                        self.logger.info("Succesfully proved theorem, ending loop.")
+                        end_loop = True
                 else:
                     self._log_and_add_to_history_buffer("Exception: Prover tool is invalid while the problem's answer is still being guessed.") # TODO: this won't be needed later
-            elif tool_or_other == ToolOrOther.LEAN4_EXECUTOR:
-                if problem_state == ProblemState.PROVING or problem_state == ProblemState.PROVING_AFTER_FINDING:
-                    if tool_prompt is not None:
-                        try:
-                            tactic = tool_prompt
-                            lean4_executor.solve_intermediate(proof_env_wrapper.proof_env, tactic)
-                            
-                            proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env)
-                            self._log_and_add_to_history_buffer(f"Lean 4 executor executed tactic:\n[TACTIC]\n{tactic}\n\n{proof_state_render}")
-                        except Exception as e:
-                            self._log_and_add_to_history_buffer(f"Exception encountered in Lean 4 executor: {e}")
-                        
-                        lean4_executor.reset()
-                        
-                        if proof_env_wrapper.proof_env.done:
-                            self.logger.info("Succesfully proved theorem, ending loop.")
-                            end_loop = True
-                    else:
-                        self._log_and_add_to_history_buffer("Exception: When using the Lean 4 executor tool, you must output the tactic between the tokens '[START TACTIC]' and '[END TACTIC]'") # TODO: maybe move this error inside coordinator prompter
-                else:
-                    self._log_and_add_to_history_buffer("Exception: Lean 4 executor tool is invalid while the problem's answer is still being guessed.") # TODO: this won't be needed later
             elif tool_or_other == ToolOrOther.GLOBAL_GUESS:
                 if problem_state == ProblemState.FINDING:
                     global_guess = global_guess_temp

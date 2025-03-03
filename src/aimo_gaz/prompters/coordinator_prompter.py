@@ -45,37 +45,25 @@ Please output your chosen tool and prompt/tactic now."""
         return history
 
     def parse_response(self, response: str) -> typing.Tuple[ToolOrOther, str, str]:
-        # this silently fixes a common error
-        has_tactic = False
-        if response.find("[START TACTIC]") != -1:
-            has_tactic = True
-            tool = ToolOrOther.LEAN4_EXECUTOR
-
         actual_tool_ind = response.find("[START TOOL]")
-        if actual_tool_ind != -1 or has_tactic:
-            if not has_tactic:
-                tool_response = response[actual_tool_ind + len("[START TOOL]"):]
-                actual_tool_ind = tool_response.find("[END TOOL]")
-                if actual_tool_ind != -1:
-                    tool_response = tool_response[:actual_tool_ind]
-                tool_response = tool_response.strip()
-                tool = None
-                for iter_tool in ToolOrOther:
-                    if tool_response == iter_tool.value:
-                        tool = iter_tool
-                        break
-                if not tool:
-                    return None, None, None
+        if actual_tool_ind != -1:
+            tool_response = response[actual_tool_ind + len("[START TOOL]"):]
+            actual_tool_ind = tool_response.find("[END TOOL]")
+            if actual_tool_ind != -1:
+                tool_response = tool_response[:actual_tool_ind]
+            tool_response = tool_response.strip()
+            tool = None
+            for iter_tool in ToolOrOther:
+                if tool_response == iter_tool.value:
+                    tool = iter_tool
+                    break
+            if not tool:
+                return None, None, None
             
             tool_prompt = None
-            start_prompt_token = "[START TACTIC]" if tool == ToolOrOther.LEAN4_EXECUTOR else "[START PROMPT]"
-            actual_tool_prompt_ind = response.rfind(start_prompt_token)
-            # this silently fixes a common error
-            if actual_tool_prompt_ind == -1 and tool == ToolOrOther.LEAN4_EXECUTOR:
-                start_prompt_token = "[START PROMPT]"
-                actual_tool_prompt_ind = response.rfind(start_prompt_token)
+            actual_tool_prompt_ind = response.rfind("[START PROMPT]")
             if actual_tool_prompt_ind != -1:
-                tool_prompt_response = response[actual_tool_prompt_ind + len(start_prompt_token):]
+                tool_prompt_response = response[actual_tool_prompt_ind + len("[START PROMPT]"):]
                 tool_prompt = tool_prompt_response.strip()
             
             return tool, tool_prompt, None

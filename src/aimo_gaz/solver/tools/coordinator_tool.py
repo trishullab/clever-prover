@@ -12,7 +12,6 @@ class ToolOrOther(Enum):
     CODER = "coder"
     LLM_GUESSER = "llm_guesser"
     PROVER = "prover"
-    LEAN4_EXECUTOR = "lean4_executor"
     GLOBAL_GUESS = "global_guess"
     RE_GUESS = "re-guess"
 
