@@ -1,4 +1,4 @@
-Below is the current proof state of a theorem in Lean 4, along with instructions to follow.
+Below is the current proof state of a theorem in Lean 4, along with instructions to follow. These are preceded by the history of proof states and tactics for proving the theorem.
 
 Please write for me the next tactic to prove this theorem in Lean 4. Only write one tactic.
 

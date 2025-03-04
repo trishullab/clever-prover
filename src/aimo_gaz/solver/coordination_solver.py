@@ -191,8 +191,6 @@ class CoordinationSolver(Solver):
                     except Exception as e:
                         self._log_and_add_to_history_buffer(f"Exception encountered in prover: {e}")
                     
-                    prover.reset()
-                    
                     if proof_env_wrapper.proof_env.done:
                         self.logger.info("Succesfully proved theorem, ending loop.")
                         end_loop = True
@@ -263,6 +261,7 @@ class CoordinationSolver(Solver):
             self.logger.info(f"End of loop {loop_num}. Time left: {time_left} s\n") # TODO: let coordinator know time left?
         
         coordinator.reset()
+        prover.reset()
 
         self.logger.info("Solver finished looping.")
 
