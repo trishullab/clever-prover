@@ -62,8 +62,8 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: loggi
     logger = logger if logger is not None else logging.getLogger(__name__)
     solver = solver_cls() if solver is None else solver
 
-    TIME_ALLOWED_PER_PROBLEM = 600
-    # TIME_ALLOWED_PER_PROBLEM = 60
+    # TIME_ALLOWED_PER_PROBLEM = 600
+    TIME_ALLOWED_PER_PROBLEM = 60
 
     problem_type_statistics = {}
     category_statistics = {}
@@ -118,18 +118,18 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: loggi
 
         temp_proof_env = proof_utils.get_proof_env(lean4_project_folder, theorem_file_path, name)
         with ProofEnvWrapper(temp_proof_env) as proof_env_wrapper:
-            solver_ans, solver_formatted_ans = solver.solve(natural_statement, raw_theorem_statement, theorem_statement, problem_state, proof_env_wrapper, theorem_file_path, name, time_allowed=TIME_ALLOWED_PER_PROBLEM)
+            solver_answer, solver_formatted_answer = solver.solve(natural_statement, raw_theorem_statement, theorem_statement, problem_state, proof_env_wrapper, name, time_allowed=TIME_ALLOWED_PER_PROBLEM)
             proof_env_done = proof_env_wrapper.proof_env.done
 
         if problem_type == ProblemType.FIND_NUMERICAL:
             solver_is_correct = False
-            solver_ans_float = string_utils.parse_float(solver_ans)
-            if solver_ans_float is None:
-                logger.info(f"ERROR: Solver answer '{solver_ans}' is not a float or fraction.")
+            solver_answer_float = string_utils.parse_float(solver_answer)
+            if solver_answer_float is None:
+                logger.info(f"ERROR: Solver answer '{solver_answer}' is not a float or fraction.")
                 solver_is_correct = False
             else:
                 eps = 1e-6
-                solver_is_correct = (abs(solver_ans_float - numerical_answer) < eps)
+                solver_is_correct = (abs(solver_answer_float - numerical_answer) < eps)
 
         # Results
 
@@ -147,8 +147,8 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: loggi
         if problem_type == ProblemType.FIND_NUMERICAL or problem_type == ProblemType.FIND_NONNUMERICAL:
             logger.info("---FIND Result---")
             logger.info(f"Solution: {natural_solution}")
-            logger.info(f"Solver Answer: {solver_ans}")
-            logger.info(f"Solver Formatted Answer: {solver_formatted_ans}")
+            logger.info(f"Solver Answer: {solver_answer}")
+            logger.info(f"Solver Formatted Answer: {solver_formatted_answer}")
             if problem_type == ProblemType.FIND_NUMERICAL:
                 logger.info(f"Numerical Answer: {numerical_answer}")
                 logger.info(f"Numerical Correct: {solver_is_correct}")

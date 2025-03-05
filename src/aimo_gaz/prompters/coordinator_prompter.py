@@ -12,15 +12,15 @@ class CoordinatorPrompter(Prompter):
         assert self.system_prompt is not None # TODO: add examples
         self.user_instructions_find = """This problem requires an answer to be inserted. Please choose tools that will help you find the answer.
 
-Please output your chosen tool and prompt or your global guess now."""
+Please output your chosen tool and prompt now."""
         self.user_instructions_prove = """This problem does not require an answer to be inserted. Please choose tools that will help you formally prove the problem.
 
-Please output your chosen tool and prompt/tactic now."""
-        self.user_instructions_prove_after_find = """Your guess for the answer to this problem has been inserted. Please choose tools that will help you formally prove the problem.
+Please output your chosen tool and prompt now."""
+        self.user_instructions_prove_after_find = """Your answer for this problem has been inserted. Please choose tools that will help you formally prove the problem.
 
-Please output your chosen tool and prompt/tactic now."""
+Please output your chosen tool and prompt now."""
 
-        self.stop_tokens = ["[END PROMPT]", "[END TACTIC]", "[END GLOBAL GUESS]"]
+        self.stop_tokens = []
 
     def get_prompt(self, history: list[dict[str, str]], history_buffer: list[str], problem_statement: str, theorem_statement: str, problem_state: ProblemState) -> list[dict[str, str]]:
         user_message = ""
@@ -46,38 +46,43 @@ Please output your chosen tool and prompt/tactic now."""
 
     def parse_response(self, response: str) -> typing.Tuple[ToolOrOther, str, str]:
         actual_tool_ind = response.find("[START TOOL]")
-        if actual_tool_ind != -1:
-            tool_response = response[actual_tool_ind + len("[START TOOL]"):]
-            actual_tool_ind = tool_response.find("[END TOOL]")
-            if actual_tool_ind != -1:
-                tool_response = tool_response[:actual_tool_ind]
-            tool_response = tool_response.strip()
-            tool = None
-            for iter_tool in ToolOrOther:
-                if tool_response == iter_tool.value:
-                    tool = iter_tool
-                    break
-            if not tool:
-                return None, None, None
-            
-            tool_prompt = None
-            actual_tool_prompt_ind = response.rfind("[START PROMPT]")
-            if actual_tool_prompt_ind != -1:
-                tool_prompt_response = response[actual_tool_prompt_ind + len("[START PROMPT]"):]
-                tool_prompt = tool_prompt_response.strip()
-            
-            return tool, tool_prompt, None
 
-        actual_global_guess_ind = response.rfind("[START GLOBAL GUESS]")
-        if actual_global_guess_ind != -1:
-            response = response[actual_global_guess_ind + len("[START GLOBAL GUESS]"):]
-            return ToolOrOther.GLOBAL_GUESS, None, response.strip()
+        if actual_tool_ind == -1:
+            return None, None, None
+
+        tool_response = response[actual_tool_ind + len("[START TOOL]"):]
+        actual_tool_ind = tool_response.find("[END TOOL]")
+        if actual_tool_ind != -1:
+            tool_response = tool_response[:actual_tool_ind]
+        tool_response = tool_response.strip()
+        tool = None
+        for iter_tool in ToolOrOther:
+            if tool_response == iter_tool.value:
+                tool = iter_tool
+                break
+        if not tool:
+            return None, None, None
         
-        actual_re_guess_ind = response.rfind("[RE-GUESS]")
-        if actual_re_guess_ind != -1:
-            return ToolOrOther.RE_GUESS, None, None
+        tool_prompt = None
+        actual_tool_prompt_ind = response.rfind("[START PROMPT]")
+        if actual_tool_prompt_ind != -1:
+            tool_prompt_response = response[actual_tool_prompt_ind + len("[START PROMPT]"):]
+            actual_tool_prompt_ind = tool_prompt_response.find("[END PROMPT]")
+            if actual_tool_prompt_ind != -1:
+                tool_prompt_response = tool_prompt_response[:actual_tool_prompt_ind]
+            tool_prompt = tool_prompt_response.strip()
         
-        return None, None, None
+        answer = None
+        if tool == ToolOrOther.PROVER:
+            actual_answer_ind = response.rfind("[START ANSWER]")
+            if actual_answer_ind != -1:
+                answer_response = response[actual_answer_ind + len("[START ANSWER]"):]
+                actual_answer_ind = answer_response.find("[END ANSWER]")
+                if actual_answer_ind != -1:
+                    answer_response = answer_response[:actual_answer_ind]
+                answer = answer_response.strip()
+        
+        return tool, tool_prompt, answer
 
 
 if __name__ == "__main__":

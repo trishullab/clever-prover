@@ -12,8 +12,6 @@ class ToolOrOther(Enum):
     CODER = "coder"
     LLM_GUESSER = "llm_guesser"
     PROVER = "prover"
-    GLOBAL_GUESS = "global_guess"
-    RE_GUESS = "re-guess"
 
 class CoordinatorTool(Tool):
     def __init__(self, model: Model, prompter: Prompter, format_answer_prompter: Prompter, logger: logging.Logger = None, **inference_kwargs):
