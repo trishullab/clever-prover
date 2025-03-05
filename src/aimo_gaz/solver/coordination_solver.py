@@ -187,7 +187,7 @@ class CoordinationSolver(Solver):
                         proof_env_wrapper.proof_env.step(action)
 
                         proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env)
-                        self._log_and_add_to_history_buffer(f"Prover generated and executed tactic:\n[TACTIC]\n{tactic}\n\n{proof_state_render}") # TODO: add this type of [TACTIC] token scaffolding to all other output messages (and exceptions?)
+                        self._log_and_add_to_history_buffer(f"Prover generated and executed tactic.\n\n{proof_state_render}") # TODO: add this type of [TACTIC] token scaffolding to all other output messages (and exceptions?) ([TACTIC] no longer in this one)
                     except Exception as e:
                         self._log_and_add_to_history_buffer(f"Exception encountered in prover: {e}")
                     
