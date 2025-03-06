@@ -83,11 +83,11 @@ from aimo_gaz.models.gpt_model import GptModel
 from aimo_gaz.prompters.old_code_prompter import OldCodePrompter
 from aimo_gaz.prompters.old_planner_prompter import OldPlannerPrompter
 from aimo_gaz.prompters.coordinator_prompter import CoordinatorPrompter
-from aimo_gaz.prompters.coordinator_format_answer_prompter import CoordinatorFormatAnswerPrompter
 from aimo_gaz.prompters.planner_prompter import PlannerPrompter
 from aimo_gaz.prompters.code_prompter import CodePrompter
 from aimo_gaz.prompters.llm_guesser_prompter import LLMGuesserPrompter
 from aimo_gaz.prompters.prover_prompter import ProverPrompter
+from aimo_gaz.prompters.prover_format_answer_prompter import ProverFormatAnswerPrompter
 
 GLOBAL_MODEL_CACHE = {}
 
@@ -95,11 +95,11 @@ class PrompterType(Enum):
     CoTPrompter = "CoTPrompter"
     OldCodePrompter = "OldCodePrompter"
     OldPlannerPrompter = "OldPlannerPrompter"
-    CoordinatorPrompters = "CoordinatorPrompters"
+    CoordinatorPrompter = "CoordinatorPrompter"
     PlannerPrompter = "PlannerPrompter"
     CodePrompter = "CodePrompter"
     LLMGuesserPrompter = "LLMGuesserPrompter"
-    ProverPrompter = "ProverPrompter"
+    ProverPrompters = "ProverPrompters"
 
     def __str__(self):
         return self.value
@@ -134,17 +134,17 @@ class PrompterConfig:
             return OldCodePrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
         elif self.prompter_type == PrompterType.OldPlannerPrompter:
             return OldPlannerPrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
-        elif self.prompter_type == PrompterType.CoordinatorPrompters:
-            return CoordinatorPrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path), \
-                CoordinatorFormatAnswerPrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
+        elif self.prompter_type == PrompterType.CoordinatorPrompter:
+            return CoordinatorPrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
         elif self.prompter_type == PrompterType.PlannerPrompter:
             return PlannerPrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
         elif self.prompter_type == PrompterType.CodePrompter:
             return CodePrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
         elif self.prompter_type == PrompterType.LLMGuesserPrompter:
             return LLMGuesserPrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
-        elif self.prompter_type == PrompterType.ProverPrompter:
-            return ProverPrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
+        elif self.prompter_type == PrompterType.ProverPrompters:
+            return ProverPrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path), \
+                   ProverFormatAnswerPrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
         else:
             raise NotImplementedError(f"Prompter type {self.prompter_type} is not implemented.")
 
@@ -255,8 +255,8 @@ class SolverOrToolConfig:
                 GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
             else:
                 model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
-            prompter, format_answer_prompter = self.prompter_config.get_prompter()
-            return CoordinatorTool(model, prompter, format_answer_prompter, logger, **self.inference_settings.to_dict())
+            prompter = self.prompter_config.get_prompter()
+            return CoordinatorTool(model, prompter, logger, **self.inference_settings.to_dict())
         elif self.solver_or_tool_type == SolverOrToolType.PlannerTool:
             if self.model_settings.name_or_path not in GLOBAL_MODEL_CACHE:
                 model = GptModel(self.model_settings.name_or_path, logger)
@@ -289,8 +289,8 @@ class SolverOrToolConfig:
                 GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
             else:
                 model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
-            prompter = self.prompter_config.get_prompter()
-            return ProverTool(model, prompter, logger, **self.inference_settings.to_dict())
+            prompter, format_answer_prompter = self.prompter_config.get_prompter()
+            return ProverTool(model, prompter, format_answer_prompter, logger, **self.inference_settings.to_dict())
         else:
             raise NotImplementedError(f"Solver type {self.solver_or_tool_type} is not implemented.")
 

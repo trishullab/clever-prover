@@ -176,21 +176,26 @@ class CoordinationSolver(Solver):
                 llm_guesser.reset()
             elif tool_or_other == ToolOrOther.PROVER:
                 answer_error = False
+                custom_proof_state_render = None
                 if answer_temp is not None:
-                    if problem_state == ProblemState.FINDING or problem_state == ProblemState.PROVING_AFTER_FINDING: # TODO: get rid of 'orig_' variables
+                    if problem_state == ProblemState.FINDING or problem_state == ProblemState.PROVING_AFTER_FINDING:
                         answer = answer_temp
-                        self._log_and_add_to_history_buffer(f"Coordinator provided answer: {answer}")
+                        answer_statement = f"Coordinator provided answer: {answer}"
+                        self._log_and_add_to_history_buffer(answer_statement)
 
                         # TODO: deal with noncomputable real division? (only an issue if guess is fraction of real numbers but actual solution is literal)
-                        formatted_answer = coordinator.solve_intermediate_format_answer(self.history_buffer, theorem_statement)
-                        self.history_buffer.clear()
-                        self._log_and_add_to_history_buffer(f"Coordinator formatted answer: {formatted_answer}")
+                        formatted_answer = prover.solve_intermediate_format_answer(answer_statement, theorem_statement)
+                        formatted_answer_statement = f"Prover formatted and inserted answer: {formatted_answer}"
+                        self._log_and_add_to_history_buffer(formatted_answer_statement)
+                        custom_proof_state_render = f"[MESSAGE]\n{formatted_answer_statement}" # TODO: maybe move all this token formatting inside prover prompter
 
                         new_raw_theorem_statement = raw_theorem_statement.replace("sorry", formatted_answer, 1)
                         self.logger.info(f"Lean theorem with answer inserted:\n{new_raw_theorem_statement}")
 
                         theorem_statement = string_utils.filter_theorem_statement(new_raw_theorem_statement)
-                        self._log_and_add_to_history_buffer(f"Lean 4 Theorem Statement with Answer Inserted:\n{theorem_statement}")
+                        theorem_statement_statement = f"[LEAN 4 THEOREM STATEMENT]\n{theorem_statement}"
+                        self._log_and_add_to_history_buffer(theorem_statement_statement)
+                        custom_proof_state_render += f"\n\n{theorem_statement_statement}"
 
                         temp_lean_file = tempfile.NamedTemporaryFile(mode="w+", suffix=".lean")
 
@@ -205,14 +210,18 @@ class CoordinationSolver(Solver):
 
                         proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env)
                         self._log_and_add_to_history_buffer(proof_state_render)
+                        custom_proof_state_render += f"\n\n{proof_state_render}"
 
                         rw_tactic = f"rw [{name}_solution]" # TODO: take solution name from theorem statement instead of hardcoding
-                        self._log_and_add_to_history_buffer(f"Automatically executing tactic '{rw_tactic}' to rewrite the solution into the proof statement.")
+                        rw_tactic_statement = f"Automatically executing tactic '{rw_tactic}' to rewrite the solution into the proof statement."
+                        self._log_and_add_to_history_buffer(rw_tactic_statement)
+                        custom_proof_state_render += f"\n\n[MESSAGE]\n{rw_tactic_statement}"
                         action = ProofAction(ProofAction.ActionType.RUN_TACTIC, ProofAction.Language.LEAN4, tactics=[rw_tactic])
                         proof_env_wrapper.proof_env.step(action)
 
                         proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env)
                         self._log_and_add_to_history_buffer(proof_state_render)
+                        custom_proof_state_render += f"\n\n{proof_state_render}"
                     else:
                         self._log_and_add_to_history_buffer(f"Exception: Providing an answer is invalid when the theorem doesn't require an answer to be inserted.")
                         answer_error = True
@@ -221,7 +230,10 @@ class CoordinationSolver(Solver):
                     pass
                 elif problem_state == ProblemState.PROVING or problem_state == ProblemState.PROVING_AFTER_FINDING:
                     try:
-                        proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env)
+                        if custom_proof_state_render is not None:
+                            proof_state_render = custom_proof_state_render
+                        else:
+                            proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env)
                         tactic = prover.solve_intermediate(proof_state_render, tool_prompt)
 
                         tactic_list = tactic.split(";")

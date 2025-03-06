@@ -8,7 +8,7 @@ defaults:
 solver_or_tool_type: ProverTool
 solver_or_tool_args:
 prompter_config:
-  prompter_type: ProverPrompter
+  prompter_type: ProverPrompters
   system_prompt_path: prompts/prover_system_prompt.txt
   example_prompt_path: prompts/prover_example_prompt.md
 # inference_settings:
