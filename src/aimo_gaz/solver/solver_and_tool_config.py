@@ -304,7 +304,7 @@ class CoordinationSolverConfig:
     strategy: CoordinationSolverStrategy
     coordination_kwargs: dict = field(default_factory=dict)
 
-    def get_solver_or_tool(self, logger: logging.Logger) -> CoordinationSolver:
+    def get_solver_or_tool(self, logger: logging.Logger, coordinator_history_logger: logging.Logger) -> CoordinationSolver:
         # tools = {
         #     "planner": self.planner.get_solver_or_tool(logger),
         #     "executor": self.executor.get_solver_or_tool(logger),
@@ -313,7 +313,7 @@ class CoordinationSolverConfig:
         tools = {}
         for tool_name, tool_config in self.tool_configs.items():
             tools[tool_name] = tool_config.get_solver_or_tool(logger)
-        return CoordinationSolver(tools, self.strategy, logger, **self.coordination_kwargs)
+        return CoordinationSolver(tools, self.strategy, logger, coordinator_history_logger, **self.coordination_kwargs)
 
 
 def recursive_replace_keywords(cfg, key_word: str, replace_word: str):

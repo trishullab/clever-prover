@@ -24,8 +24,9 @@ def main(cfg):
     os.makedirs(".logs", exist_ok=True)
     os.makedirs(f".logs/{time_str}", exist_ok=True)
     logger = setup_logger("aimo_gaz", f".logs/{time_str}/aimo_gaz.log")
+    coordinator_history_logger = setup_logger("aimo_gaz_coordinator_history", f".logs/{time_str}/aimo_gaz_coordinator_history.log")
     solver_config = parse_solver_or_tool_config(cfg)
-    solver = solver_config.get_solver_or_tool(logger)
+    solver = solver_config.get_solver_or_tool(logger, coordinator_history_logger) # TODO: second logger only works with coordination solver
     with solver:
         # test_solver(solver)
         # Run benchmarking here
@@ -35,9 +36,9 @@ def main(cfg):
         data_dir = os.path.join(data_dir, "data")
         # benchmark = "valid"
         # benchmark = "kaggle_train_1"
-        # benchmark = "harmonic_test_find_1"
+        benchmark = "harmonic_test_find_1"
         # benchmark = "harmonic_test_prove_1"
-        benchmark = "harmonic_test_48"
+        # benchmark = "harmonic_test_48"
         # benchmark = "simple_find_1"
         # benchmark_ext = "csv"
         benchmark_ext = "json"

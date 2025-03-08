@@ -61,11 +61,14 @@ def render_proof_env(proof_env: ProofEnv) -> str:
         tactic_str = "; ".join(a.kwargs["tactics"])
         render_list.append(f"[LAST TACTIC]\n{tactic_str}")
         if info.progress == "StateChanged":
-            render_list.append(f"[STATE CHANGED]")
+            render_list.append("[STATE CHANGED]")
         elif info.progress == "StateUnchanged":
-            render_list.append(f"[STATE UNCHANGED]")
+            render_list.append("[STATE UNCHANGED]")
         elif info.progress == "Failed":
-            render_list.append(f"[FAILED]")
+            render_list.append("[FAILED]")
+        elif info.progress == "Done":
+            # the [STATE CHANGED] makes searching log files easier
+            render_list.append("[STATE CHANGED]\n[DONE]")
         if info.error_message is not None:
             render_list.append(f"[ERROR MESSAGE]\n{info.error_message}")
     return "\n".join(render_list)

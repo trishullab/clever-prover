@@ -35,8 +35,10 @@ class CoordinationSolver(Solver):
         tools: typing.Dict[str, Tool],
         strategy: CoordinationSolverStrategy,
         logger: logging.Logger = None,
+        coordinator_history_logger: logging.Logger = None,
         **coordination_kwargs):
         self.logger = logger
+        self.coordinator_history_logger = coordinator_history_logger
         self.tools = tools
         self.strategy = strategy
         self.coordination_kwargs = coordination_kwargs
@@ -180,7 +182,10 @@ class CoordinationSolver(Solver):
                 if answer_temp is not None:
                     if problem_state == ProblemState.FINDING or problem_state == ProblemState.PROVING_AFTER_FINDING:
                         answer = answer_temp
-                        answer_statement = f"Coordinator provided answer: {answer}"
+                        if problem_state == ProblemState.FINDING:
+                            answer_statement = f"Coordinator provided answer: {answer}"
+                        else:
+                            answer_statement = f"Coordinator provided new answer: {answer}"
                         self._log_and_add_to_history_buffer(answer_statement)
 
                         # TODO: deal with noncomputable real division? (only an issue if guess is fraction of real numbers but actual solution is literal)
@@ -257,6 +262,11 @@ class CoordinationSolver(Solver):
             
             self.logger.info(f"End of loop {loop_num}. Time left: {time_left} s\n") # TODO: let coordinator know time left?
         
+        self.coordinator_history_logger.info(f"[PROBLEM] {name}")
+        for message in coordinator.history:
+            self.coordinator_history_logger.info(f"\n[ROLE] {message['role']}\n[CONTENT]\n{message['content']}")
+        self.coordinator_history_logger.info("[END]\n\n")
+
         coordinator.reset()
         prover.reset()
 
