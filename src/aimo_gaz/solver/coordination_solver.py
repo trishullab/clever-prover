@@ -239,6 +239,10 @@ class CoordinationSolver(Solver):
                             proof_state_render = custom_proof_state_render
                         else:
                             proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env)
+                        # a quick patch for a common formatting error # TODO: move this into coordinator prompter
+                        answer_token_ind = tool_prompt.find("[START ANSWER]")
+                        if answer_token_ind != -1:
+                            tool_prompt = tool_prompt[:answer_token_ind].strip()
                         tactic = prover.solve_intermediate(proof_state_render, tool_prompt)
 
                         tactic_list = tactic.split(";")

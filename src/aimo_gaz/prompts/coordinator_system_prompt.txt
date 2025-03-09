@@ -18,7 +18,7 @@ Now please output the tool you would like to use next. Output the name of the to
 
 Then for all tools, output custom instructions for the tool to follow between the tokens '[START PROMPT]' and '[END PROMPT]'. These instructions can use previously generated plans.
 
-If you use the prover tool and the problem requires an answer to be inserted, you can choose to provide an answer to the prover to be filled into the theorem. In this case, please include your answer between the tokens '[START ANSWER]' and '[END ANSWER]'. Only include the guessed answer, without words.
+If you use the prover tool and the problem requires an answer to be inserted, you can choose to provide an answer to the prover to be filled into the theorem. In this case, please include your answer between the tokens '[START ANSWER]' and '[END ANSWER]' below the prompt. Only include the guessed answer, without words.
 Please provide such an answer if it is the first time you call the prover, or if you believe the answer you previously provided is wrong and you want to re-guess it (for example, if the prover fails to make forward progress for several steps). Note that re-guessing the answer will reset proof progress.
 
 Below are the problem statements and the history of actions taken so far by the coordinator (you) and the tools to solve this problem.
