@@ -14,7 +14,7 @@ error: tactic 'rewrite' failed, did not find instance of the pattern in the targ
   2 * (3 - 2 * y) - y
 
 [INSTRUCTIONS]
-Please write the next tactic now.
+Since the previous tactic failed, please try a different tactic to make proof progress.
 
 `example_assistant`
 [START TACTIC]
@@ -36,7 +36,7 @@ norm_num
 error: unsolved goals
 
 [INSTRUCTIONS]
-Please write the next tactic now.
+Since the last tactic failed, try introducing new hypotheses that will help prove the theorem.
 
 `example_assistant`
 [START TACTIC]
@@ -62,7 +62,7 @@ linarith
 error: linarith failed to find a contradiction
 
 [INSTRUCTIONS]
-Please write the next tactic now.
+'linarith' was not able to make any proof progress. Please explicitly use one of the hypotheses to make proof progress.
 
 `example_assistant`
 [START TACTIC]
@@ -83,7 +83,7 @@ rw [ih_factored]
 [STATE CHANGED]
 
 [INSTRUCTIONS]
-Please write the next tactic now.
+Please use the inductive hypothesis to prove the current goal.
 
 `example_assistant`
 [START TACTIC]
@@ -104,7 +104,7 @@ rw h₀ at h₁
 [STATE CHANGED]
 
 [INSTRUCTIONS]
-Please write the next tactic now.
+Now that the hypothesis h₁ has been rewritten, find a way to simplify h₁ to help prove the goal.
 
 `example_assistant`
 [START TACTIC]
