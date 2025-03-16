@@ -30,7 +30,7 @@ Please output your chosen tool and prompt now."""
             user_message += string_utils.format_problem_statements(problem_statement, theorem_statement) + "\n\n"
         
         if history_buffer:
-            user_message += "[MESSAGE]\n" + "\n\n[MESSAGE]\n".join(history_buffer) + "\n\n"
+            user_message += "[MESSAGE]\n" + "\n[END]\n\n[MESSAGE]\n".join(history_buffer) + "\n[END]\n\n"
 
         if problem_state == ProblemState.FINDING:
             user_instructions = self.user_instructions_find
@@ -38,7 +38,7 @@ Please output your chosen tool and prompt now."""
             user_instructions = self.user_instructions_prove
         else:
             user_instructions = self.user_instructions_prove_after_find
-        user_message += "[INSTRUCTIONS]\n" + user_instructions
+        user_message += "[INSTRUCTIONS]\n" + user_instructions + "\n[END]"
 
         history.append({"role": "user", "content": user_message})
 

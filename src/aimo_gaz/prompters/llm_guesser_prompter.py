@@ -16,7 +16,7 @@ class LLMGuesserPrompter(Prompter):
         if not history or history[0]["role"] != "system":
             history.insert(0, {"role": "system", "content": self.system_prompt})
         instructions = tool_prompt if tool_prompt else self.default_user_instructions
-        history.append({"role": "user", "content": f"[INSTRUCTIONS]\n{instructions}"})
+        history.append({"role": "user", "content": f"[INSTRUCTIONS]\n{instructions}\n[END]"})
         return history
 
     def parse_response(self, response: str) -> typing.Tuple[str, float]:

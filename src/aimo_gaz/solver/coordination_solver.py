@@ -192,7 +192,7 @@ class CoordinationSolver(Solver):
                         formatted_answer = prover.solve_intermediate_format_answer(answer_statement, theorem_statement)
                         formatted_answer_statement = f"Prover formatted and inserted answer: {formatted_answer}"
                         self._log_and_add_to_history_buffer(formatted_answer_statement)
-                        custom_proof_state_render = f"[MESSAGE]\n{formatted_answer_statement}" # TODO: maybe move all this token formatting inside prover prompter
+                        custom_proof_state_render = f"[MESSAGE]\n{formatted_answer_statement}\n[END]" # TODO: maybe move all this token formatting inside prover prompter
 
                         new_raw_theorem_statement = raw_theorem_statement.replace("sorry", formatted_answer, 1)
                         self.logger.info(f"Lean theorem with answer inserted:\n{new_raw_theorem_statement}")
@@ -200,7 +200,7 @@ class CoordinationSolver(Solver):
                         theorem_statement = string_utils.filter_theorem_statement(new_raw_theorem_statement)
                         theorem_statement_statement = f"[LEAN 4 THEOREM STATEMENT]\n{theorem_statement}"
                         self._log_and_add_to_history_buffer(theorem_statement_statement)
-                        custom_proof_state_render += f"\n\n{theorem_statement_statement}"
+                        custom_proof_state_render += f"\n\n{theorem_statement_statement}\n[END]"
 
                         temp_lean_file = tempfile.NamedTemporaryFile(mode="w+", suffix=".lean")
 
@@ -215,12 +215,12 @@ class CoordinationSolver(Solver):
 
                         proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env)
                         self._log_and_add_to_history_buffer(proof_state_render)
-                        custom_proof_state_render += f"\n\n{proof_state_render}"
+                        custom_proof_state_render += f"\n\n{proof_state_render}\n[END]"
 
                         rw_tactic = f"rw [{name}_solution]" # TODO: take solution name from theorem statement instead of hardcoding
                         rw_tactic_statement = f"Automatically executing tactic '{rw_tactic}' to rewrite the solution into the proof statement."
                         self._log_and_add_to_history_buffer(rw_tactic_statement)
-                        custom_proof_state_render += f"\n\n[MESSAGE]\n{rw_tactic_statement}"
+                        custom_proof_state_render += f"\n\n[MESSAGE]\n{rw_tactic_statement}\n[END]"
                         action = ProofAction(ProofAction.ActionType.RUN_TACTIC, ProofAction.Language.LEAN4, tactics=[rw_tactic])
                         proof_env_wrapper.proof_env.step(action)
 
@@ -239,6 +239,10 @@ class CoordinationSolver(Solver):
                             proof_state_render = custom_proof_state_render
                         else:
                             proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env)
+                        # a quick patch for a common formatting error # TODO: move this into coordinator prompter
+                        answer_token_ind = tool_prompt.find("[ANSWER]")
+                        if answer_token_ind != -1:
+                            tool_prompt = tool_prompt[:answer_token_ind].strip()
                         tactic = prover.solve_intermediate(proof_state_render, tool_prompt)
 
                         tactic_list = tactic.split(";")
@@ -262,10 +266,10 @@ class CoordinationSolver(Solver):
             
             self.logger.info(f"End of loop {loop_num}. Time left: {time_left} s\n") # TODO: let coordinator know time left?
         
-        self.coordinator_history_logger.info(f"[PROBLEM] {name}")
+        self.coordinator_history_logger.info(f"[PROBLEM] {name} [END]")
         for message in coordinator.history:
-            self.coordinator_history_logger.info(f"\n[ROLE] {message['role']}\n[CONTENT]\n{message['content']}")
-        self.coordinator_history_logger.info("[END]\n\n")
+            self.coordinator_history_logger.info(f"\n[ROLE] {message['role']} [END]\n[CONTENT]\n{message['content']}\n[END]")
+        self.coordinator_history_logger.info("\n\n")
 
         coordinator.reset()
         prover.reset()

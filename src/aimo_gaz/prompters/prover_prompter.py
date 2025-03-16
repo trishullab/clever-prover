@@ -16,7 +16,7 @@ class ProverPrompter(Prompter):
             history.insert(0, {"role": "system", "content": self.system_prompt})
             history[1:1] = self.example_prompt_list
         instructions = tool_prompt if tool_prompt else self.default_user_instructions
-        history.append({"role": "user", "content": f"{proof_state_render}\n\n[INSTRUCTIONS]\n{instructions}"})
+        history.append({"role": "user", "content": f"{proof_state_render}\n[END]\n\n[INSTRUCTIONS]\n{instructions}\n[END]"})
         return history
 
     def parse_response(self, response: str) -> str:

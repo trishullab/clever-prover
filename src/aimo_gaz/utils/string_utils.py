@@ -25,7 +25,7 @@ def history_to_str(history: list[dict[str, str]]) -> str:
         return "[{}]".format(",\n".join(map(str, history))) + "\n" + history[-1]["content"]
 
 def format_problem_statements(problem_statement: str, theorem_statement: str) -> str:
-    return f"[PROBLEM STATEMENT]\n{problem_statement}\n\n[LEAN 4 THEOREM STATEMENT]\n{theorem_statement}"
+    return f"[PROBLEM STATEMENT]\n{problem_statement}\n[END]\n\n[LEAN 4 THEOREM STATEMENT]\n{theorem_statement}\n[END]"
 
 def parse_example_prompt_list(example_prompt_str: str) -> list[dict[str, str]]:
     example_prompt_list = []
@@ -71,7 +71,6 @@ def render_proof_env(proof_env: ProofEnv) -> str:
             render_list.append("[STATE CHANGED]\n[DONE]")
         if info.error_message is not None:
             render_list.append(f"[ERROR MESSAGE]\n{info.error_message}")
-    render_list.append("[END]") # TODO: add this [END] scaffolding to other things?
     return "\n".join(render_list)
 
     # if len(proof_env._history) == 0:
