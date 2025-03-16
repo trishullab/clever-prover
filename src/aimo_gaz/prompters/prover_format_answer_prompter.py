@@ -12,9 +12,9 @@ A coordinator has provided its guess for the answer to this problem, but it may 
 {}
 
 [INSTRUCTIONS]
-Please format your guessed answer in Lean 4 notation to replace the first 'sorry' in the Lean 4 theorem statement above. Output your formatted answer between the tokens '[START FORMATTED ANSWER]' and '[END FORMATTED ANSWER]'"""
+Please format your guessed answer in Lean 4 notation to replace the first 'sorry' in the Lean 4 theorem statement above. Output your formatted answer between the tokens '[FORMATTED ANSWER]' and '[END]'"""
 
-        self.stop_tokens = ["[END FORMATTED ANSWER]"]
+        self.stop_tokens = ["[END]"]
 
     def get_prompt(self, history: list[dict[str, str]], answer_statement: str, theorem_statement: str) -> list[dict[str, str]]:
         user_message = f"[MESSAGE]\n{answer_statement}\n\n" + self.user_instructions.format(theorem_statement)
@@ -24,7 +24,7 @@ Please format your guessed answer in Lean 4 notation to replace the first 'sorry
         return history
 
     def parse_response(self, response: str) -> str:
-        actual_formatted_answer_ind = response.rfind("[START FORMATTED ANSWER]")
+        actual_formatted_answer_ind = response.rfind("[FORMATTED ANSWER]")
         if actual_formatted_answer_ind != -1:
-            response = response[(actual_formatted_answer_ind + len("[START FORMATTED ANSWER]")):]
+            response = response[(actual_formatted_answer_ind + len("[FORMATTED ANSWER]")):]
         return response.strip()

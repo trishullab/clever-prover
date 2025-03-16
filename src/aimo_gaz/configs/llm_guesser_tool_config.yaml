@@ -12,4 +12,4 @@ prompter_config:
   system_prompt_path: prompts/llm_guesser_system_prompt.txt
 # inference_settings:
 #   stop:
-#     - '[END GUESS]'
+#     - '[END]'

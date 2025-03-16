@@ -12,14 +12,15 @@ rw [h2] at h1
 [ERROR MESSAGE]
 error: tactic 'rewrite' failed, did not find instance of the pattern in the target expression
   2 * (3 - 2 * y) - y
+[END]
 
 [INSTRUCTIONS]
 Since the previous tactic failed, please try a different tactic to make proof progress.
 
 `example_assistant`
-[START TACTIC]
+[TACTIC]
 linarith
-[END TACTIC]
+[END]
 
 `example_user`
 [PROOF STATE]
@@ -34,14 +35,15 @@ norm_num
 [FAILED]
 [ERROR MESSAGE]
 error: unsolved goals
+[END]
 
 [INSTRUCTIONS]
 Since the last tactic failed, try introducing new hypotheses that will help prove the theorem.
 
 `example_assistant`
-[START TACTIC]
+[TACTIC]
 have h2 : 1 % 398 = (57 * 7) % 398 := by norm_num
-[END TACTIC]
+[END]
 
 `example_user`
 [PROOF STATE]
@@ -60,14 +62,15 @@ linarith
 [FAILED]
 [ERROR MESSAGE]
 error: linarith failed to find a contradiction
+[END]
 
 [INSTRUCTIONS]
 'linarith' was not able to make any proof progress. Please explicitly use one of the hypotheses to make proof progress.
 
 `example_assistant`
-[START TACTIC]
+[TACTIC]
 rw [(h 5)]
-[END TACTIC]
+[END]
 
 `example_user`
 [PROOF STATE]
@@ -81,14 +84,15 @@ ih_factored : d ^ 3 + 3 * d ^ 2 + 5 * d + 3 = d ^ 3 + 2 * d + 3 * (d ^ 2 + d + 1
 [LAST TACTIC]
 rw [ih_factored]
 [STATE CHANGED]
+[END]
 
 [INSTRUCTIONS]
 Please use the inductive hypothesis to prove the current goal.
 
 `example_assistant`
-[START TACTIC]
+[TACTIC]
 apply dvd_add ih
-[END TACTIC]
+[END]
 
 `example_user`
 [PROOF STATE]
@@ -102,11 +106,12 @@ b = -2
 [LAST TACTIC]
 rw h₀ at h₁
 [STATE CHANGED]
+[END]
 
 [INSTRUCTIONS]
 Now that the hypothesis h₁ has been rewritten, find a way to simplify h₁ to help prove the goal.
 
 `example_assistant`
-[START TACTIC]
+[TACTIC]
 norm_num at h₁
-[END TACTIC]
+[END]

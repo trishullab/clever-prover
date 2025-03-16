@@ -12,4 +12,4 @@ prompter_config:
   system_prompt_path: prompts/planner_system_prompt.txt
 # inference_settings:
 #   stop:
-#     - '[END PROCEDURE]'
+#     - '[END]'

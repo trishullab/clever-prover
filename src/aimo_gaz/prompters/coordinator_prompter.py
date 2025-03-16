@@ -45,13 +45,13 @@ Please output your chosen tool and prompt now."""
         return history
 
     def parse_response(self, response: str) -> typing.Tuple[ToolOrOther, str, str]:
-        actual_tool_ind = response.find("[START TOOL]")
+        actual_tool_ind = response.find("[TOOL]")
 
         if actual_tool_ind == -1:
             return None, None, None
 
-        tool_response = response[actual_tool_ind + len("[START TOOL]"):]
-        actual_tool_ind = tool_response.find("[END TOOL]")
+        tool_response = response[(actual_tool_ind + len("[TOOL]")):]
+        actual_tool_ind = tool_response.find("[END]")
         if actual_tool_ind != -1:
             tool_response = tool_response[:actual_tool_ind]
         tool_response = tool_response.strip()
@@ -64,20 +64,20 @@ Please output your chosen tool and prompt now."""
             return None, None, None
         
         tool_prompt = None
-        actual_tool_prompt_ind = response.rfind("[START PROMPT]")
+        actual_tool_prompt_ind = response.rfind("[PROMPT]")
         if actual_tool_prompt_ind != -1:
-            tool_prompt_response = response[actual_tool_prompt_ind + len("[START PROMPT]"):]
-            actual_tool_prompt_ind = tool_prompt_response.find("[END PROMPT]")
+            tool_prompt_response = response[(actual_tool_prompt_ind + len("[PROMPT]")):]
+            actual_tool_prompt_ind = tool_prompt_response.find("[END]")
             if actual_tool_prompt_ind != -1:
                 tool_prompt_response = tool_prompt_response[:actual_tool_prompt_ind]
             tool_prompt = tool_prompt_response.strip()
         
         answer = None
         if tool == ToolOrOther.PROVER:
-            actual_answer_ind = response.rfind("[START ANSWER]")
+            actual_answer_ind = response.rfind("[ANSWER]")
             if actual_answer_ind != -1:
-                answer_response = response[actual_answer_ind + len("[START ANSWER]"):]
-                actual_answer_ind = answer_response.find("[END ANSWER]")
+                answer_response = response[(actual_answer_ind + len("[ANSWER]")):]
+                actual_answer_ind = answer_response.find("[END]")
                 if actual_answer_ind != -1:
                     answer_response = answer_response[:actual_answer_ind]
                 answer = answer_response.strip()

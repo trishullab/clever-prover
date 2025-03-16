@@ -9,7 +9,7 @@ class ProverPrompter(Prompter):
         assert self.example_prompt_list
         self.default_user_instructions = "Please write the next tactic now."
         
-        self.stop_tokens = ["[END TACTIC]"]
+        self.stop_tokens = ["[END]"]
 
     def get_prompt(self, history: list[dict[str, str]], proof_state_render: str, tool_prompt: str) -> list[dict[str, str]]:
         if not history or history[0]["role"] != "system":
@@ -20,7 +20,7 @@ class ProverPrompter(Prompter):
         return history
 
     def parse_response(self, response: str) -> str:
-        actual_tactic_ind = response.rfind("[START TACTIC]")
+        actual_tactic_ind = response.rfind("[TACTIC]")
         if actual_tactic_ind != -1:
-            response = response[(actual_tactic_ind + len("[START TACTIC]")):]
+            response = response[(actual_tactic_ind + len("[TACTIC]")):]
         return response.strip()

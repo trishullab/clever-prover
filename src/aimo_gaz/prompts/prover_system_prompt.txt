@@ -4,4 +4,4 @@ Please write for me the next tactic to prove this theorem in Lean 4. Only write 
 
 Be sure to use correct Lean 4 notation; do not use Lean 3 notation.
 
-Please start your response with '[START TACTIC]' and end it with '[END TACTIC]'
+Please start your response with '[TACTIC]' and end it with '[END]'

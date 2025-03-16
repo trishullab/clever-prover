@@ -13,4 +13,4 @@ prompter_config:
   example_prompt_path: prompts/prover_example_prompt.md
 # inference_settings:
 #   stop:
-#     - '[END TACTIC]'
+#     - '[END]'

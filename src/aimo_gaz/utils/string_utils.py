@@ -71,6 +71,7 @@ def render_proof_env(proof_env: ProofEnv) -> str:
             render_list.append("[STATE CHANGED]\n[DONE]")
         if info.error_message is not None:
             render_list.append(f"[ERROR MESSAGE]\n{info.error_message}")
+    render_list.append("[END]") # TODO: add this [END] scaffolding to other things?
     return "\n".join(render_list)
 
     # if len(proof_env._history) == 0:
