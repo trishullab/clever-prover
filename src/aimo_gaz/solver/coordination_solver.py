@@ -266,9 +266,9 @@ class CoordinationSolver(Solver):
             
             self.logger.info(f"End of loop {loop_num}. Time left: {time_left} s\n") # TODO: let coordinator know time left?
         
-        self.coordinator_history_logger.info(f"[PROBLEM] {name} [END]")
+        self.coordinator_history_logger.info(f"[PROBLEM] {name}")
         for message in coordinator.history:
-            self.coordinator_history_logger.info(f"\n[ROLE] {message['role']} [END]\n[CONTENT]\n{message['content']}\n[END]")
+            self.coordinator_history_logger.info(f"\n[ROLE] {message['role']}\n[CONTENT]\n{message['content']}")
         self.coordinator_history_logger.info("\n\n")
 
         coordinator.reset()
