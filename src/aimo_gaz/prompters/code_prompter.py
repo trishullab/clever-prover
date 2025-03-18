@@ -7,7 +7,7 @@ class CodePrompter(Prompter):
         super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt_list,
                          append_system_prompt_after_every_message)
         assert self.system_prompt is not None # TODO: add examples
-        self.default_user_instructions = "Please write the code now." # TODO: maybe adjust '```python' and '```' scaffolding
+        self.default_user_instructions = "Please write the code now." # TODO: maybe adjust '```python' and '```' scaffolding; change system prompt to markdown file
         
         self.stop_tokens = []
 

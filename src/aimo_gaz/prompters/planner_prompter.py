@@ -7,7 +7,7 @@ class PlannerPrompter(Prompter):
         super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt_list,
                          append_system_prompt_after_every_message)
         assert self.system_prompt is not None # TODO: add examples # TODO: include custom system prompt for proving?
-        self.default_user_instructions = "Please write the steps now."
+        self.default_user_instructions = "Please write the steps now." # TODO: change all system prompts/error messages to replace "token" with "keyword"?
         
         self.stop_tokens = []
 

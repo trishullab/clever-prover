@@ -8,7 +8,7 @@ class LLMGuesserPrompter(Prompter):
         super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt_list,
                          append_system_prompt_after_every_message)
         assert self.system_prompt is not None # TODO: add examples # TODO: phrase this as a helper instead of a guesser
-        self.default_user_instructions = "Please write your guess now."
+        self.default_user_instructions = "Please write your guess now." # TODO: change system prompt to not force the first sentence
         
         self.stop_tokens = []
 

@@ -9,7 +9,7 @@ solver_or_tool_type: LLMGuesserTool
 solver_or_tool_args:
 prompter_config:
   prompter_type: LLMGuesserPrompter
-  system_prompt_path: prompts/llm_guesser_system_prompt.txt
+  system_prompt_path: prompts/llm_guesser_system_prompt.md
 # inference_settings:
 #   stop:
 #     - '[END]'

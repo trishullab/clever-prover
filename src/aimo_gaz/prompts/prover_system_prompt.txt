@@ -1,7 +1,0 @@
-Below is the current proof state of a theorem in Lean 4, along with instructions to follow. These are preceded by the history of proof states and tactics for proving the theorem.
-
-Please write for me the next tactic to prove this theorem in Lean 4. Only write one tactic.
-
-Be sure to use correct Lean 4 notation; do not use Lean 3 notation.
-
-Please start your response with '[TACTIC]' and end it with '[END]'
