@@ -89,7 +89,7 @@ if __name__ == "__main__":
     os.makedirs(".logs", exist_ok=True)
     os.makedirs(f".logs/{time_str}", exist_ok=True)
     os.makedirs(f".logs/{time_str}/temp", exist_ok=True)
-    logger = setup_logger("aimo_gaz", f".logs/{time_str}/code_tool_test.log")
+    logger = setup_logger("aimo_gaz", f".logs/{time_str}/old_code_tool_test.log")
 
     # model_name_or_path = "deepseek-ai/deepseek-coder-1.3b-instruct"
     model_name = "gpt-4o-mini"

@@ -4,7 +4,7 @@ from aimo_gaz.prompters.prompter import Prompter
 from aimo_gaz.utils import string_utils
 import logging
 
-class CodeTool(Tool):
+class CoderTool(Tool):
     def __init__(self, model: Model, prompter: Prompter, logger: logging.Logger = None, **inference_kwargs):
         assert model is not None, "Model must be provided."
         assert prompter is not None, "Prompter must be provided."
@@ -13,7 +13,7 @@ class CodeTool(Tool):
         self.prompter = prompter
         self.logger = logger
         self.inference_kwargs = inference_kwargs
-        self.inference_kwargs["n"] = 1 # Only one response is needed from code tool
+        self.inference_kwargs["n"] = 1 # Only one response is needed from coder tool
         self.inference_kwargs["stop"] = prompter.stop_tokens
         self.history = []
 
@@ -21,7 +21,7 @@ class CodeTool(Tool):
         if not self.model.is_loaded():
             self.model.__enter__()
         # Prompt the model for the code
-        assert self.history == [], "History not empty (Code Tool)"
+        assert self.history == [], "History not empty (Coder Tool)"
         self.history = self.prompter.get_prompt(self.history, tool_prompt)
         self.logger.info(f"[CODER] Raw prompt used:\n{string_utils.history_to_str(self.history)}")
         # Get the model response

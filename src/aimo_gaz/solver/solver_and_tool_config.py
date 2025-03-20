@@ -73,10 +73,10 @@ from aimo_gaz.solver.vanilla_few_shot_solver import FewShotSolver as VanillaFewS
 from aimo_gaz.solver.coordination_solver import CoordinationSolver, CoordinationSolverStrategy
 from aimo_gaz.solver.tools.old_code_tool import OldCodeTool
 from aimo_gaz.solver.tools.old_planner_tool import OldPlannerTool
-from aimo_gaz.solver.tools.execution_tool import ExecutionTool
+from aimo_gaz.solver.tools.executor_tool import ExecutorTool
 from aimo_gaz.solver.tools.coordinator_tool import CoordinatorTool
 from aimo_gaz.solver.tools.planner_tool import PlannerTool
-from aimo_gaz.solver.tools.code_tool import CodeTool
+from aimo_gaz.solver.tools.coder_tool import CoderTool
 from aimo_gaz.solver.tools.llm_guesser_tool import LLMGuesserTool
 from aimo_gaz.solver.tools.prover_tool import ProverTool
 from aimo_gaz.models.gpt_model import GptModel
@@ -84,7 +84,7 @@ from aimo_gaz.prompters.old_code_prompter import OldCodePrompter
 from aimo_gaz.prompters.old_planner_prompter import OldPlannerPrompter
 from aimo_gaz.prompters.coordinator_prompter import CoordinatorPrompter
 from aimo_gaz.prompters.planner_prompter import PlannerPrompter
-from aimo_gaz.prompters.code_prompter import CodePrompter
+from aimo_gaz.prompters.coder_prompter import CoderPrompter
 from aimo_gaz.prompters.llm_guesser_prompter import LLMGuesserPrompter
 from aimo_gaz.prompters.prover_prompter import ProverPrompter
 from aimo_gaz.prompters.prover_format_answer_prompter import ProverFormatAnswerPrompter
@@ -97,7 +97,7 @@ class PrompterType(Enum):
     OldPlannerPrompter = "OldPlannerPrompter"
     CoordinatorPrompter = "CoordinatorPrompter"
     PlannerPrompter = "PlannerPrompter"
-    CodePrompter = "CodePrompter"
+    CoderPrompter = "CoderPrompter"
     LLMGuesserPrompter = "LLMGuesserPrompter"
     ProverPrompters = "ProverPrompters"
 
@@ -110,10 +110,10 @@ class SolverOrToolType(Enum):
     CoordinationSolver = "CoordinationSolver"
     OldCodeTool = "OldCodeTool"
     OldPlannerTool = "OldPlannerTool"
-    ExecutionTool = "ExecutionTool"
+    ExecutorTool = "ExecutorTool"
     CoordinatorTool = "CoordinatorTool"
     PlannerTool = "PlannerTool"
-    CodeTool = "CodeTool"
+    CoderTool = "CoderTool"
     LLMGuesserTool = "LLMGuesserTool"
     ProverTool = "ProverTool"
 
@@ -138,8 +138,8 @@ class PrompterConfig:
             return CoordinatorPrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
         elif self.prompter_type == PrompterType.PlannerPrompter:
             return PlannerPrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
-        elif self.prompter_type == PrompterType.CodePrompter:
-            return CodePrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
+        elif self.prompter_type == PrompterType.CoderPrompter:
+            return CoderPrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
         elif self.prompter_type == PrompterType.LLMGuesserPrompter:
             return LLMGuesserPrompter(system_prompt_path=self.system_prompt_path, example_prompt_path=self.example_prompt_path)
         elif self.prompter_type == PrompterType.ProverPrompters:
@@ -265,16 +265,16 @@ class SolverOrToolConfig:
                 model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
             prompter = self.prompter_config.get_prompter()
             return PlannerTool(model, prompter, logger, **self.inference_settings.to_dict())
-        elif self.solver_or_tool_type == SolverOrToolType.CodeTool:
+        elif self.solver_or_tool_type == SolverOrToolType.CoderTool:
             if self.model_settings.name_or_path not in GLOBAL_MODEL_CACHE:
                 model = GptModel(self.model_settings.name_or_path, logger)
                 GLOBAL_MODEL_CACHE[self.model_settings.name_or_path] = model
             else:
                 model = GLOBAL_MODEL_CACHE[self.model_settings.name_or_path]
             prompter = self.prompter_config.get_prompter()
-            return CodeTool(model, prompter, logger, **self.inference_settings.to_dict())
-        elif self.solver_or_tool_type == SolverOrToolType.ExecutionTool:
-            return ExecutionTool(logger, **self.solver_or_tool_args)
+            return CoderTool(model, prompter, logger, **self.inference_settings.to_dict())
+        elif self.solver_or_tool_type == SolverOrToolType.ExecutorTool:
+            return ExecutorTool(logger, **self.solver_or_tool_args)
         elif self.solver_or_tool_type == SolverOrToolType.LLMGuesserTool:
             if self.model_settings.name_or_path not in GLOBAL_MODEL_CACHE:
                 model = GptModel(self.model_settings.name_or_path, logger)

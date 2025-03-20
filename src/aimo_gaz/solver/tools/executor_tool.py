@@ -5,7 +5,7 @@ import tempfile
 import typing
 from subprocess import Popen, PIPE, STDOUT, TimeoutExpired
 
-class ExecutionTool(Tool):
+class ExecutorTool(Tool):
     def __init__(self, logger: logging.Logger = None, timeout_in_secs: float = 10.0):
         assert logger is not None, "Logger must be provided."
         self.logger = logger
@@ -181,14 +181,14 @@ print("[OUTPUT END]")"""
         pass
 
 if __name__ == "__main__":
-    # Test the ExecutionTool class
+    # Test the ExecutorTool class
     import time
     from aimo_gaz.utils.log_utils import setup_logger
     time_str = time.strftime("%Y%m%d-%H%M%S")
     os.makedirs(".logs", exist_ok=True)
     os.makedirs(f".logs/{time_str}", exist_ok=True)
     os.makedirs(f".logs/{time_str}/temp", exist_ok=True)
-    logger = setup_logger("aimo_gaz", f".logs/{time_str}/execution_tool_test.log")
+    logger = setup_logger("aimo_gaz", f".logs/{time_str}/executor_tool_test.log")
     code = """
 x = symbols('x')
 eq = Eq(x**2 - 2*x - 8, 0)
@@ -196,7 +196,7 @@ print(f\"Solving equation: {eq}\")
 sol = solve(eq, x)
 print(sol)
 """
-    tool = ExecutionTool(logger=logger, timeout_in_secs=5)
+    tool = ExecutorTool(logger=logger, timeout_in_secs=5)
     with tool:
         output = tool.solve_intermediate(code)
         print(output)

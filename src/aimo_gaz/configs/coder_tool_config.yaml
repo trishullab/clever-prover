@@ -5,6 +5,11 @@ defaults:
   - override hydra/job_logging: 'disabled'
   - _self_
 
-solver_or_tool_type: ExecutionTool
+solver_or_tool_type: CoderTool
 solver_or_tool_args:
-  timeout_in_secs: 15.0
+prompter_config:
+  prompter_type: CoderPrompter
+  system_prompt_path: prompts/coder_system_prompt.md
+# inference_settings:
+#   stop:
+#     - '[END]'

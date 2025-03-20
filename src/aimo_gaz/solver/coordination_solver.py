@@ -10,10 +10,10 @@ from itp_interface.rl.simple_proof_env import ProofAction
 from aimo_gaz.solver.abs_solver_and_tool import Solver, Tool
 from aimo_gaz.solver.tools.old_planner_tool import OldPlannerTool
 from aimo_gaz.solver.tools.old_code_tool import OldCodeTool
-from aimo_gaz.solver.tools.execution_tool import ExecutionTool
+from aimo_gaz.solver.tools.executor_tool import ExecutorTool
 from aimo_gaz.solver.tools.coordinator_tool import CoordinatorTool
 from aimo_gaz.solver.tools.planner_tool import PlannerTool
-from aimo_gaz.solver.tools.code_tool import CodeTool
+from aimo_gaz.solver.tools.coder_tool import CoderTool
 from aimo_gaz.solver.tools.llm_guesser_tool import LLMGuesserTool
 from aimo_gaz.solver.tools.prover_tool import ProverTool
 from aimo_gaz.solver.tools.coordinator_tool import ToolOrOther
@@ -44,7 +44,7 @@ class CoordinationSolver(Solver):
         self.coordination_kwargs = coordination_kwargs
         self.history_buffer = []
         self._init_hyperparameters()
-        self._cloned_exec_tool : ExecutionTool = None
+        self._cloned_exec_tool : ExecutorTool = None
     
     def _init_hyperparameters(self):
         self.num_code_gens = self.coordination_kwargs.get("num_code_gens", 1)
@@ -104,8 +104,8 @@ class CoordinationSolver(Solver):
 
         coordinator: CoordinatorTool = self.tools["coordinator"]
         planner: PlannerTool = self.tools["planner"]
-        coder: CodeTool = self.tools["coder"]
-        executor: ExecutionTool = self.tools["executor"]
+        coder: CoderTool = self.tools["coder"]
+        executor: ExecutorTool = self.tools["executor"]
         llm_guesser: LLMGuesserTool = self.tools["llm_guesser"]
         prover: ProverTool = self.tools["prover"]
 
@@ -294,7 +294,7 @@ class CoordinationSolver(Solver):
         assert "executor" in self.tools, "Executor tool not provided."
         old_planner: OldPlannerTool = self.tools["old_planner"]
         old_coder: OldCodeTool = self.tools["old_coder"]
-        executor: ExecutionTool = self.tools["executor"]
+        executor: ExecutorTool = self.tools["executor"]
         global_attempts, local_attempts = 0, 0
         # total_repairs = 0
         codes = []

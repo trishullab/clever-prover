@@ -1,6 +1,5 @@
 import typing
 from aimo_gaz.prompters.prompter import Prompter
-from aimo_gaz.utils import string_utils
 
 class LLMGuesserPrompter(Prompter):
     def __init__(self, system_prompt_path: str = None, example_prompt_path: str = None, system_prompt: str = None,
