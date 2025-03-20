@@ -136,7 +136,7 @@ class CoordinationSolver(Solver):
             if coordinator_error:
                 pass
             elif tool_or_other is None:
-                self._log_and_add_to_history_buffer("Exception: Coordinator output must include the token '[TOOL]' (with a valid tool name)") # TODO: maybe move this error inside coordinator prompter
+                self._log_and_add_to_history_buffer("Exception: Coordinator output must include the keyword '[TOOL]' (with a valid tool name)") # TODO: maybe move this error inside coordinator prompter
             elif tool_or_other == ToolOrOther.PLANNER:
                 try:
                     plan = planner.solve_intermediate(tool_prompt)
@@ -192,7 +192,7 @@ class CoordinationSolver(Solver):
                         formatted_answer = prover.solve_intermediate_format_answer(answer_statement, theorem_statement)
                         formatted_answer_statement = f"Prover formatted and inserted answer: {formatted_answer}"
                         self._log_and_add_to_history_buffer(formatted_answer_statement)
-                        custom_proof_state_render = f"[MESSAGE]\n{formatted_answer_statement}\n[END]" # TODO: maybe move all this token formatting inside prover prompter
+                        custom_proof_state_render = f"[MESSAGE]\n{formatted_answer_statement}\n[END]" # TODO: maybe move all this keyword formatting inside prover prompter
 
                         new_raw_theorem_statement = raw_theorem_statement.replace("sorry", formatted_answer, 1)
                         self.logger.info(f"Lean theorem with answer inserted:\n{new_raw_theorem_statement}")
@@ -250,7 +250,7 @@ class CoordinationSolver(Solver):
                         proof_env_wrapper.proof_env.step(action)
 
                         proof_state_render = string_utils.render_proof_env(proof_env_wrapper.proof_env)
-                        self._log_and_add_to_history_buffer(f"Prover generated and executed tactic.\n\n{proof_state_render}") # TODO: add this type of [TACTIC] token scaffolding to all other output messages (and exceptions?) ([TACTIC] no longer in this one)
+                        self._log_and_add_to_history_buffer(f"Prover generated and executed tactic.\n\n{proof_state_render}") # TODO: add this type of [TACTIC] keyword scaffolding to all other output messages (and exceptions?) ([TACTIC] no longer in this one)
                     except Exception as e:
                         self._log_and_add_to_history_buffer(f"Exception encountered in prover: {e}")
                     

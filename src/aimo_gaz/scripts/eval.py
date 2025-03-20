@@ -62,8 +62,8 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: loggi
     logger = logger if logger is not None else logging.getLogger(__name__)
     solver = solver_cls() if solver is None else solver
 
-    TIME_ALLOWED_PER_PROBLEM = 600
-    # TIME_ALLOWED_PER_PROBLEM = 60
+    # TIME_ALLOWED_PER_PROBLEM = 600
+    TIME_ALLOWED_PER_PROBLEM = 60
 
     problem_type_statistics = {}
     category_statistics = {}

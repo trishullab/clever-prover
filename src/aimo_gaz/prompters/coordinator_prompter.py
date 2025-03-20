@@ -9,7 +9,7 @@ class CoordinatorPrompter(Prompter):
                  example_prompt_list: list[dict[str, str]] = None, append_system_prompt_after_every_message: bool = False):
         super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt_list,
                          append_system_prompt_after_every_message)
-        assert self.system_prompt is not None # TODO: add examples # TODO: change system prompt to not explicitly reference history?
+        assert self.system_prompt is not None # TODO: add examples
         self.user_instructions_find = """This problem requires an answer to be inserted. Please choose tools that will help you find the answer.
 
 Please output your chosen tool and prompt now."""

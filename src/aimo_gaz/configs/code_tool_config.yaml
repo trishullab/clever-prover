@@ -9,7 +9,7 @@ solver_or_tool_type: CodeTool
 solver_or_tool_args:
 prompter_config:
   prompter_type: CodePrompter
-  system_prompt_path: prompts/coder_system_prompt.txt
+  system_prompt_path: prompts/coder_system_prompt.md
 # inference_settings:
 #   stop:
 #     - '[END]'

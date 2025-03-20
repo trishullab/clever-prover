@@ -9,7 +9,7 @@ class ProverFormatAnswerPrompter(Prompter): # TODO: rename to prover
 {}
 [END]"""
         self.user_instructions = """[INSTRUCTIONS]
-A coordinator has provided its guess for the answer to this problem, but it may not yet be in the proper Lean 4 format to insert into the Lean 4 theorem statement. Please format your guessed answer in Lean 4 notation to replace the first 'sorry' in the Lean 4 theorem statement above. Output your formatted answer between the tokens '[FORMATTED ANSWER]' and '[END]'
+A coordinator has provided its guess for the answer to this problem, but it may not yet be in the proper Lean 4 format to insert into the Lean 4 theorem statement. Please format your guessed answer in Lean 4 notation to replace the first 'sorry' in the Lean 4 theorem statement above. Output your formatted answer between the keywords '[FORMATTED ANSWER]' and '[END]'
 [END]"""
 
         self.stop_tokens = ["[END]"]
