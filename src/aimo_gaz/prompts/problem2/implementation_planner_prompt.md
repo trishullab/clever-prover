@@ -4,6 +4,8 @@ Please write for me a detailed plan of the steps you would take to implement a L
 
 Please respond mostly in natural language.
 
+--------------------------------------------------
+
 [PROBLEM STATEMENT]
 /--
 function_signature: "def truncate_number(number: float) -> float"

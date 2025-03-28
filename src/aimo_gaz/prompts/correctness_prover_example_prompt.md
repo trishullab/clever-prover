@@ -1,0 +1,203 @@
+`example_user`
+[PROBLEM STATEMENT]
+/--
+function_signature: "def coins_won(score_changes: List[int], threshold: int) -> int"
+docstring: |
+    In a game, a player's score starts at 0 and is updated round by round using values from the list
+    score_changes (where positive numbers add to the score and negative numbers subtract).
+    After each round, as long as the player's cumulative score is greater than or equal to the given threshold,
+    the player wins a coin for that round.
+    Your task is to compute and return the total number of coins won by the player by the end of the game.
+test_cases:
+  - input:
+      score_changes:
+        - 3
+        - 4
+        - -2
+        - 1
+      threshold: 5
+    expected_output: 1
+  - input:
+      score_changes:
+        - 3
+        - 4
+        - 5
+      threshold: 5
+    expected_output: 2
+-/
+[END]
+
+[PROBLEM SPEC]
+def problem_spec
+-- function signature
+(impl: List Int → Int → Nat)
+-- inputs
+(score_changes: List Int)
+(threshold: Int) :=
+-- spec
+let spec (score_changes' : List Int) (threshold' : Int) (result: Nat) :=
+score_changes'.length > 0 →
+if result = 0 then
+  ∀ i, 1 ≤ i ∧ i ≤ score_changes'.length →
+  (score_changes'.take i).sum < threshold'
+else
+  (∃ i, 1 ≤ i ∧ i ≤ score_changes'.length →
+  (score_changes'.take i).sum ≥ threshold' →
+  ( let score_changes'' := score_changes'.drop i;
+    let threshold'' := threshold' - (score_changes'.take i).sum;
+    let result' := impl score_changes'' threshold'';
+    result = 1 + result') →
+  ∀ i', 1 ≤ i' ∧ i' < i → (score_changes'.take i').sum < threshold
+  );
+-- program terminates
+∃ result, impl score_changes threshold = result →
+-- return value satisfies spec
+spec score_changes threshold result
+[END]
+
+[FUNCTION IMPLEMENTATION]
+def implementation (score_changes: List Int) (threshold: Int) : Nat :=
+let rec loop (score_changes: List Int) (threshold: Int) (score: Int) (coins: Nat) : Nat :=
+  match score_changes with
+  | [] => coins
+  | head :: tail =>
+    let score' := head + score
+    let coins' := if score' ≥ threshold then coins + 1 else coins
+    loop tail threshold score' coins'
+loop score_changes threshold 0 0
+[END]
+
+[LEMMAS]
+lemma implementation_loop_threshold_invariant
+(score_changes: List Int)
+(threshold: Int)
+(score: Int)
+(coins: Nat)
+(k: Int)
+(h_rounds_played: score_changes.length > 0)
+: implementation.loop score_changes (threshold - k) score coins
+= implementation.loop score_changes threshold (score + k) coins := by
+sorry
+
+lemma implementation_loop_simple_increment
+(head: Int)
+(score_changes_tail: List Int)
+(threshold: Int)
+(score: Int)
+(coins: Nat)
+: (head + score < threshold →
+implementation.loop (head :: score_changes_tail) threshold score coins =
+implementation.loop (score_changes_tail) threshold (head + score) coins) ∧
+(head + score ≥ threshold →
+implementation.loop (head :: score_changes_tail) threshold score coins =
+1 + implementation.loop (score_changes_tail) threshold (head + score) coins) := by
+sorry
+
+lemma implementation_loop_coin_monotonic_increasing
+(score_changes: List Int)
+(threshold: Int)
+(score: Int)
+(coins: Nat)
+(h_rounds_played: score_changes.length > 0)
+: coins ≤ implementation.loop score_changes threshold score coins := by
+sorry
+
+lemma implementation_loop_invariant_stop
+(score_changes: List Int)
+(threshold: Int)
+(score: Int)
+(coins: Nat)
+(h_rounds_played: score_changes.length > 0)
+(h_within_threshold: coins = implementation.loop score_changes threshold score coins)
+: ∀ i, 1 ≤ i ∧ i ≤ score_changes.length →
+score + (score_changes.take i).sum < threshold := by
+sorry
+
+lemma implementation_loop_invariant_continue
+(score_changes: List Int)
+(threshold: Int)
+(score: Int)
+(coins: Nat)
+(h_rounds_played: score_changes.length > 0)
+(h_within_threshold: coins < implementation.loop score_changes threshold score coins)
+:∃ i', 1 ≤ i' ∧ i' ≤ score_changes.length →
+(score + (score_changes.take i').sum ≥ threshold) →
+implementation.loop score_changes threshold score coins =
+1 + implementation.loop (score_changes.drop i') threshold
+(score + (score_changes.take i').sum) coins →
+∀ i, 1 ≤ i ∧ i < i' → score + (score_changes.take i).sum < threshold := by
+sorry
+[END]
+
+[CORRECTNESS DEFINITION]
+theorem correctness
+(score_changes: List Int)
+(threshold: Int)
+: problem_spec implementation score_changes threshold
+:= by
+sorry
+[END]
+
+[PLAN]
+Prove the `correctness` theorem.
+  - Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
+  - Early on, you will want to break the proof up into cases based on whether the output of `implementation_loop` (with initial values as input) is 0.
+  - Use the `implementation_loop_threshold_invariant`, `implementation_loop_invariant_stop`, and `implementation_loop_invariant_continue` lemmas in the proof.
+[END]
+
+`example_assistant`
+theorem correctness
+(score_changes: List Int)
+(threshold: Int)
+: problem_spec implementation score_changes threshold
+:=
+by
+-- sometimes we have to create a temporary variable to use in the proof
+unfold problem_spec
+let result := implementation score_changes threshold
+use result
+simp [result]
+simp [implementation]
+intros h_rounds_played
+have h_stop := implementation_loop_invariant_stop score_changes threshold 0 0 h_rounds_played
+by_cases h_implementation_stop: implementation.loop score_changes threshold 0 0 = 0
+-- Case 1: where implementation.loop score_changes threshold 0 0 = 0
+simp [h_implementation_stop]
+simp [h_implementation_stop] at h_stop
+exact h_stop
+-- Case 2: where implementation.loop score_changes threshold 0 0 ≠ 0
+simp [h_implementation_stop]
+have h_implementation_stop': 0 < implementation.loop score_changes threshold 0 0 := by
+  by_contra
+  rename_i h_implementation_stop_false
+  simp at h_implementation_stop_false
+  contradiction
+have h_continue := implementation_loop_invariant_continue score_changes threshold 0 0 h_rounds_played h_implementation_stop'
+simp at h_continue
+obtain ⟨i₁⟩ := h_continue
+rename_i h_continue_i₁
+use i₁
+intro h_1_le_i₁ h_iᵢ_score_len h_threshold
+simp [h_1_le_i₁, h_iᵢ_score_len, h_threshold] at h_continue_i₁
+by_cases h_drop_i₁: (List.drop i₁ score_changes).length > 0
+have h_threshold' := implementation_loop_threshold_invariant (List.drop i₁ score_changes) threshold 0 0 (List.take i₁ score_changes).sum h_drop_i₁
+simp at h_threshold'
+simp [h_threshold']
+intro h_drop_impl
+simp [h_drop_impl] at h_continue_i₁
+intro i''
+intro h_i''_le_i₁
+have h'' := h_continue_i₁ i''
+by_cases h_1_le_i'': 1 ≤ i''
+simp [h_1_le_i''] at h''
+assumption
+simp at h_1_le_i''
+linarith
+simp at h_drop_i₁
+have h_i₁_eq_score_changes_len : i₁ = score_changes.length := by
+  linarith
+simp [h_i₁_eq_score_changes_len] at h_continue_i₁
+simp [implementation.loop] at h_continue_i₁
+simp [h_i₁_eq_score_changes_len]
+simp [implementation.loop]
+exact h_continue_i₁

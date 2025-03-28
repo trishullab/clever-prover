@@ -1,8 +1,12 @@
-The instructions below describe a coding problem statement with a corresponding Lean 4 problem spec, function implementation, and correctness definition.
+The instructions below describe a coding problem statement with a corresponding Lean 4 problem spec, function implementation signature, and test cases.
 
-Please write for me a detailed plan of the steps you would take to prove the correctness definition in Lean 4 stating that the given function implementation follows the required problem spec.
+Along with these is a detailed plan with steps of how to implement the Lean 4 function to solve this problem.
 
-Please respond mostly in natural language.
+Please write for me an implementation of this Lean 4 function to solve this problem, starting with the function implementation signature below.
+
+Please respond entirely in Lean 4.
+
+--------------------------------------------------
 
 [PROBLEM STATEMENT]
 /--
@@ -43,21 +47,16 @@ if result then below_zero_condition else ¬below_zero_condition;
 spec result
 [END]
 
-[FUNCTION IMPLEMENTATION]
+[FUNCTION IMPLEMENTATION SIGNATURE]
 def implementation (operations: List Int) : Bool :=
-let rec check (ops : List Int) (acc : Int) : Bool :=
-  match ops with
-  | []        => false
-  | op :: ops' =>
-    let new_acc := acc + op
-    if new_acc < 0 then true else check ops' new_acc
-check operations 0
+sorry
 [END]
 
-[CORRECTNESS DEFINITION]
-theorem correctness
-(operations: List Int)
-: problem_spec implementation operations
-:= by
-sorry
+[TEST CASES]
+#test implementation [1, 2, 3] = false
+#test implementation [1, 2, -4, 5] = true
+[END]
+
+[PLAN]
+
 [END]

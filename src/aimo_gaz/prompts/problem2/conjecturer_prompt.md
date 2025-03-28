@@ -1,8 +1,12 @@
 The instructions below describe a coding problem statement with a corresponding Lean 4 problem spec, function implementation, and correctness definition.
 
-Please write for me a detailed plan of the steps you would take to prove the correctness definition in Lean 4 stating that the given function implementation follows the required problem spec.
+Along with these is a detailed plan with steps of how to prove the correctness definition in Lean 4 stating that the given function implementation follows the required problem spec.
 
-Please respond mostly in natural language.
+Please write for me a list of conjectured lemmas in Lean 4 that will be useful for carrying out this proof. Fill in the proofs of these lemmas with `sorry`; do NOT write the tactics to prove these lemmas.
+
+Please respond entirely in Lean 4.
+
+--------------------------------------------------
 
 [PROBLEM STATEMENT]
 /--
@@ -33,8 +37,7 @@ spec result
 [END]
 
 [FUNCTION IMPLEMENTATION]
-def implementation (number: Rat) : Rat :=
-number - number.floor
+
 [END]
 
 [CORRECTNESS DEFINITION]
@@ -42,4 +45,8 @@ theorem correctness
 (number: Rat)
 : problem_spec implementation number := by
 sorry
+[END]
+
+[PLAN]
+
 [END]

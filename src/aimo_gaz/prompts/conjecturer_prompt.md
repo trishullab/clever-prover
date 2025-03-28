@@ -6,6 +6,8 @@ Please write for me a list of conjectured lemmas in Lean 4 that will be useful f
 
 Please respond entirely in Lean 4.
 
+--------------------------------------------------
+
 [PROBLEM STATEMENT]
 
 [END]

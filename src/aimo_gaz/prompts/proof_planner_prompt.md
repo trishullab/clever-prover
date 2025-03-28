@@ -4,6 +4,8 @@ Please write for me a detailed plan of the steps you would take to prove the cor
 
 Please respond mostly in natural language.
 
+--------------------------------------------------
+
 [PROBLEM STATEMENT]
 
 [END]
