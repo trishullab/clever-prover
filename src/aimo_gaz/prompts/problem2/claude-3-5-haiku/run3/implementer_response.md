@@ -1,25 +1,27 @@
-Here's the implementation of the `implementation` function for truncating a number to its decimal part in Lean 4:
+Here's the implementation in Lean 4 following the detailed plan:
 
 ```lean
 def implementation (number: Rat) : Rat :=
   number - number.floor
 ```
 
-This concise implementation follows the plan exactly:
-1. It takes a rational number as input
-2. Uses `number.floor` to get the integer part
-3. Subtracts the floor value from the original number
-4. Returns the decimal part (which is always less than 1)
+Let's break down why this implementation meets the requirements:
 
-Let's verify it meets the requirements:
-- It works for positive rational numbers
-- Returns only the decimal portion 
-- Handles whole numbers by returning 0
-- Leverages Lean 4's built-in rational number operations
+1. `number.floor` finds the largest integer less than or equal to the input number
+2. Subtracting this floor value from the original number gives the decimal part
+3. The result is always between 0 and 1 (exclusive of 1)
 
-The implementation can be verified with the provided test case:
-```lean
-#test implementation 3.5 = 0.5
-```
+The function handles different scenarios:
+- For 3.5, it returns 0.5
+- For 4.0, it returns 0
+- For 2.75, it returns 0.75
 
-This solution is simple, direct, and leverages Lean 4's built-in rational number capabilities to solve the problem efficiently.
+The implementation is concise and directly maps to the problem specification. It leverages Lean's built-in rational number operations to compute the decimal part of a number.
+
+The key operations used are:
+- `Rat.floor`: Returns the largest integer less than or equal to a rational number
+- Subtraction: Removes the integer part, leaving only the decimal component
+
+This implementation satisfies the problem spec by:
+- Always returning a value between 0 and 1
+- Ensuring that the original number equals its floor plus the returned decimal part

@@ -1,30 +1,44 @@
-Here's a Lean 4 proof for the correctness theorem:
+I'll provide a Lean 4 proof for the correctness theorem based on the provided implementation and specification:
 
 ```lean
 theorem correctness
 (number: Rat)
 : problem_spec implementation number := by
-  -- Unfold problem specification
+  -- Unfold the problem specification
   unfold problem_spec
-  
-  -- Introduce the result of the implementation
+
+  -- Set the result to the implementation 
   let result := implementation number
-  
-  -- Prove termination (always exists)
+
+  -- Prove three parts of the specification 
+  constructor
+  · -- Part 1: 0 ≤ result 
+    unfold implementation
+    apply sub_nonneg.mpr
+    apply le_floor
+
+  constructor  
+  · -- Part 2: result < 1
+    unfold implementation
+    apply floor_lt
+
+  · -- Part 3: number = number.floor + result
+    unfold implementation
+    rfl
+
+  -- Prove implementation terminates
   use result
-  
-  -- Prove specification 
-  unfold spec
-  unfold implementation
-  
-  -- By definition of implementation and rational number floor
   rfl
 ```
 
-The proof works because:
-1. It uses `use result` to demonstrate the function terminates with a specific result
-2. `rfl` (reflexivity) shows that the result matches the specification
-3. The implementation `number - number.floor` directly gives the decimal part
-4. The proof is simple because the implementation exactly matches the specification
+This proof follows the strategy outlined in the plan:
 
-The proof relies on the built-in properties of `Rat.floor` and simple algebraic reasoning to show that subtracting the floor from the original number yields the decimal part.
+1. Uses `constructor` to break down the `problem_spec` into its component parts
+2. First proves the result is non-negative by applying `sub_nonneg.mpr` and `le_floor`
+3. Then proves the result is less than 1 by applying `floor_lt`
+4. Uses reflexivity (`rfl`) to prove the reconstruction property
+5. Proves termination by using `use result` and `rfl`
+
+The key steps leverage built-in Lean properties of rational numbers, particularly around the `floor` function. The implementation is simple subtraction of the floor from the original number, which naturally satisfies the specification.
+
+The proof assumes standard Lean lemmas about rational numbers and floor operations are available in the context.

@@ -29,7 +29,8 @@ def problem_spec
 (number: Rat) :=
 -- spec
 let spec (res):=
-res = number - number.floor;
+0 ≤ res ∧ res < 1 ∧
+number = number.floor + res;
 -- program terminates
 ∃ result, impl number = result →
 -- return value satisfies spec

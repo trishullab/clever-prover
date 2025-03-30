@@ -1,56 +1,71 @@
-For this problem, the proof strategy will be relatively straightforward since the implementation almost exactly matches the problem specification. Here's a detailed plan for proving the correctness:
+I'll outline a detailed plan for proving the correctness of the `truncate_number` function in Lean 4:
 
-1. Proof Strategy Overview:
-   - The goal is to prove that the implementation `implementation` satisfies the problem specification `problem_spec`
-   - The specification requires two main things:
-     a) The function returns the decimal part of the number
-     b) The function terminates
+Proof Strategy Overview:
+1. The implementation is quite straightforward - it subtracts the floor of the number from the original number. 
 
-2. Proof Structure:
-   - First, demonstrate that the function always terminates
-     - This is trivial because the function performs a simple subtraction operation
-     - Use `exists` to show there's always a result
+Key Proof Steps:
+1. First, prove that the result is non-negative
+   - This follows directly from the properties of Rat.floor, which always returns the largest integer less than or equal to the input number
+   - Subtracting the floor will always yield a non-negative number less than 1
 
-   - Then, verify that the result matches the specification
-     - Prove that `number - number.floor` correctly extracts the decimal part
-     - This follows directly from the definition of `floor` in Lean's rational number library
+2. Prove that the result is less than 1
+   - This is a direct consequence of the definition of floor
+   - The subtraction of floor will always result in a fractional part less than 1
 
-3. Detailed Proof Steps:
-   - Start by unfolding the `problem_spec`
-   - Split the proof into two main parts:
-     a) Termination: Show `∃ result, implementation number = result`
-     b) Specification: Show `result = number - number.floor`
+3. Prove the reconstruction property
+   - Show that number = number.floor + (number - number.floor)
+   - This is essentially an algebraic manipulation that is trivially true
 
-4. Key Proof Techniques:
-   - Use basic algebraic reasoning
-   - Leverage built-in properties of `Rat.floor`
-   - Use simple rewrite and reflexivity tactics
-
-Here's a potential proof outline in Lean 4:
-
+Detailed Proof Plan:
 ```lean
 theorem correctness
 (number: Rat)
 : problem_spec implementation number := by
-  -- Unfold problem specification
+  -- Unfold the problem specification
   unfold problem_spec
   
-  -- Prove termination
-  apply Exists.intro (implementation number)
+  -- Set the result to the implementation
+  let result := implementation number
   
-  -- Prove specification
-  unfold implementation
-  unfold spec
+  -- Prove the three parts of the specification
   
-  -- This should be true by definition
-  rfl
+  -- Part 1: Result is non-negative
+  have h1 : 0 ≤ result := by
+    -- Proof follows from floor property
+    simp [implementation]
+    apply sub_nonneg.mpr
+    apply le_floor
+
+  -- Part 2: Result is less than 1  
+  have h2 : result < 1 := by
+    -- Proof follows from floor property
+    simp [implementation]
+    apply floor_lt
+
+  -- Part 3: Reconstruction property
+  have h3 : number = number.floor + result := by
+    -- Algebraic manipulation
+    simp [implementation]
+    rfl
+
+  -- Combine the three parts
+  exists result
+  apply And.intro h1
+  apply And.intro h2 h3
 ```
 
-The proof is remarkably simple because:
-1. The implementation exactly matches the specification
-2. Lean's rational number library provides the necessary `floor` functionality
-3. The decimal part extraction is a direct subtraction operation
+Key Proof Techniques:
+1. Use of `simp` to simplify algebraic expressions
+2. Leverage built-in properties of Rat.floor
+3. Prove each part of the specification separately
+4. Use `exists` to show the implementation produces a result
+5. Use `And.intro` to combine multiple proof obligations
 
-The key insight is that `number - number.floor` precisely removes the integer part, leaving only the decimal portion less than 1.
+The proof relies on fundamental properties of rational numbers and floor function, making it relatively straightforward. The main challenge is precisely capturing the three required properties of the truncation operation.
 
-Would you like me to elaborate on any part of this proof strategy?
+Potential Challenges:
+- Ensuring the proof works for all rational numbers
+- Handling edge cases like negative numbers or zero
+- Proving the properties rigorously without relying on intuition
+
+Would you like me to elaborate on any specific part of the proof strategy?
