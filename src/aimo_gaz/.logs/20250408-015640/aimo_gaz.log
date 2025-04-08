@@ -1,0 +1,20 @@
+2025-04-08 01:56:40,746 - aimo_gaz - INFO - ---Starting Run---
+2025-04-08 01:56:40,746 - aimo_gaz - INFO - Running on placeholder_0
+2025-04-08 01:56:40,747 - aimo_gaz - INFO - Starting to solve problem:
+/--
+function_signature: "def truncate_number(number: float) -> float"
+docstring: |
+    Given a positive floating point number, it can be decomposed into
+    and integer part (largest integer smaller than given number) and decimals
+    (leftover part always smaller than 1).
+test_cases:
+  - input: 3.5
+    expected_output: 0.5
+--/
+2025-04-08 01:56:40,747 - aimo_gaz - INFO - Finished solving in 6.0558319091796875e-05 seconds.
+2025-04-08 01:56:40,747 - aimo_gaz - INFO - ---Final Results---
+2025-04-08 01:56:40,747 - aimo_gaz - INFO - Benchmark: placeholder_0
+2025-04-08 01:56:40,747 - aimo_gaz - INFO - Prove Accuracy: 1 / 1 = 1.00
+2025-04-08 01:56:40,747 - aimo_gaz - INFO - 
+
+

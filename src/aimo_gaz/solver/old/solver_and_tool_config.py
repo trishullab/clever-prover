@@ -70,24 +70,24 @@ from aimo_gaz.solver.test_solver import TestSolver
 from aimo_gaz.solver.abs_solver_and_tool import Solver, Tool
 from aimo_gaz.solver.vanilla_few_shot_solver import FewShotSolver as VanillaFewShotSolver
 from aimo_gaz.solver.coordination_solver import CoordinationSolver, CoordinationSolverStrategy
-# from aimo_gaz.solver.tools.old_code_tool import OldCodeTool # TODO: delete these and large parts of this file
-# from aimo_gaz.solver.tools.old_planner_tool import OldPlannerTool
-# from aimo_gaz.solver.tools.executor_tool import ExecutorTool
-# from aimo_gaz.solver.tools.coordinator_tool import CoordinatorTool
-# from aimo_gaz.solver.tools.planner_tool import PlannerTool
-# from aimo_gaz.solver.tools.coder_tool import CoderTool
-# from aimo_gaz.solver.tools.llm_guesser_tool import LLMGuesserTool
-# from aimo_gaz.solver.tools.prover_tool import ProverTool
+from aimo_gaz.solver.tools.old_code_tool import OldCodeTool
+from aimo_gaz.solver.tools.old_planner_tool import OldPlannerTool
+from aimo_gaz.solver.tools.executor_tool import ExecutorTool
+from aimo_gaz.solver.tools.coordinator_tool import CoordinatorTool
+from aimo_gaz.solver.tools.planner_tool import PlannerTool
+from aimo_gaz.solver.tools.coder_tool import CoderTool
+from aimo_gaz.solver.tools.llm_guesser_tool import LLMGuesserTool
+from aimo_gaz.solver.tools.prover_tool import ProverTool
 from aimo_gaz.models.gpt_model import GptModel
-# from aimo_gaz.prompters.cot_prompter import CoTPrompter
-# from aimo_gaz.prompters.old_code_prompter import OldCodePrompter
-# from aimo_gaz.prompters.old_planner_prompter import OldPlannerPrompter
-# from aimo_gaz.prompters.coordinator_prompter import CoordinatorPrompter
-# from aimo_gaz.prompters.planner_prompter import PlannerPrompter
-# from aimo_gaz.prompters.coder_prompter import CoderPrompter
-# from aimo_gaz.prompters.llm_guesser_prompter import LLMGuesserPrompter
-# from aimo_gaz.prompters.prover_prompter import ProverPrompter
-# from aimo_gaz.prompters.prover_format_answer_prompter import ProverFormatAnswerPrompter
+from aimo_gaz.prompters.cot_prompter import CoTPrompter
+from aimo_gaz.prompters.old_code_prompter import OldCodePrompter
+from aimo_gaz.prompters.old_planner_prompter import OldPlannerPrompter
+from aimo_gaz.prompters.coordinator_prompter import CoordinatorPrompter
+from aimo_gaz.prompters.planner_prompter import PlannerPrompter
+from aimo_gaz.prompters.coder_prompter import CoderPrompter
+from aimo_gaz.prompters.llm_guesser_prompter import LLMGuesserPrompter
+from aimo_gaz.prompters.prover_prompter import ProverPrompter
+from aimo_gaz.prompters.prover_format_answer_prompter import ProverFormatAnswerPrompter
 
 GLOBAL_MODEL_CACHE = {}
 
@@ -351,6 +351,7 @@ def parse_solver_or_tool_config(cfg) -> typing.Union[SolverOrToolConfig, Coordin
         recursive_replace_keywords(cfg, "<AIMO_GAZ_ROOT>", gaz_root)
     is_coordination_solver = "tools" in cfg
     if not is_coordination_solver:
+
         model_settings = ModelSettings(**cfg["model_settings"])
         inference_settings = InferenceSettings(**cfg["inference_settings"])
 
@@ -376,9 +377,8 @@ def parse_solver_or_tool_config(cfg) -> typing.Union[SolverOrToolConfig, Coordin
         # executor = parse_solver_or_tool_config(executor_cfg)
         # coder = parse_solver_or_tool_config(coder_cfg)
         tool_configs = {}
-        if cfg["tools"]:
-            for tool_name, tool_config in cfg["tools"].items():
-                tool_cfg = hydra.compose(config_name=tool_config)
-                tool_configs[tool_name] = parse_solver_or_tool_config(tool_cfg)
+        for tool_name, tool_config in cfg["tools"].items():
+            tool_cfg = hydra.compose(config_name=tool_config)
+            tool_configs[tool_name] = parse_solver_or_tool_config(tool_cfg)
         # return CoordinationSolverConfig(planner, executor, coder, strategy, coordination_kwargs)
         return CoordinationSolverConfig(tool_configs, strategy, coordination_kwargs)

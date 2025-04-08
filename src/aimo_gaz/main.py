@@ -13,8 +13,7 @@ def test_solver(solver: Solver):
         print(ans)
         problem = input("Enter a math problem to solve: ")
 
-# @hydra.main(config_path="configs/", config_name="coordination_solver_config_pceelmv", version_base="1.2")
-@hydra.main(config_path="configs/", config_name="coordination_solver_config_cthl", version_base="1.2")
+@hydra.main(config_path="configs/", config_name="coordination_solver_config_pipssc", version_base="1.2")
 def main(cfg):
     dirpath = os.path.dirname(os.path.abspath(__file__))
     os.environ["AIMO_GAZ_ROOT"] = dirpath
@@ -34,9 +33,10 @@ def main(cfg):
         data_dir = os.path.dirname(root)
         data_dir = os.path.dirname(data_dir)
         data_dir = os.path.join(data_dir, "data")
+        benchmark = "placeholder_0" # TODO: use benchmarks instead of just the single file path in 'eval.py'
         # benchmark = "valid"
         # benchmark = "kaggle_train_1"
-        benchmark = "harmonic_test_find_1"
+        # benchmark = "harmonic_test_find_1"
         # benchmark = "harmonic_test_prove_1"
         # benchmark = "harmonic_test_48"
         # benchmark = "harmonic_test_missed_6"

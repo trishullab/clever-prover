@@ -1,115 +1,48 @@
-from itp_interface.rl.simple_proof_env import ProofEnv
+import typing
 
-def parse_float(input: str) -> float:
-    try:
-        return float(input)
-    except:
-        pass
-    try:
-        return eval(input)
-    except:
-        pass
-    return None
+def parse_problem_file(raw_problem: str) -> typing.Tuple[str, str, str, str, str]:
+    PROBLEM_STATEMENT_START_STRING = "-- start_def problem_details"
+    PROBLEM_STATEMENT_END_STRING = "-- end_def problem_details"
+    PROBLEM_SPEC_START_STRING = "-- start_def problem_spec"
+    PROBLEM_SPEC_END_STRING = "-- end_def problem_spec"
+    IMPLEMENTATION_SIGNATURE_START_STRING = "-- start_def implementation_signature"
+    IMPLEMENTATION_SIGNATURE_END_STRING = "-- end_def implementation_signature"
+    TEST_CASES_START_STRING = "-- start_def test_cases"
+    TEST_CASES_END_STRING = "-- end_def test_cases"
+    CORRECTNESS_DEFINITION_START_STRING = "-- start_def correctness_definition"
+    CORRECTNESS_DEFINITION_END_STRING = "-- end_def correctness_definition"
+    
+    problem_statement_start_ind = raw_problem.find(PROBLEM_STATEMENT_START_STRING)
+    problem_statement_end_ind = raw_problem.find(PROBLEM_STATEMENT_END_STRING)
+    problem_spec_start_ind = raw_problem.find(PROBLEM_SPEC_START_STRING)
+    problem_spec_end_ind = raw_problem.find(PROBLEM_SPEC_END_STRING)
+    implementation_signature_start_ind = raw_problem.find(IMPLEMENTATION_SIGNATURE_START_STRING)
+    implementation_signature_end_ind = raw_problem.find(IMPLEMENTATION_SIGNATURE_END_STRING)
+    test_cases_start_ind = raw_problem.find(TEST_CASES_START_STRING)
+    test_cases_end_ind = raw_problem.find(TEST_CASES_END_STRING)
+    correctness_definition_start_ind = raw_problem.find(CORRECTNESS_DEFINITION_START_STRING)
+    correctness_definition_end_ind = raw_problem.find(CORRECTNESS_DEFINITION_END_STRING)
 
-def filter_theorem_statement(raw_theorem_statement: str) -> str:
-    theorem_statement_lines = []
-    for line in raw_theorem_statement.splitlines():
-        if line and not line.isspace() and not line.startswith("import ") and not line.startswith("open ") and not line.startswith("--"):
-            theorem_statement_lines.append(line)
-    return "\n".join(theorem_statement_lines)
+    if problem_statement_start_ind == -1 or problem_statement_end_ind == -1 \
+            or problem_spec_start_ind == -1 or problem_spec_end_ind == -1 \
+            or implementation_signature_start_ind == -1 or implementation_signature_end_ind == -1 \
+            or test_cases_start_ind == -1 or test_cases_end_ind == -1 \
+            or correctness_definition_start_ind == -1 or correctness_definition_end_ind == -1:
+        raise ValueError(f"Problem file has wrong format.")
 
-def history_to_str(history: list[dict[str, str]]) -> str:
-    if len(history) > 10:
-        return "[...,\n{}]".format(",\n".join(map(str, history[-10:]))) + "\n" + history[-1]["content"]
-    else:
-        return "[{}]".format(",\n".join(map(str, history))) + "\n" + history[-1]["content"]
+    problem_statement_start_ind += len(PROBLEM_STATEMENT_START_STRING)
+    problem_spec_start_ind += len(PROBLEM_SPEC_START_STRING)
+    implementation_signature_start_ind += len(IMPLEMENTATION_SIGNATURE_START_STRING)
+    test_cases_start_ind += len(TEST_CASES_START_STRING)
+    correctness_definition_start_ind += len(CORRECTNESS_DEFINITION_START_STRING)
 
-def format_problem_statements(problem_statement: str, theorem_statement: str) -> str:
-    return f"[PROBLEM STATEMENT]\n{problem_statement}\n[END]\n\n[LEAN 4 THEOREM STATEMENT]\n{theorem_statement}\n[END]"
+    problem_statement = raw_problem[problem_statement_start_ind:problem_statement_end_ind].strip()
+    problem_spec = raw_problem[problem_spec_start_ind:problem_spec_end_ind].strip()
+    implementation_signature = raw_problem[implementation_signature_start_ind:implementation_signature_end_ind].strip()
+    test_cases = raw_problem[test_cases_start_ind:test_cases_end_ind].strip()
+    correctness_definition = raw_problem[correctness_definition_start_ind:correctness_definition_end_ind].strip()
 
-def parse_example_prompt_list(example_prompt_str: str) -> list[dict[str, str]]:
-    example_prompt_list = []
-    curr_ind = example_prompt_str.find("`example_user`")
-    i = 0
-    while curr_ind != -1:
-        curr_name = "example_user" if i % 2 == 0 else "example_assistant"
-        curr_ind += len(f"`{curr_name}`")
-        next_name = "example_assistant" if i % 2 == 0 else "example_user"
-        next_ind = example_prompt_str.find(f"`{next_name}`", curr_ind)
-        if next_ind != -1:
-            content = example_prompt_str[curr_ind:next_ind].strip()
-        else:
-            content = example_prompt_str[curr_ind:].strip()
-        example_prompt_list.append({"role": "system", "name": curr_name, "content": content})
-        curr_ind = next_ind
-        i += 1
-    return example_prompt_list
+    implementation_signature += "\nsorry"
+    correctness_definition += " by\nsorry"
 
-def render_proof_env(proof_env: ProofEnv) -> str:
-    render_list = ["[PROOF STATE]"] # TODO: maybe remove [MESSAGE] that appears before this
-    goals_list = proof_env.state.training_data_format.start_goals
-    for i in range(len(goals_list)):
-        if i > 0:
-            render_list.append("")
-        goal = goals_list[i]
-        render_list.extend(goal.hypotheses)
-        render_list.append("⊢")
-        render_list.append(goal.goal)
-    if proof_env._history: # TODO: pass in tactic and info instead of taking from history
-        _, a, _, _, _, info = proof_env._history[-1]
-        render_list.append("")
-        tactic_str = "; ".join(a.kwargs["tactics"])
-        render_list.append(f"[LAST TACTIC]\n{tactic_str}")
-        if info.progress == "StateChanged":
-            render_list.append("[STATE CHANGED]")
-        elif info.progress == "StateUnchanged":
-            render_list.append("[STATE UNCHANGED]")
-        elif info.progress == "Failed":
-            render_list.append("[FAILED]")
-        elif info.progress == "Done":
-            # the [STATE CHANGED] makes searching log files easier
-            render_list.append("[STATE CHANGED]\n[DONE]")
-        if info.error_message is not None:
-            render_list.append(f"[ERROR MESSAGE]\n{info.error_message}")
-    return "\n".join(render_list)
-
-    # if len(proof_env._history) == 0:
-    #     current_state = proof_env.state
-    #     s_goals = [((f"Solution (Inserted): {solution_str}\n " if solution_str else "") +
-    #                 f"Goal [{idx}]:\n {goal.goal}\n Hyps [{idx}]:\n {goal.hypotheses}\n Dfns [{idx}]:\n {goal.relevant_defns}\n Thms [{idx}]:\n {goal.possible_useful_theorems_local}\n------------------\n")
-    #                 for idx, goal in enumerate(current_state.training_data_format.start_goals)]
-    #     s_goal = '\n'.join(s_goals)
-    #     return f"Proof State:\n {s_goal}"
-    # render_list = []
-    # s1, a, s2, r, d, info = proof_env._history[-1]
-    # visibility = 3
-    # # self.logger.info("-"*50)
-    # # s1_relevant_dfns = [
-    # #     "\n".join([str(s1.training_data_format.all_useful_defns_theorems[dfns.lemma_idx]) for dfns in goal.relevant_defns]) 
-    # #         for goal in s1.training_data_format.start_goals]
-    # # s1_possible_thms = [
-    # #     "\n".join([str(s1.training_data_format.all_useful_defns_theorems[thm.lemma_idx]) 
-    # #         for thm in (goal.possible_useful_theorems_local[:visibility] + goal.possible_useful_theorems_external[:visibility])])
-    # #         for goal in s1.training_data_format.start_goals]
-    # # s1_goals = [f"Goal [{idx}]:\n {goal.goal}\n Hyps [{idx}]:\n {goal.hypotheses}\n Dfns [{idx}]:\n {s1_relevant_dfns[idx]}\n Thms [{idx}]:\n {s1_possible_thms[idx]}\n------------------\n" for idx, goal in enumerate(s1.training_data_format.start_goals)]
-    # # s1_goal = '\n'.join(s1_goals)
-    # # self.logger.info(f"Proof State (before action):\n {s1_goal}")
-    # s2_relevant_dfns = [
-    #     "\n".join([str(s2.training_data_format.all_useful_defns_theorems[dfns.lemma_idx]) for dfns in goal.relevant_defns])
-    #         for goal in s2.training_data_format.start_goals]
-    # s2_possible_thms = [
-    #     "\n".join([str(s2.training_data_format.all_useful_defns_theorems[thm.lemma_idx]) 
-    #         for thm in (goal.possible_useful_theorems_local[:visibility] + goal.possible_useful_theorems_external[:visibility])])
-    #         for goal in s2.training_data_format.start_goals]
-    # s2_goals = [((f"Solution (Inserted): {solution_str}\n " if solution_str else "") +
-    #                 f"Goal [{idx}]:\n {goal.goal}\n Hyps [{idx}]: {goal.hypotheses}\n Dfns [{idx}]:\n {s2_relevant_dfns[idx]}\n Thms [{idx}]:\n {s2_possible_thms[idx]}\n-------------------\n")
-    #             for idx, goal in enumerate(s2.training_data_format.start_goals)] # TODO: convey solution another way? currently doesn't convey type, so maybe include entire line
-    # action = a.serialize()
-    # render_list.append(f"Action:\n {action}")
-    # s2_goal = '\n'.join(s2_goals)
-    # render_list.append(f"Proof State:\n {s2_goal}")
-    # render_list.append(f"Reward:\n {r}")
-    # render_list.append(f"Done:\n {d}")
-    # render_list.append(f"Info:\n {info.to_json()}")
-    # # self.logger.info("-"*50)
-    # return "\n".join(render_list)
+    return problem_statement, problem_spec, implementation_signature, test_cases, correctness_definition

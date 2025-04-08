@@ -8,15 +8,15 @@ import tempfile
 from sympy import *
 from itp_interface.rl.simple_proof_env import ProofAction
 from aimo_gaz.solver.abs_solver_and_tool import Solver, Tool
-from aimo_gaz.solver.tools.old_planner_tool import OldPlannerTool
-from aimo_gaz.solver.tools.old_code_tool import OldCodeTool
-from aimo_gaz.solver.tools.executor_tool import ExecutorTool
-from aimo_gaz.solver.tools.coordinator_tool import CoordinatorTool
-from aimo_gaz.solver.tools.planner_tool import PlannerTool
-from aimo_gaz.solver.tools.coder_tool import CoderTool
-from aimo_gaz.solver.tools.llm_guesser_tool import LLMGuesserTool
-from aimo_gaz.solver.tools.prover_tool import ProverTool
-from aimo_gaz.solver.tools.coordinator_tool import ToolOrOther
+# from aimo_gaz.solver.tools.old_planner_tool import OldPlannerTool # TODO: delete these eventually?
+# from aimo_gaz.solver.tools.old_code_tool import OldCodeTool
+# from aimo_gaz.solver.tools.executor_tool import ExecutorTool
+# from aimo_gaz.solver.tools.coordinator_tool import CoordinatorTool
+# from aimo_gaz.solver.tools.planner_tool import PlannerTool
+# from aimo_gaz.solver.tools.coder_tool import CoderTool
+# from aimo_gaz.solver.tools.llm_guesser_tool import LLMGuesserTool
+# from aimo_gaz.solver.tools.prover_tool import ProverTool
+# from aimo_gaz.solver.tools.coordinator_tool import ToolOrOther
 from aimo_gaz.scripts.eval import ProblemState, ProofEnvWrapper
 from aimo_gaz.utils import string_utils, proof_utils
 from enum import Enum
@@ -25,6 +25,7 @@ from collections import Counter
 class CoordinationSolverStrategy(Enum):
     PLAN_CODE_EXEC_EXRACT_LAST_MAJ_VOTE = "plan_code_exec_extract_last_maj_vote"
     COORDINATOR_TOOL_HISTORY_LOOP = "coordinator_tool_history_loop"
+    PLANNER_IMPLEMENTER_PLANNER_SOLVER_SOLVER_CHAIN = "planner_implementer_planner_solver_solver_chain"
 
     def __str__(self):
         return self.value
@@ -96,6 +97,10 @@ class CoordinationSolver(Solver):
     def _log_and_add_to_history_buffer(self, message):
         self.logger.info(message)
         self.history_buffer.append(message)
+    
+
+    def _planner_implementer_planner_solver_solver_chain(self, problem_statement: str, problem_spec: str, implementation_signature: str, test_cases: str, correctness_definition: str, time_allowed: int):
+        return None
 
 
     def _coordinator_tool_history_loop(self, problem_statement: str, raw_theorem_statement: str, theorem_statement: str, problem_state: ProblemState, proof_env_wrapper: ProofEnvWrapper, name: str, time_allowed: int) -> float:
@@ -509,8 +514,7 @@ Choices:
                     answer = random.choice(answers)
             return answer
 
-    def solve(self, problem_statement: str, raw_theorem_statement: str, theorem_statement: str, problem_state: ProblemState, proof_env_wrapper: ProofEnvWrapper, name: str, time_allowed: int) -> typing.Tuple[bool, str]:
-        assert len(self.tools) > 0, "No tools provided."
+    def solve(self, problem_statement: str, problem_spec: str, implementation_signature: str, test_cases: str, correctness_definition: str, time_allowed: int) -> typing.Tuple[bool, str]:
         self.start_time = time.time()
         self.logger.info(f"Starting to solve problem:\n{problem_statement}")
         answer = -1
@@ -519,6 +523,8 @@ Choices:
                 answer = self._plan_code_exec_extract_last_maj_vote(problem_statement, time_allowed)
             elif self.strategy == CoordinationSolverStrategy.COORDINATOR_TOOL_HISTORY_LOOP:
                 answer = self._coordinator_tool_history_loop(problem_statement, raw_theorem_statement, theorem_statement, problem_state, proof_env_wrapper, name, time_allowed)
+            elif self.strategy == CoordinationSolverStrategy.PLANNER_IMPLEMENTER_PLANNER_SOLVER_SOLVER_CHAIN:
+                answer = self._planner_implementer_planner_solver_solver_chain(problem_statement, problem_spec, implementation_signature, test_cases, correctness_definition, time_allowed)
             else:
                 raise NotImplementedError(f"Strategy {self.strategy} is not implemented.")
         except Exception as e:
@@ -527,4 +533,4 @@ Choices:
         self.end_time = time.time()
         self.logger.info(f"Finished solving in {self.end_time - self.start_time} seconds.")
         self.reset()
-        return answer
+        return answer # TODO: get rid of answer and other strategies?

@@ -1,0 +1,17 @@
+tools:
+  # coordinator: coordinator_tool_config.yaml
+  # planner: planner_tool_config.yaml
+  # coder: coder_tool_config.yaml
+  # executor: executor_tool_config.yaml
+  # llm_guesser: llm_guesser_tool_config.yaml
+  # prover: prover_tool_config.yaml
+
+strategy: planner_implementer_planner_solver_solver_chain
+
+coordination_kwargs:
+  num_code_gens: 1
+  num_plans: 1
+  code_timeout_in_secs: 15.0
+  problem_timeout_in_secs: 1200.0
+  num_attempts: 5
+  picker_optional: False
