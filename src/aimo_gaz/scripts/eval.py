@@ -65,7 +65,7 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: loggi
     # TIME_ALLOWED_PER_PROBLEM = 600
     TIME_ALLOWED_PER_PROBLEM = 60
 
-    proved = 0
+    num_proved = 0
     total = 0
 
     problem_file_path = "../../../clever/src/lean4/human_eval/problem_2.lean"
@@ -75,13 +75,13 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: loggi
     
     problem_statement, problem_spec, implementation_signature, test_cases, correctness_definition = string_utils.parse_problem_file(raw_problem)
 
-    solver.solve(problem_statement, problem_spec, implementation_signature, test_cases, correctness_definition, time_allowed=TIME_ALLOWED_PER_PROBLEM)
+    proved = solver.solve(problem_statement, problem_spec, implementation_signature, test_cases, correctness_definition, time_allowed=TIME_ALLOWED_PER_PROBLEM)
     
-    proved += 1
+    num_proved += int(proved)
     total += 1
 
     return {
-        "proved": proved,
+        "num_proved": num_proved,
         "total": total,
     }
 
@@ -221,7 +221,7 @@ def evaluate_on_benchmarks(benchmark, benchmark_ext, valid_path, solver, time_st
 
     logger.info("---Final Results---")
     logger.info(f"Benchmark: {benchmark}")
-    logger.info(f"Prove Accuracy: {stats['proved']} / {stats['total']} = {stats['proved'] / stats['total']:.2f}")
+    logger.info(f"Prove Accuracy: {stats['num_proved']} / {stats['total']} = {stats['num_proved'] / stats['total']:.2f}")
     # if stats["numerical_total"] > 0:
     #     logger.info(f"Numerical Accuracy: {stats['numerical_correct']} / {stats['numerical_total']} = {stats['numerical_correct'] / stats['numerical_total']:.2f}")
     # for problem_type, problem_type_stats in stats["problem_type_statistics"].items():
