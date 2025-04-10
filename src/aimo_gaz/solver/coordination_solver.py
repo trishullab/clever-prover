@@ -8,15 +8,7 @@ import tempfile
 from sympy import *
 from itp_interface.rl.simple_proof_env import ProofAction
 from aimo_gaz.solver.abs_solver_and_tool import Solver, Tool
-# from aimo_gaz.solver.tools.old_planner_tool import OldPlannerTool # TODO: delete these eventually?
-# from aimo_gaz.solver.tools.old_code_tool import OldCodeTool
-# from aimo_gaz.solver.tools.executor_tool import ExecutorTool
-# from aimo_gaz.solver.tools.coordinator_tool import CoordinatorTool
-# from aimo_gaz.solver.tools.planner_tool import PlannerTool
-# from aimo_gaz.solver.tools.coder_tool import CoderTool
-# from aimo_gaz.solver.tools.llm_guesser_tool import LLMGuesserTool
-# from aimo_gaz.solver.tools.prover_tool import ProverTool
-# from aimo_gaz.solver.tools.coordinator_tool import ToolOrOther
+from aimo_gaz.solver.tools.implementation_planner_tool import ImplementationPlannerTool
 from aimo_gaz.scripts.eval import ProblemState, ProofEnvWrapper
 from aimo_gaz.utils import string_utils, proof_utils
 from enum import Enum
@@ -80,6 +72,19 @@ class CoordinationSolver(Solver):
     
 
     def _planner_implementer_planner_solver_solver_chain(self, problem_statement: str, problem_spec: str, implementation_signature: str, test_cases: str, correctness_definition: str, time_allowed: int):
+        implementation_planner: ImplementationPlannerTool = self.tools["implementation_planner"]
+
+        try:
+            implementation_plan = implementation_planner.solve_intermediate(problem_statement, problem_spec, implementation_signature, test_cases)
+            self.logger.info(f"Implementation planner generated implementation plan:\n{implementation_plan}")
+        except Exception as e:
+            self.logger.info(f"Exception encountered in implementation planner: {e}")
+        implementation_planner.reset()
+
+        # TODO: generate implementation
+
+        # TODO: check implementation against test cases
+
         proved = True
 
         if proved:

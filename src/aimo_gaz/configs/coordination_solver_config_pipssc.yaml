@@ -1,10 +1,5 @@
 tools:
-  # coordinator: coordinator_tool_config.yaml
-  # planner: planner_tool_config.yaml
-  # coder: coder_tool_config.yaml
-  # executor: executor_tool_config.yaml
-  # llm_guesser: llm_guesser_tool_config.yaml
-  # prover: prover_tool_config.yaml
+  implementation_planner: implementation_planner_tool_config.yaml
 
 strategy: planner_implementer_planner_solver_solver_chain
 

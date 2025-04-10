@@ -1,5 +1,29 @@
 import typing
 
+def history_to_str(history: list[dict[str, str]]) -> str:
+    if len(history) > 10:
+        return "[...,\n{}]".format(",\n".join(map(str, history[-10:]))) + "\n" + history[-1]["content"]
+    else:
+        return "[{}]".format(",\n".join(map(str, history))) + "\n" + history[-1]["content"]
+
+def parse_example_prompt_list(example_prompt_str: str) -> list[dict[str, str]]:
+    example_prompt_list = []
+    curr_ind = example_prompt_str.find("`example_user`")
+    i = 0
+    while curr_ind != -1:
+        curr_name = "example_user" if i % 2 == 0 else "example_assistant"
+        curr_ind += len(f"`{curr_name}`")
+        next_name = "example_assistant" if i % 2 == 0 else "example_user"
+        next_ind = example_prompt_str.find(f"`{next_name}`", curr_ind)
+        if next_ind != -1:
+            content = example_prompt_str[curr_ind:next_ind].strip()
+        else:
+            content = example_prompt_str[curr_ind:].strip()
+        example_prompt_list.append({"role": "system", "name": curr_name, "content": content})
+        curr_ind = next_ind
+        i += 1
+    return example_prompt_list
+
 def parse_problem_file(raw_problem: str) -> typing.Tuple[str, str, str, str, str]:
     PROBLEM_STATEMENT_START_STRING = "-- start_def problem_details"
     PROBLEM_STATEMENT_END_STRING = "-- end_def problem_details"
