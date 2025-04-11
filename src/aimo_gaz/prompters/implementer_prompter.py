@@ -40,7 +40,7 @@ class ImplementerPrompter(Prompter):
     def parse_response(self, response: str) -> str:
         def_start_ind = response.find("```lean")
         if def_start_ind != -1:
-            def_response = response[def_start_ind + len("```lean"):]
+            def_response = response[(def_start_ind + len("```lean")):]
             def_end_ind = def_response.find("```")
             if def_end_ind != -1:
                 def_response = def_response[:def_end_ind]
@@ -51,7 +51,7 @@ class ImplementerPrompter(Prompter):
         if def_response.startswith("def "):
             implementation_start_ind = def_response.find(":=")
             if implementation_start_ind != -1:
-                implementation_response = def_response[implementation_start_ind + len(":="):]
+                implementation_response = def_response[(implementation_start_ind + len(":=")):]
             else:
                 implementation_response = def_response
         else:

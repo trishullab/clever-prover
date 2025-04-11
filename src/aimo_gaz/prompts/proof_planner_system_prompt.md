@@ -7,21 +7,3 @@ If you believe that proving some helper lemmas first would be helpful to proving
 Be sure to only output the lemmas that are necessary to prove the correctness definition. Do not output extraneous lemmas.
 
 After (optionally) describing the lemmas, output the keyword `[CORRECTNESS PLAN]` followed by a detailed natural language plan of the steps you would take to prove the correctness definition. You may freely use any of your lemmas in this correctness proof. End the correctness plan with the keyword `[END]`.
-
---------------------------------------------------
-
-[PROBLEM STATEMENT]
-
-[END]
-
-[PROBLEM SPEC]
-
-[END]
-
-[FUNCTION IMPLEMENTATION]
-
-[END]
-
-[CORRECTNESS DEFINITION]
-
-[END]

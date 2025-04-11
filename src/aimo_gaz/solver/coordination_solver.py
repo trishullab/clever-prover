@@ -10,6 +10,7 @@ from itp_interface.rl.simple_proof_env import ProofAction
 from aimo_gaz.solver.abs_solver_and_tool import Solver, Tool
 from aimo_gaz.solver.tools.implementation_planner_tool import ImplementationPlannerTool
 from aimo_gaz.solver.tools.implementer_tool import ImplementerTool
+from aimo_gaz.solver.tools.proof_planner_tool import ProofPlannerTool
 from aimo_gaz.scripts.eval import ProblemState, ProofEnvWrapper
 from aimo_gaz.utils import string_utils, proof_utils
 from enum import Enum
@@ -75,6 +76,7 @@ class CoordinationSolver(Solver):
     def _planner_implementer_planner_solver_solver_chain(self, problem_statement: str, problem_spec: str, implementation_signature: str, test_cases: str, correctness_definition: str, time_allowed: int):
         implementation_planner: ImplementationPlannerTool = self.tools["implementation_planner"]
         implementer: ImplementerTool = self.tools["implementer"]
+        proof_planner: ProofPlannerTool = self.tools["proof_planner"]
 
         implementation_plan = "N/A"
         try:
@@ -94,6 +96,17 @@ class CoordinationSolver(Solver):
         implementer.reset()
 
         # TODO: check implementation against test cases
+
+        lemmas = []
+        lemma_plans = []
+        correctness_plan = "N/A"
+        try:
+            raw_proof_plan, lemmas, lemma_plans, correctness_plan = proof_planner.solve_intermediate(problem_statement, problem_spec, implementation, correctness_definition)
+            assert len(lemmas) == len(lemma_plans)
+            self.logger.info(f"Proof planner generated raw proof plan:\n{raw_proof_plan}")
+        except Exception as e:
+            self.logger.info(f"Exception encountered in proof planner: {e}")
+        proof_planner.reset()
 
         proved = True
 
