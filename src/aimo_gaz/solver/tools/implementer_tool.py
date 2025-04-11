@@ -17,11 +17,11 @@ class ImplementerTool(Tool):
         self.inference_kwargs["stop"] = prompter.stop_tokens
         self.history = []
 
-    def solve_intermediate(self, problem_statement: str, problem_spec: str, function_implementation_signature: str, test_cases: str, implementation_plan: str) -> str:
+    def solve_intermediate(self, problem_statement: str, problem_spec: str, implementation_signature: str, test_cases: str, implementation_plan: str) -> str:
         if not self.model.is_loaded():
             self.model.__enter__()
         # Prompt the model for the plan
-        self.history = self.prompter.get_prompt(self.history, problem_statement, problem_spec, function_implementation_signature, test_cases, implementation_plan)
+        self.history = self.prompter.get_prompt(self.history, problem_statement, problem_spec, implementation_signature, test_cases, implementation_plan)
         self.logger.info(f"[IMPLEMENTER] Raw prompt used:\n{string_utils.history_to_str(self.history)}")
         # Get the model response
         response = self.model.generate(self.history, **self.inference_kwargs)

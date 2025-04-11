@@ -30,11 +30,11 @@ class ImplementerPrompter(Prompter):
 
         self.stop_tokens = []
 
-    def get_prompt(self, history: list[dict[str, str]], problem_statement: str, problem_spec: str, function_implementation_signature: str, test_cases: str, implementation_plan: str) -> list[dict[str, str]]:
+    def get_prompt(self, history: list[dict[str, str]], problem_statement: str, problem_spec: str, implementation_signature: str, test_cases: str, implementation_plan: str) -> list[dict[str, str]]:
         if not history or history[0]["role"] != "system":
             history.insert(0, {"role": "system", "content": self.system_prompt})
             history[1:1] = self.example_prompt_list
-        history.append({"role": "user", "content": self.user_prompt.format(problem_statement, problem_spec, function_implementation_signature, test_cases, implementation_plan)})
+        history.append({"role": "user", "content": self.user_prompt.format(problem_statement, problem_spec, implementation_signature, test_cases, implementation_plan)})
         return history
 
     def parse_response(self, response: str) -> str:
