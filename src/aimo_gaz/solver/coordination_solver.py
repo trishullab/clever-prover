@@ -9,6 +9,7 @@ from sympy import *
 from itp_interface.rl.simple_proof_env import ProofAction
 from aimo_gaz.solver.abs_solver_and_tool import Solver, Tool
 from aimo_gaz.solver.tools.implementation_planner_tool import ImplementationPlannerTool
+from aimo_gaz.solver.tools.implementer_tool import ImplementerTool
 from aimo_gaz.scripts.eval import ProblemState, ProofEnvWrapper
 from aimo_gaz.utils import string_utils, proof_utils
 from enum import Enum
@@ -73,7 +74,9 @@ class CoordinationSolver(Solver):
 
     def _planner_implementer_planner_solver_solver_chain(self, problem_statement: str, problem_spec: str, implementation_signature: str, test_cases: str, correctness_definition: str, time_allowed: int):
         implementation_planner: ImplementationPlannerTool = self.tools["implementation_planner"]
+        implementer: ImplementerTool = self.tools["implementer"]
 
+        implementation_plan = "N/A"
         try:
             implementation_plan = implementation_planner.solve_intermediate(problem_statement, problem_spec, implementation_signature, test_cases)
             self.logger.info(f"Implementation planner generated implementation plan:\n{implementation_plan}")
@@ -81,7 +84,14 @@ class CoordinationSolver(Solver):
             self.logger.info(f"Exception encountered in implementation planner: {e}")
         implementation_planner.reset()
 
-        # TODO: generate implementation
+        implementation = implementation_signature
+        try:
+            implementation = implementer.solve_intermediate(problem_statement, problem_spec, implementation_signature, test_cases, implementation_plan)
+            implementation = implementation_signature[:-len("sorry")] + implementation
+            self.logger.info(f"Implementer generated implementation:\n{implementation}")
+        except Exception as e:
+            self.logger.info(f"Exception encountered in implementer: {e}")
+        implementer.reset()
 
         # TODO: check implementation against test cases
 

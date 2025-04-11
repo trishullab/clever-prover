@@ -5,7 +5,7 @@ class ImplementationPlannerPrompter(Prompter):
                  example_prompt_list: list[dict[str, str]] = None, append_system_prompt_after_every_message: bool = False):
         super().__init__(system_prompt_path, example_prompt_path, system_prompt, example_prompt_list,
                          append_system_prompt_after_every_message)
-        assert self.system_prompt is not None # TODO: add examples
+        assert self.system_prompt is not None
         assert self.example_prompt_list
 
         self.user_prompt = """[PROBLEM STATEMENT]
