@@ -5,6 +5,7 @@ import math
 import random
 import copy
 import tempfile
+import subprocess
 from sympy import *
 from itp_interface.rl.simple_proof_env import ProofAction
 from aimo_gaz.solver.abs_solver_and_tool import Solver, Tool
@@ -71,7 +72,25 @@ class CoordinationSolver(Solver):
     def _log_and_add_to_history_buffer(self, message):
         self.logger.info(message)
         self.history_buffer.append(message)
-    
+
+
+    def _check_implementation(self, implementation, test_cases) -> bool: # TODO: maybe add error feedback later
+        temp_lean_file_text = f"""import Imports.AllImports
+
+{implementation}
+
+{test_cases}
+"""
+        
+        with tempfile.NamedTemporaryFile(mode="w+", suffix=".lean") as temp_lean_file:
+            temp_lean_file.write(temp_lean_file_text)
+            temp_lean_file.flush()
+
+            result = subprocess.run(["lake", "env", "lean", temp_lean_file.name], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd="../../../clever/src/lean4/", text=True)
+
+        self.logger.info(f"Check implementation output:\n{result.stdout.strip()}")
+        
+        return (result.returncode == 0)
 
     def _planner_implementer_planner_solver_solver_chain(self, problem_statement: str, problem_spec: str, implementation_signature: str, test_cases: str, correctness_definition: str, time_allowed: int):
         implementation_planner: ImplementationPlannerTool = self.tools["implementation_planner"]
@@ -95,7 +114,11 @@ class CoordinationSolver(Solver):
             self.logger.info(f"Exception encountered in implementer: {e}")
         implementer.reset()
 
-        # TODO: check implementation against test cases
+        implementation_passes = self._check_implementation(implementation, test_cases)
+        if implementation_passes: # TODO: re-sample implementation if it fails test cases
+            self.logger.info("Implementation passed test cases.")
+        else:
+            self.logger.info("Implementation failed test cases.")
 
         lemmas = []
         lemma_plans = []
@@ -111,7 +134,7 @@ class CoordinationSolver(Solver):
         proved = True
 
         if proved:
-            self.logger.info("Succesfully proved correctness.")
+            self.logger.info("Successfully proved correctness.")
         else:
             self.logger.info("Failed to prove correctness.")
 
