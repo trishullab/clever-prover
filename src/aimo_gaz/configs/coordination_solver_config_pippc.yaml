@@ -3,7 +3,7 @@ tools:
   implementer: implementer_tool_config.yaml
   proof_planner: proof_planner_tool_config.yaml
 
-strategy: planner_implementer_planner_solver_solver_chain
+strategy: planner_implementer_planner_prover_chain
 
 coordination_kwargs:
   num_code_gens: 1

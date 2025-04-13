@@ -13,7 +13,7 @@ def test_solver(solver: Solver):
         print(ans)
         problem = input("Enter a math problem to solve: ")
 
-@hydra.main(config_path="configs/", config_name="coordination_solver_config_pipssc", version_base="1.2")
+@hydra.main(config_path="configs/", config_name="coordination_solver_config_pippc", version_base="1.2")
 def main(cfg):
     dirpath = os.path.dirname(os.path.abspath(__file__))
     os.environ["AIMO_GAZ_ROOT"] = dirpath

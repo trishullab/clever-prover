@@ -18,7 +18,7 @@ from enum import Enum
 from collections import Counter
 
 class CoordinationSolverStrategy(Enum):
-    PLANNER_IMPLEMENTER_PLANNER_SOLVER_SOLVER_CHAIN = "planner_implementer_planner_solver_solver_chain"
+    PLANNER_IMPLEMENTER_PLANNER_PROVER_CHAIN = "planner_implementer_planner_prover_chain"
 
     def __str__(self):
         return self.value
@@ -92,7 +92,7 @@ class CoordinationSolver(Solver):
         
         return (result.returncode == 0)
 
-    def _planner_implementer_planner_solver_solver_chain(self, problem_statement: str, problem_spec: str, implementation_signature: str, test_cases: str, correctness_definition: str, time_allowed: int):
+    def _planner_implementer_planner_prover_chain(self, problem_statement: str, problem_spec: str, implementation_signature: str, test_cases: str, correctness_definition: str, time_allowed: int):
         implementation_planner: ImplementationPlannerTool = self.tools["implementation_planner"]
         implementer: ImplementerTool = self.tools["implementer"]
         proof_planner: ProofPlannerTool = self.tools["proof_planner"]
@@ -334,8 +334,8 @@ class CoordinationSolver(Solver):
         self.start_time = time.time()
         self.logger.info(f"Starting to solve problem:\n{problem_statement}")
         try:
-            if self.strategy == CoordinationSolverStrategy.PLANNER_IMPLEMENTER_PLANNER_SOLVER_SOLVER_CHAIN:
-                proved = self._planner_implementer_planner_solver_solver_chain(problem_statement, problem_spec, implementation_signature, test_cases, correctness_definition, time_allowed)
+            if self.strategy == CoordinationSolverStrategy.PLANNER_IMPLEMENTER_PLANNER_PROVER_CHAIN:
+                proved = self._planner_implementer_planner_prover_chain(problem_statement, problem_spec, implementation_signature, test_cases, correctness_definition, time_allowed)
             else:
                 raise NotImplementedError(f"Strategy {self.strategy} is not implemented.")
         except Exception as e:
