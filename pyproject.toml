@@ -1,6 +1,29 @@
 [build-system]
 requires = [
-    "hatchling",
+    "hatchling"
+]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/clever_prover"]
+
+[project]
+name = "clever_prover"
+version = "0.0.0"
+authors = [
+  { name="Amitayush Thakur", email="amitayush@utexas.edu" },
+  { name="George Tsoukalas", email="george.tsoukalas@utexas.edu" }
+]
+description = "Proving correctness of generated code using LLMs in Lean 4"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+]
+
+dependencies = [
     "torch==2.1.1",
     "numpy==1.26.4",
     "accelerate==0.29.1",
@@ -23,27 +46,10 @@ requires = [
     "matplotlib==3.9.0",
     "dataclasses-json==0.5.7"
 ]
-build-backend = "hatchling.build"
-[project]
-name = "aimo_gaz"
-version = "0.0.1"
-authors = [
-  { name="Amitayush Thakur", email="amitayush@utexas.edu" },
-  { name="George Tsoukalas", email="george.tsoukalas@utexas.edu" },
-  { name="Zayne Sprague", email="zaynesprague@utexas.edu"}
-]
-description = "Generic interface for hooking up to any Interactive Theorem Prover (ITP) and collecting data for training ML models for AI in formal theorem proving."
-readme = "README.md"
-requires-python = ">=3.10"
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: POSIX :: Linux",
-]
 
 [project.urls]
-Homepage = "https://github.com/amit9oct/aimo"
-Issues = "https://github.com/amit9oct/aimo/issues"
+Homepage = "https://github.com/trishullab/clever_prover"
+Issues = "https://github.com/trishullab/clever_prover/issues"
 
 [tool.hatch.envs.default.env-vars]
 PIP_EXTRA_INDEX_URL = "https://download.pytorch.org/whl/cu121"
