@@ -50,7 +50,7 @@ else
   ∀ i', 1 ≤ i' ∧ i' < i → (score_changes'.take i').sum < threshold
   );
 -- program terminates
-∃ result, impl score_changes threshold = result →
+∃ result, impl score_changes threshold = result ∧
 -- return value satisfies spec
 spec score_changes threshold result
 [END]
@@ -150,8 +150,7 @@ theorem correctness
 (score_changes: List Int)
 (threshold: Int)
 : problem_spec implementation score_changes threshold
-:=
-by
+:= by
 -- sometimes we have to create a temporary variable to use in the proof
 unfold problem_spec
 let result := implementation score_changes threshold

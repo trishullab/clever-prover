@@ -50,7 +50,7 @@ else
   ∀ i', 1 ≤ i' ∧ i' < i → (score_changes'.take i').sum < threshold
   );
 -- program terminates
-∃ result, impl score_changes threshold = result →
+∃ result, impl score_changes threshold = result ∧
 -- return value satisfies spec
 spec score_changes threshold result
 [END]
