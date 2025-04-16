@@ -108,13 +108,13 @@ class CoordinationSolver(Solver):
         implementation = implementation_signature
         try:
             implementation = implementer.solve_intermediate(problem_statement, problem_spec, implementation_signature, test_cases, implementation_plan)
-            implementation = implementation_signature[:-len("sorry")] + implementation
+            implementation = implementation_signature[:-len("sorry")] + implementation # TODO: implementer sometimes generates test cases; parse these?
             self.logger.info(f"Implementer generated implementation:\n{implementation}")
         except Exception as e:
             self.logger.info(f"Exception encountered in implementer: {e}")
         implementer.reset()
 
-        implementation_passes = self._check_implementation(implementation, test_cases)
+        implementation_passes = self._check_implementation(implementation, test_cases) # TODO: deal with commented test cases
         if implementation_passes: # TODO: re-sample implementation if it fails test cases
             self.logger.info("Implementation passed test cases.")
         else:
@@ -131,7 +131,7 @@ class CoordinationSolver(Solver):
             self.logger.info(f"Exception encountered in proof planner: {e}")
         proof_planner.reset()
 
-        proved = True
+        proved = implementation_passes
 
         if proved:
             self.logger.info("Successfully proved correctness.")

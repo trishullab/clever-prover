@@ -162,6 +162,7 @@ cython_debug/
 .idea/
 
 src/clever_prover/.logs/*
+!src/clever_prover/.logs/archive/
 src/clever_prover/.logs/old/*
 !src/clever_prover/.logs/old/archive/
 !clever_prover.log

@@ -270,5 +270,5 @@ if __name__ == "__main__":
             print(f"Category: {category} ({category_stats['proved']} / {category_stats['total']} = {category_stats['proved'] / category_stats['total']:.2f})")
         print("\n\n")
 
-        if len(stats["category_statistics"]) != 0:
-            plot_category_statistics(stats["category_statistics"])
+        # if len(stats["category_statistics"]) != 0:
+        #     plot_category_statistics(stats["category_statistics"])
