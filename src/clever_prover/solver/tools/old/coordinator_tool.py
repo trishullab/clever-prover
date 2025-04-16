@@ -1,10 +1,10 @@
 from enum import Enum
 import typing
-from aimo_gaz.solver.abs_solver_and_tool import Tool
-from aimo_gaz.models.abs_model import Model
-from aimo_gaz.prompters.prompter import Prompter
-from aimo_gaz.scripts.eval import ProblemState
-from aimo_gaz.utils import string_utils
+from clever_prover.solver.abs_solver_and_tool import Tool
+from clever_prover.models.abs_model import Model
+from clever_prover.prompters.prompter import Prompter
+from clever_prover.scripts.eval import ProblemState
+from clever_prover.utils import string_utils
 import logging
 
 class ToolOrOther(Enum):

@@ -1,4 +1,4 @@
-from aimo_gaz.solver.abs_solver_and_tool import Tool
+from clever_prover.solver.abs_solver_and_tool import Tool
 import logging
 import os
 import tempfile
@@ -183,12 +183,12 @@ print("[OUTPUT END]")"""
 if __name__ == "__main__":
     # Test the ExecutorTool class
     import time
-    from aimo_gaz.utils.log_utils import setup_logger
+    from clever_prover.utils.log_utils import setup_logger
     time_str = time.strftime("%Y%m%d-%H%M%S")
     os.makedirs(".logs", exist_ok=True)
     os.makedirs(f".logs/{time_str}", exist_ok=True)
     os.makedirs(f".logs/{time_str}/temp", exist_ok=True)
-    logger = setup_logger("aimo_gaz", f".logs/{time_str}/executor_tool_test.log")
+    logger = setup_logger("clever_prover", f".logs/{time_str}/executor_tool_test.log")
     code = """
 x = symbols('x')
 eq = Eq(x**2 - 2*x - 8, 0)

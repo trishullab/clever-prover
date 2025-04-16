@@ -1,9 +1,9 @@
 import hydra
 import os
 import time
-from aimo_gaz.solver.solver_and_tool_config import parse_solver_or_tool_config, Solver
-from aimo_gaz.scripts.eval import evaluate_on_benchmarks
-from aimo_gaz.utils.log_utils import setup_logger
+from clever_prover.solver.solver_and_tool_config import parse_solver_or_tool_config, Solver
+from clever_prover.scripts.eval import evaluate_on_benchmarks
+from clever_prover.utils.log_utils import setup_logger
 
 
 def test_solver(solver: Solver):
@@ -16,20 +16,20 @@ def test_solver(solver: Solver):
 @hydra.main(config_path="configs/", config_name="coordination_solver_config_pippc", version_base="1.2")
 def main(cfg):
     dirpath = os.path.dirname(os.path.abspath(__file__))
-    os.environ["AIMO_GAZ_ROOT"] = dirpath
+    os.environ["CLEVER_PROVER_ROOT"] = dirpath
     os.environ["USE_VLLM"] = "True"
     os.chdir(dirpath)
     time_str = time.strftime("%Y%m%d-%H%M%S")
     os.makedirs(".logs", exist_ok=True)
     os.makedirs(f".logs/{time_str}", exist_ok=True)
-    logger = setup_logger("aimo_gaz", f".logs/{time_str}/aimo_gaz.log")
-    coordinator_history_logger = setup_logger("aimo_gaz_coordinator_history", f".logs/{time_str}/aimo_gaz_coordinator_history.log")
+    logger = setup_logger("clever_prover", f".logs/{time_str}/clever_prover.log")
+    coordinator_history_logger = setup_logger("clever_prover_coordinator_history", f".logs/{time_str}/clever_prover_coordinator_history.log")
     solver_config = parse_solver_or_tool_config(cfg)
     solver = solver_config.get_solver_or_tool(logger, coordinator_history_logger) # TODO: second logger only works with coordination solver
     with solver:
         # test_solver(solver)
         # Run benchmarking here
-        root = os.environ.get("AIMO_GAZ_ROOT")
+        root = os.environ.get("CLEVER_PROVER_ROOT")
         data_dir = os.path.dirname(root)
         data_dir = os.path.dirname(data_dir)
         data_dir = os.path.join(data_dir, "data")

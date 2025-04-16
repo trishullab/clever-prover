@@ -1,4 +1,4 @@
-from aimo_gaz.prompters.prompter import Prompter
+from clever_prover.prompters.prompter import Prompter
 
 class ImplementationPlannerPrompter(Prompter):
     def __init__(self, system_prompt_path: str = None, example_prompt_path: str = None, system_prompt: str = None,

@@ -8,12 +8,12 @@ import tempfile
 import subprocess
 from sympy import *
 from itp_interface.rl.simple_proof_env import ProofAction
-from aimo_gaz.solver.abs_solver_and_tool import Solver, Tool
-from aimo_gaz.solver.tools.implementation_planner_tool import ImplementationPlannerTool
-from aimo_gaz.solver.tools.implementer_tool import ImplementerTool
-from aimo_gaz.solver.tools.proof_planner_tool import ProofPlannerTool
-from aimo_gaz.scripts.eval import ProblemState, ProofEnvWrapper
-from aimo_gaz.utils import string_utils, proof_utils
+from clever_prover.solver.abs_solver_and_tool import Solver, Tool
+from clever_prover.solver.tools.implementation_planner_tool import ImplementationPlannerTool
+from clever_prover.solver.tools.implementer_tool import ImplementerTool
+from clever_prover.solver.tools.proof_planner_tool import ProofPlannerTool
+from clever_prover.scripts.eval import ProblemState, ProofEnvWrapper
+from clever_prover.utils import string_utils, proof_utils
 from enum import Enum
 from collections import Counter
 

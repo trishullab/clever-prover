@@ -1,8 +1,8 @@
 from itp_interface.rl.simple_proof_env import ProofAction, ProofEnv
-from aimo_gaz.solver.abs_solver_and_tool import Tool
-from aimo_gaz.models.abs_model import Model
-from aimo_gaz.prompters.prompter import Prompter
-from aimo_gaz.utils import string_utils
+from clever_prover.solver.abs_solver_and_tool import Tool
+from clever_prover.models.abs_model import Model
+from clever_prover.prompters.prompter import Prompter
+from clever_prover.utils import string_utils
 import logging
 import hydra
 
@@ -67,7 +67,7 @@ class ProverTool(Tool): # TODO: ignoring all actions other than RUN_TACTIC for n
 def main(cfg):
     import sys
     import os
-    from aimo_gaz.solver.solver_and_tool_config import parse_solver_or_tool_config
+    from clever_prover.solver.solver_and_tool_config import parse_solver_or_tool_config
     from itp_interface.rl.simple_proof_env import ProofExecutorCallback, ProofEnvReRankStrategy
 
     print("Interactive Proof Environment")
@@ -112,7 +112,7 @@ def main(cfg):
     #             action = scan_action(language)
 
     dirpath = os.path.abspath(os.path.join(__file__, f"{os.pardir}/{os.pardir}/{os.pardir}/"))
-    os.environ["AIMO_GAZ_ROOT"] = dirpath
+    os.environ["CLEVER_PROVER_ROOT"] = dirpath
     os.chdir(dirpath)
     logger = logging.getLogger(__name__)
     solver_config = parse_solver_or_tool_config(cfg)

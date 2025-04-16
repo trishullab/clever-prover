@@ -1,4 +1,4 @@
-from aimo_gaz.prompters.prompter import Prompter
+from clever_prover.prompters.prompter import Prompter
 import copy
 
 class OldCodePrompter(Prompter):

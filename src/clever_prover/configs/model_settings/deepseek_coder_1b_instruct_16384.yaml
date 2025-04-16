@@ -1,5 +1,5 @@
 name_or_path: deepseek-ai/deepseek-coder-1.3b-instruct
-logging_dir: <AIMO_GAZ_ROOT>/.logs/model
+logging_dir: <CLEVER_PROVER_ROOT>/.logs/model
 use_vllm: True
 vllm_model_args:
   dtype: half

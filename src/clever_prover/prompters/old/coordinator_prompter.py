@@ -1,8 +1,8 @@
 import typing
-from aimo_gaz.prompters.prompter import Prompter
-from aimo_gaz.solver.tools.coordinator_tool import ToolOrOther
-from aimo_gaz.scripts.eval import ProblemState
-from aimo_gaz.utils import string_utils
+from clever_prover.prompters.prompter import Prompter
+from clever_prover.solver.tools.coordinator_tool import ToolOrOther
+from clever_prover.scripts.eval import ProblemState
+from clever_prover.utils import string_utils
 
 class CoordinatorPrompter(Prompter):
     def __init__(self, system_prompt_path: str = None, example_prompt_path: str = None, system_prompt: str = None,

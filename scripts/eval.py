@@ -1,9 +1,9 @@
 # import csv
 # import matplotlib.pyplot as plt
 
-# from aimo_gaz.solver.abs_solver import Solver
-# from aimo_gaz.solver.test_solver import TestSolver
-# from aimo_gaz.solver.vanilla_few_shot_solver import FewShotSolver
+# from clever_prover.solver.abs_solver import Solver
+# from clever_prover.solver.test_solver import TestSolver
+# from clever_prover.solver.vanilla_few_shot_solver import FewShotSolver
 
 
 # def get_csv_data(path: str):

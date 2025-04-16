@@ -1,3 +1,3 @@
 name_or_path: gpt-4o
-logging_dir: <AIMO_GAZ_ROOT>/.logs/model
+logging_dir: <CLEVER_PROVER_ROOT>/.logs/model
 use_vllm: False

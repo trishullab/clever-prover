@@ -3,12 +3,12 @@ import os
 import logging
 import typing
 import hydra
-from aimo_gaz.prompters.prompter import Prompter
+from clever_prover.prompters.prompter import Prompter
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
 from enum import Enum
-from aimo_gaz.models.abs_model import Model
-from aimo_gaz.models.gpt_model import GptModel
+from clever_prover.models.abs_model import Model
+from clever_prover.models.gpt_model import GptModel
 if os.environ.get("USE_VLLM", "False").lower() == "true":
     # In case we cannot install VLLM
     from vllm import LLM, SamplingParams
@@ -66,28 +66,28 @@ class vLLMHarness(Model):
         pass
 
 
-from aimo_gaz.solver.test_solver import TestSolver
-from aimo_gaz.solver.abs_solver_and_tool import Solver, Tool
-from aimo_gaz.solver.vanilla_few_shot_solver import FewShotSolver as VanillaFewShotSolver
-from aimo_gaz.solver.coordination_solver import CoordinationSolver, CoordinationSolverStrategy
-from aimo_gaz.solver.tools.old_code_tool import OldCodeTool
-from aimo_gaz.solver.tools.old_planner_tool import OldPlannerTool
-from aimo_gaz.solver.tools.executor_tool import ExecutorTool
-from aimo_gaz.solver.tools.coordinator_tool import CoordinatorTool
-from aimo_gaz.solver.tools.planner_tool import PlannerTool
-from aimo_gaz.solver.tools.coder_tool import CoderTool
-from aimo_gaz.solver.tools.llm_guesser_tool import LLMGuesserTool
-from aimo_gaz.solver.tools.prover_tool import ProverTool
-from aimo_gaz.models.gpt_model import GptModel
-from aimo_gaz.prompters.cot_prompter import CoTPrompter
-from aimo_gaz.prompters.old_code_prompter import OldCodePrompter
-from aimo_gaz.prompters.old_planner_prompter import OldPlannerPrompter
-from aimo_gaz.prompters.coordinator_prompter import CoordinatorPrompter
-from aimo_gaz.prompters.planner_prompter import PlannerPrompter
-from aimo_gaz.prompters.coder_prompter import CoderPrompter
-from aimo_gaz.prompters.llm_guesser_prompter import LLMGuesserPrompter
-from aimo_gaz.prompters.prover_prompter import ProverPrompter
-from aimo_gaz.prompters.prover_format_answer_prompter import ProverFormatAnswerPrompter
+from clever_prover.solver.test_solver import TestSolver
+from clever_prover.solver.abs_solver_and_tool import Solver, Tool
+from clever_prover.solver.vanilla_few_shot_solver import FewShotSolver as VanillaFewShotSolver
+from clever_prover.solver.coordination_solver import CoordinationSolver, CoordinationSolverStrategy
+from clever_prover.solver.tools.old_code_tool import OldCodeTool
+from clever_prover.solver.tools.old_planner_tool import OldPlannerTool
+from clever_prover.solver.tools.executor_tool import ExecutorTool
+from clever_prover.solver.tools.coordinator_tool import CoordinatorTool
+from clever_prover.solver.tools.planner_tool import PlannerTool
+from clever_prover.solver.tools.coder_tool import CoderTool
+from clever_prover.solver.tools.llm_guesser_tool import LLMGuesserTool
+from clever_prover.solver.tools.prover_tool import ProverTool
+from clever_prover.models.gpt_model import GptModel
+from clever_prover.prompters.cot_prompter import CoTPrompter
+from clever_prover.prompters.old_code_prompter import OldCodePrompter
+from clever_prover.prompters.old_planner_prompter import OldPlannerPrompter
+from clever_prover.prompters.coordinator_prompter import CoordinatorPrompter
+from clever_prover.prompters.planner_prompter import PlannerPrompter
+from clever_prover.prompters.coder_prompter import CoderPrompter
+from clever_prover.prompters.llm_guesser_prompter import LLMGuesserPrompter
+from clever_prover.prompters.prover_prompter import ProverPrompter
+from clever_prover.prompters.prover_format_answer_prompter import ProverFormatAnswerPrompter
 
 GLOBAL_MODEL_CACHE = {}
 
@@ -342,13 +342,13 @@ def recursive_replace_keywords(cfg, key_word: str, replace_word: str):
         raise Exception(f"Invalid type: {type(cfg)}")
 
 def parse_solver_or_tool_config(cfg) -> typing.Union[SolverOrToolConfig, CoordinationSolverConfig]:
-    if "AIMO_GAZ_ROOT" in os.environ:
-        gaz_root = os.environ["AIMO_GAZ_ROOT"]
+    if "CLEVER_PROVER_ROOT" in os.environ:
+        gaz_root = os.environ["CLEVER_PROVER_ROOT"]
     else:
         gaz_root = None
     if gaz_root is not None:
         # Replace all the <gaz_root> placeholders in all the paths in all the setting
-        recursive_replace_keywords(cfg, "<AIMO_GAZ_ROOT>", gaz_root)
+        recursive_replace_keywords(cfg, "<CLEVER_PROVER_ROOT>", gaz_root)
     is_coordination_solver = "tools" in cfg
     if not is_coordination_solver:
 

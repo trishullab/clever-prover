@@ -1,7 +1,7 @@
 import typing
 import copy
-from aimo_gaz.models.abs_model import GenerationResult, GenerationResults, Model
-from aimo_gaz.models.gpt_access import GptAccess
+from clever_prover.models.abs_model import GenerationResult, GenerationResults, Model
+from clever_prover.models.gpt_access import GptAccess
 import logging
 
 class GptModel(Model):

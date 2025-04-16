@@ -1,5 +1,5 @@
 import re
-from aimo_gaz.prompters.prompter import Prompter
+from clever_prover.prompters.prompter import Prompter
 
 class CoTPrompter(Prompter):
     int_regex = re.compile(r"[-+]?\d+")

@@ -7,18 +7,18 @@ import copy
 import tempfile
 from sympy import *
 from itp_interface.rl.simple_proof_env import ProofAction
-from aimo_gaz.solver.abs_solver_and_tool import Solver, Tool
-from aimo_gaz.solver.tools.old_planner_tool import OldPlannerTool
-from aimo_gaz.solver.tools.old_code_tool import OldCodeTool
-from aimo_gaz.solver.tools.executor_tool import ExecutorTool
-from aimo_gaz.solver.tools.coordinator_tool import CoordinatorTool
-from aimo_gaz.solver.tools.planner_tool import PlannerTool
-from aimo_gaz.solver.tools.coder_tool import CoderTool
-from aimo_gaz.solver.tools.llm_guesser_tool import LLMGuesserTool
-from aimo_gaz.solver.tools.prover_tool import ProverTool
-from aimo_gaz.solver.tools.coordinator_tool import ToolOrOther
-from aimo_gaz.scripts.eval import ProblemState, ProofEnvWrapper
-from aimo_gaz.utils import string_utils, proof_utils
+from clever_prover.solver.abs_solver_and_tool import Solver, Tool
+from clever_prover.solver.tools.old_planner_tool import OldPlannerTool
+from clever_prover.solver.tools.old_code_tool import OldCodeTool
+from clever_prover.solver.tools.executor_tool import ExecutorTool
+from clever_prover.solver.tools.coordinator_tool import CoordinatorTool
+from clever_prover.solver.tools.planner_tool import PlannerTool
+from clever_prover.solver.tools.coder_tool import CoderTool
+from clever_prover.solver.tools.llm_guesser_tool import LLMGuesserTool
+from clever_prover.solver.tools.prover_tool import ProverTool
+from clever_prover.solver.tools.coordinator_tool import ToolOrOther
+from clever_prover.scripts.eval import ProblemState, ProofEnvWrapper
+from clever_prover.utils import string_utils, proof_utils
 from enum import Enum
 from collections import Counter
 

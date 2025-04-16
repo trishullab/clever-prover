@@ -20,18 +20,18 @@
 #     TrainerCallback,
 #     GenerationConfig
 # )
-# from aimo_gaz.tools.log_utils import setup_logger
+# from clever_prover.tools.log_utils import setup_logger
 # from transformers.trainer_callback import TrainerControl, TrainerState
 # from peft import LoraConfig
-# from aimo_gaz.models.huggingface_model_map import get_empty_config, trim_model_kwargs, get_model_class, get_decoder_start_token_id
-# from aimo_gaz.models.cuda_context import CudaContext
+# from clever_prover.models.huggingface_model_map import get_empty_config, trim_model_kwargs, get_model_class, get_decoder_start_token_id
+# from clever_prover.models.cuda_context import CudaContext
 # MODEL_TRAINING_MODE = False # Set this to true while training
 # if MODEL_TRAINING_MODE:
-#     from aimo_gaz.models.comet_helper import CometHelper
+#     from clever_prover.models.comet_helper import CometHelper
 #     from comet_ml import Experiment
-#     from aimo_gaz.models.custom_sft_trainer import GenerateEvalSFTTrainer
-#     from aimo_gaz.models.custom_s2s_trainer import GenerateEvalS2STrainer
-# from aimo_gaz.models.abs_model import GenerationResult, GenerationResults, Model
+#     from clever_prover.models.custom_sft_trainer import GenerateEvalSFTTrainer
+#     from clever_prover.models.custom_s2s_trainer import GenerateEvalS2STrainer
+# from clever_prover.models.abs_model import GenerationResult, GenerationResults, Model
 
 # class AutoRegressiveSequenceSearch(Enum):
 #     NucleusSampling = "nucleus_sampling"

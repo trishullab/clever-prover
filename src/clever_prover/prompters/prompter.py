@@ -1,6 +1,6 @@
 import typing
 from abc import ABC, abstractmethod
-from aimo_gaz.utils import string_utils
+from clever_prover.utils import string_utils
 
 class Prompter(ABC):
     def __init__(self,

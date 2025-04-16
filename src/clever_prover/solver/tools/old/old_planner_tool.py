@@ -1,8 +1,8 @@
-from aimo_gaz.solver.abs_solver_and_tool import Tool
-from aimo_gaz.models.abs_model import Model
-from aimo_gaz.models.gpt_model import GptModel
-# from aimo_gaz.solver.solver_and_tool_config import vLLMHarness
-from aimo_gaz.prompters.prompter import Prompter
+from clever_prover.solver.abs_solver_and_tool import Tool
+from clever_prover.models.abs_model import Model
+from clever_prover.models.gpt_model import GptModel
+# from clever_prover.solver.solver_and_tool_config import vLLMHarness
+from clever_prover.prompters.prompter import Prompter
 import logging
 
 class OldPlannerTool(Tool):
@@ -67,15 +67,15 @@ class OldPlannerTool(Tool):
 
 if __name__ == "__main__":
     # Test the OldPlannerTool class
-    from aimo_gaz.prompters.old_planner_prompter import OldPlannerPrompter
-    from aimo_gaz.utils.log_utils import setup_logger
+    from clever_prover.prompters.old_planner_prompter import OldPlannerPrompter
+    from clever_prover.utils.log_utils import setup_logger
     import time
     import os
 
     time_str = time.strftime("%Y%m%d-%H%M%S")
     os.makedirs(".logs", exist_ok=True)
     os.makedirs(f".logs/{time_str}", exist_ok=True)
-    logger = setup_logger("aimo_gaz", f".logs/{time_str}/planner_tool_test.log")
+    logger = setup_logger("clever_prover", f".logs/{time_str}/planner_tool_test.log")
 
     # model_name_or_path = "deepseek-ai/deepseek-math-7b-rl" # "deepseek-ai/deepseek-math-7b-rl" #"deepseek-ai/deepseek-coder-1.3b-instruct"
     model_name = "gpt-4o-mini"

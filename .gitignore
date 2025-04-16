@@ -161,10 +161,10 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
 
-src/aimo_gaz/.logs/*
-src/aimo_gaz/.logs/old/*
-!src/aimo_gaz/.logs/old/archive/
-!aimo_gaz.log
+src/clever_prover/.logs/*
+src/clever_prover/.logs/old/*
+!src/clever_prover/.logs/old/archive/
+!clever_prover.log
 
 .log/
 

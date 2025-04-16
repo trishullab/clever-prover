@@ -7,9 +7,9 @@ import os
 import matplotlib.pyplot as plt
 from enum import Enum
 from itp_interface.rl.simple_proof_env import ProofEnv
-from aimo_gaz.solver.abs_solver_and_tool import Solver
-from aimo_gaz.solver.test_solver import TestSolver
-from aimo_gaz.utils import string_utils, proof_utils
+from clever_prover.solver.abs_solver_and_tool import Solver
+from clever_prover.solver.test_solver import TestSolver
+from clever_prover.utils import string_utils, proof_utils
 
 
 def get_json_data(path: str):

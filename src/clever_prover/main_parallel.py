@@ -1,9 +1,9 @@
 import hydra
 import os
 import time
-from aimo_gaz.solver.solver_and_tool_config import parse_solver_or_tool_config, Solver
-from aimo_gaz.scripts.eval import evaluate_on_benchmarks
-from aimo_gaz.utils.log_utils import setup_logger
+from clever_prover.solver.solver_and_tool_config import parse_solver_or_tool_config, Solver
+from clever_prover.scripts.eval import evaluate_on_benchmarks
+from clever_prover.utils.log_utils import setup_logger
 import torch.distributed as dist
 import pandas as pd
 import numpy as np
@@ -29,7 +29,7 @@ def split_csv(file_path, num_splits, data_dir):
 
 def attempt_on_subset(rank, size, time_str, cfg, csv_path, benchmark_name, config_name="coordination_solver_config", version_base="1.2"):
     dist.init_process_group(backend='nccl', rank=rank, world_size=size)
-    logger = setup_logger("aimo_gaz", f".logs/{time_str}/aimo_gaz_{rank}.log")
+    logger = setup_logger("clever_prover", f".logs/{time_str}/clever_prover_{rank}.log")
     solver_config = parse_solver_or_tool_config(cfg)
     solver = solver_config.get_solver_or_tool(logger)
     with solver:
@@ -42,7 +42,7 @@ def attempt_on_subset(rank, size, time_str, cfg, csv_path, benchmark_name, confi
 def main(cfg):
     dist.init_process_group(backend='nccl')
     dirpath = os.path.dirname(os.path.abspath(__file__))
-    os.environ["AIMO_GAZ_ROOT"] = dirpath
+    os.environ["CLEVER_PROVER_ROOT"] = dirpath
     os.chdir(dirpath)
     time_str = time.strftime("%Y%m%d-%H%M%S")
     os.makedirs(".logs", exist_ok=True)
@@ -54,7 +54,7 @@ def main(cfg):
     rank = dist.get_rank() or 0
 
     # split csv into several pieces
-    root = os.environ.get("AIMO_GAZ_ROOT")
+    root = os.environ.get("CLEVER_PROVER_ROOT")
     data_dir = os.path.dirname(root)
     data_dir = os.path.dirname(data_dir)
     data_dir = os.path.join(data_dir, "data")
