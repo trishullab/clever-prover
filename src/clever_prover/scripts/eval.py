@@ -70,7 +70,7 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: loggi
 
     problem_file_path = "../../../clever/src/lean4/human_eval/problem_2.lean"
 
-    with open(problem_file_path, "r") as problem_file:
+    with open(problem_file_path, "r") as problem_file: # TODO: use CLEVER API instead
         raw_problem = problem_file.read()
     
     problem_statement, problem_spec, implementation_signature, test_cases, correctness_definition = string_utils.parse_problem_file(raw_problem)
