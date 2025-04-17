@@ -602,3 +602,64 @@ simp at h_1_le_i'_lt_i₁
 intro i h_1_le_i h_i_lt_i₁_plus_1
 simp [h_1_le_i'_lt_i₁] at h_i_lt_i₁_plus_1
 linarith
+
+`example_user`
+[FUNCTION IMPLEMENTATION]
+def implementation (n: Nat) : Nat :=
+match n with
+| 0 => 1
+| 1 => 1
+| n' + 2 => implementation n' + implementation (n' + 1)
+[END]
+
+[PREVIOUS LEMMAS]
+-- N/A
+[END]
+
+[CURRENT LEMMA]
+theorem fib_comp_to_non_comp (n : ℕ)
+(f : Nat → Nat)
+(h_f_0: f 0 = 1)
+(h_f_1: f 1 = 1)
+(h_f_step: ∀ n, f (n + 2) = f n + f (n + 1))
+: fibonacci_non_computable n (f n) := by
+sorry
+[END]
+
+[PLAN]
+Prove a `fib_comp_to_non_comp` lemma that states that given a computable function `f : Nat → Nat` that follows the Fibonacci base cases (`f 0 = 1`, `f 1 = 1`) and recursive case (`∀ n, f (n + 2) = f n + f (n + 1)`), the built-in Lean 4 function `fibonacci_non_computable` called on `n` and `(f n)` outputs `True` (for all `n`).
+  - Use induction and break the proof up into the base cases and the recursive case.
+[END]
+
+`example_assistant`
+theorem fib_comp_to_non_comp (n : ℕ)
+(f : Nat → Nat)
+(h_f_0: f 0 = 1)
+(h_f_1: f 1 = 1)
+(h_f_step: ∀ n, f (n + 2) = f n + f (n + 1))
+: fibonacci_non_computable n (f n) := by
+induction' n using Nat.strong_induction_on with n' ih
+by_cases h_n'_lt_1: n' < 2
+-- if n' < 2 then
+have h_n'_eq_0: n' = 0 ∨ n' = 1 := by
+  interval_cases n'
+  all_goals simp
+cases h_n'_eq_0
+rename_i h_n'_eq_0
+simp [h_n'_eq_0, h_f_0, fibonacci_non_computable.base0]
+rename_i h_n'_eq_1
+simp [h_n'_eq_1, h_f_1, fibonacci_non_computable.base1]
+set n'' := n' - 2
+have h_n''_eq_n_plus_2: n' = n'' + 2 := by
+  rw [Nat.sub_add_cancel]
+  linarith
+have h_n''_lt_n': n'' < n' := by
+  linarith
+have h_fib_n'':= h_f_step n''
+have h_fib_n''_non_computable := ih n'' h_n''_lt_n'
+have h_fib_n''_plus_1_non_computable := ih (n'' + 1) (by linarith)
+have h_fib_n''_plus_2_non_computable :=
+  fibonacci_non_computable.step _ _ _ h_fib_n''_non_computable h_fib_n''_plus_1_non_computable
+rw [←h_fib_n''] at h_fib_n''_plus_2_non_computable
+rw [←h_n''_eq_n_plus_2] at h_fib_n''_plus_2_non_computable
+assumption
