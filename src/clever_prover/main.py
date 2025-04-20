@@ -33,14 +33,8 @@ def main(cfg):
         data_dir = os.path.dirname(root)
         data_dir = os.path.dirname(data_dir)
         data_dir = os.path.join(data_dir, "data")
-        benchmark = "placeholder_0" # TODO: use benchmarks instead of just the single file path in 'eval.py'
-        # benchmark = "valid"
-        # benchmark = "kaggle_train_1"
-        # benchmark = "harmonic_test_find_1"
-        # benchmark = "harmonic_test_prove_1"
-        # benchmark = "harmonic_test_48"
-        # benchmark = "harmonic_test_missed_6"
-        # benchmark = "simple_find_1"
+        # benchmark = "problem_2_1"
+        benchmark = "simple_problems_2"
         # benchmark_ext = "csv"
         benchmark_ext = "json"
         logger.info("---Starting Run---")

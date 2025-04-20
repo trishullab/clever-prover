@@ -131,7 +131,9 @@ class CoordinationSolver(Solver):
             self.logger.info(f"Exception encountered in proof planner: {e}")
         proof_planner.reset()
 
-        proved = implementation_passes
+        # TODO: add provers
+
+        proved = implementation_passes # TODO: make this actually reflect if problem is proved
 
         if proved:
             self.logger.info("Successfully proved correctness.")
