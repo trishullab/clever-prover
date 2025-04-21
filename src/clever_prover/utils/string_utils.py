@@ -50,20 +50,27 @@ def parse_problem_file(raw_problem: str) -> typing.Tuple[str, str, str, str, str
     if problem_statement_start_ind == -1 or problem_statement_end_ind == -1 \
             or problem_spec_start_ind == -1 or problem_spec_end_ind == -1 \
             or implementation_signature_start_ind == -1 or implementation_signature_end_ind == -1 \
-            or test_cases_start_ind == -1 or test_cases_end_ind == -1 \
             or correctness_definition_start_ind == -1 or correctness_definition_end_ind == -1:
         raise ValueError(f"Problem file has wrong format.")
+    
+    test_cases_exist = True
+    if test_cases_start_ind == -1 or test_cases_end_ind == -1:
+        test_cases_exist = False
 
     problem_statement_start_ind += len(PROBLEM_STATEMENT_START_STRING)
     problem_spec_start_ind += len(PROBLEM_SPEC_START_STRING)
     implementation_signature_start_ind += len(IMPLEMENTATION_SIGNATURE_START_STRING)
-    test_cases_start_ind += len(TEST_CASES_START_STRING)
+    if test_cases_exist:
+        test_cases_start_ind += len(TEST_CASES_START_STRING)
     correctness_definition_start_ind += len(CORRECTNESS_DEFINITION_START_STRING)
 
     problem_statement = raw_problem[problem_statement_start_ind:problem_statement_end_ind].strip()
     problem_spec = raw_problem[problem_spec_start_ind:problem_spec_end_ind].strip()
     implementation_signature = raw_problem[implementation_signature_start_ind:implementation_signature_end_ind].strip()
-    test_cases = raw_problem[test_cases_start_ind:test_cases_end_ind].strip()
+    if test_cases_exist:
+        test_cases = raw_problem[test_cases_start_ind:test_cases_end_ind].strip()
+    else:
+        test_cases = ""
     correctness_definition = raw_problem[correctness_definition_start_ind:correctness_definition_end_ind].strip()
 
     implementation_signature += "\nsorry"
