@@ -46,6 +46,16 @@ class ImplementerPrompter(Prompter):
                 def_response = def_response[:def_end_ind]
         else:
             def_response = response
+        
+        # implementer sometimes generates the test cases, so filter them out
+        def_end_ind = def_response.find("#test ")
+        if def_end_ind == -1:
+            def_end_ind = def_response.find("#eval ")
+        if def_end_ind == -1:
+            def_end_ind = def_response.find("#eval! ")
+        if def_end_ind != -1:
+            def_response = def_response[:def_end_ind]
+        
         def_response = def_response.strip()
         
         if def_response.startswith("def "):

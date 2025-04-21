@@ -108,7 +108,7 @@ class CoordinationSolver(Solver):
         implementation = implementation_signature
         try:
             implementation = implementer.solve_intermediate(problem_statement, problem_spec, implementation_signature, test_cases, implementation_plan)
-            implementation = implementation_signature[:-len("sorry")] + implementation # TODO: implementer sometimes generates test cases; parse these?
+            implementation = implementation_signature[:-len("sorry")] + implementation
             self.logger.info(f"Implementer generated implementation:\n{implementation}")
         except Exception as e:
             self.logger.info(f"Exception encountered in implementer: {e}")
