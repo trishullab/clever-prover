@@ -28,7 +28,7 @@ dependencies = [
     "numpy==1.26.4",
     "accelerate==0.29.1",
     "bitsandbytes==0.42.0",
-    "transformers==4.41.2",
+    "transformers==4.48.0",
     "sympy==1.12.1",
     "ray==2.36.0",
     "tqdm>=4.27",
@@ -44,7 +44,9 @@ dependencies = [
     "trl==0.9.4",
     "setuptools==69.5.1",
     "matplotlib==3.9.0",
-    "dataclasses-json==0.5.7"
+    "dataclasses-json==0.5.7",
+    "copra-theorem-prover>=1.0.0",
+    "itp-interface>=1.1.10"
 ]
 
 [project.urls]
