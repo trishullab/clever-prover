@@ -97,25 +97,39 @@ class CoordinationSolver(Solver):
         implementer: ImplementerTool = self.tools["implementer"]
         proof_planner: ProofPlannerTool = self.tools["proof_planner"]
 
+        NUM_IMPLEMENTATION_SAMPLES = 10
         implementation_plan = "N/A"
-        try:
-            implementation_plan = implementation_planner.solve_intermediate(problem_statement, problem_spec, implementation_signature, test_cases)
-            self.logger.info(f"Implementation planner generated implementation plan:\n{implementation_plan}")
-        except Exception as e:
-            self.logger.info(f"Exception encountered in implementation planner: {e}")
-        implementation_planner.reset()
-
         implementation = implementation_signature
-        try:
-            implementation = implementer.solve_intermediate(problem_statement, problem_spec, implementation_signature, test_cases, implementation_plan)
-            implementation = implementation_signature[:-len("sorry")] + implementation # TODO: implementer sometimes generates test cases; parse these?
-            self.logger.info(f"Implementer generated implementation:\n{implementation}")
-        except Exception as e:
-            self.logger.info(f"Exception encountered in implementer: {e}")
-        implementer.reset()
+        implementation_passes = False
+        for i in range(NUM_IMPLEMENTATION_SAMPLES): # TODO: do this in parallel instead?
+            self.logger.info(f"Sampling implementation planner and implementer: {i+1} of {NUM_IMPLEMENTATION_SAMPLES}")
 
-        implementation_passes = self._check_implementation(implementation, test_cases) # TODO: deal with commented test cases
-        if implementation_passes: # TODO: re-sample implementation if it fails test cases
+            try:
+                implementation_plan = implementation_planner.solve_intermediate(problem_statement, problem_spec, implementation_signature, test_cases)
+                self.logger.info(f"Implementation planner generated implementation plan:\n{implementation_plan}")
+            except Exception as e:
+                self.logger.info(f"Exception encountered in implementation planner: {e}")
+            implementation_planner.reset()
+
+            try:
+                implementation = implementer.solve_intermediate(problem_statement, problem_spec, implementation_signature, test_cases, implementation_plan)
+                implementation = implementation_signature[:-len("sorry")] + implementation
+                self.logger.info(f"Implementer generated implementation:\n{implementation}")
+            except Exception as e:
+                self.logger.info(f"Exception encountered in implementer: {e}")
+            implementer.reset()
+
+            implementation_passes = self._check_implementation(implementation, test_cases) # TODO: deal with commented test cases
+            if implementation_passes: # TODO: provide feedback to implementer/implementation planner?
+                self.logger.info("Implementer sample passed test cases.")
+            else:
+                self.logger.info("Implementer sample failed test cases.")
+            
+            if implementation_passes:
+                self.logger.info(f"Implementer sample passed on attempt: {i+1} of {NUM_IMPLEMENTATION_SAMPLES}")
+                break
+
+        if implementation_passes:
             self.logger.info("Implementation passed test cases.")
         else:
             self.logger.info("Implementation failed test cases.")
@@ -131,7 +145,9 @@ class CoordinationSolver(Solver):
             self.logger.info(f"Exception encountered in proof planner: {e}")
         proof_planner.reset()
 
-        proved = implementation_passes
+        # TODO: add provers
+
+        proved = implementation_passes # TODO: make this actually reflect if problem is proved
 
         if proved:
             self.logger.info("Successfully proved correctness.")

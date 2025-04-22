@@ -67,18 +67,29 @@ def evaluate(data, solver_cls = TestSolver, solver: Solver = None, logger: loggi
 
     num_proved = 0
     total = 0
+    for exidx, ex in enumerate(data):
+        logger.info("---Starting Problem---")
+        
+        problem_filename = ex.get("filename")
+        logger.info(f"Problem Filename: {problem_filename}")
 
-    problem_file_path = "../../../clever/src/lean4/human_eval/problem_2.lean"
+        problem_file_path = os.path.join(f"../../../clever/src/lean4/", problem_filename)
 
-    with open(problem_file_path, "r") as problem_file:
-        raw_problem = problem_file.read()
-    
-    problem_statement, problem_spec, implementation_signature, test_cases, correctness_definition = string_utils.parse_problem_file(raw_problem)
+        with open(problem_file_path, "r") as problem_file: # TODO: use CLEVER API instead
+            raw_problem = problem_file.read()
+        
+        problem_statement, problem_spec, implementation_signature, test_cases, correctness_definition = string_utils.parse_problem_file(raw_problem)
 
-    proved = solver.solve(problem_statement, problem_spec, implementation_signature, test_cases, correctness_definition, time_allowed=TIME_ALLOWED_PER_PROBLEM)
-    
-    num_proved += int(proved)
-    total += 1
+        proved = solver.solve(problem_statement, problem_spec, implementation_signature, test_cases, correctness_definition, time_allowed=TIME_ALLOWED_PER_PROBLEM)
+        
+        num_proved += int(proved)
+        total += 1
+
+        logger.info("---Problem Result---")
+        logger.info(f"Example {exidx}:")
+        logger.info(f"Problem Filename: {problem_filename}")
+        logger.info(f"Problem Statement:\n{problem_statement}")
+        logger.info(f"Proved: {proved}")
 
     return {
         "num_proved": num_proved,

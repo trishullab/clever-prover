@@ -1,0 +1,32 @@
+[
+    {
+        "filename": "human_eval/problem_0.lean"
+    },
+    {
+        "filename": "human_eval/problem_6.lean"
+    },
+    {
+        "filename": "human_eval/problem_7.lean"
+    },
+    {
+        "filename": "human_eval/problem_9.lean"
+    },
+    {
+        "filename": "human_eval/problem_21.lean"
+    },
+    {
+        "filename": "human_eval/problem_29.lean"
+    },
+    {
+        "filename": "human_eval/problem_31.lean"
+    },
+    {
+        "filename": "human_eval/problem_37.lean"
+    },
+    {
+        "filename": "human_eval/problem_39.lean"
+    },
+    {
+        "filename": "human_eval/problem_44.lean"
+    }
+]
