@@ -2,11 +2,12 @@
 defaults:
   - override hydra/job_logging: 'disabled'
 
-proof_dump_file_name: few_shot_spec_generation.log
 task_type: SPEC_ISOMORPHISM
 log_dir: ".logs/eval_few_shot_spec_generation"
 exp_name: "few_shot_spec_generation"
+spec_generation_strategy: "FewShotSpecGeneration"
 problems_to_solve: "*"
+k: 1
 spec_prompt_settings:
   system_prompt_path: "src/clever_prover/prompts/baselines/system/FewShotSpecGeneration.md"
   example_prompt_path: "src/clever_prover/prompts/baselines/examples/FewShotSpecGeneration.md"

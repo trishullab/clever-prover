@@ -1,5 +1,4 @@
 import logging
-import asyncio
 import os
 import re
 from clever_prover.tasks.spec_generation_task import SpecGenerationTask
@@ -20,24 +19,20 @@ class FewShotSpecGenerationTask(SpecGenerationTask):
         spec_model_settings: ModelSettings,
         proof_prompt_settings: PromptSettings,
         proof_model_settings: ModelSettings,
-        proof_dump_file_name,
         lemma_name="spec_isomorphism",
         logger: logging.Logger = None):
         """
         Initialize the FewShotSpecGenerationTask with project path, file path, and lemma name.
         """
-        super().__init__(problem_id=problem_id, problem_view=problem_view, lemma_name=lemma_name)
+        super().__init__(problem_id=problem_id, problem_view=problem_view, lemma_name=lemma_name, logger=logger)
         self.proof_prompt_settings = proof_prompt_settings
         self.proof_model_settings = proof_model_settings
         self.spec_prompt_settings = spec_prompt_settings
         self.spec_model_settings = spec_model_settings
-        self.proof_dump_file_name = proof_dump_file_name
-        self.logger = logger if logger else logging.getLogger(__name__)
         self.generated_spec = None
         self.helper_definitions = None
         self.helper_lemmas = None
         self.generated_proof = None
-        self.validation_result = None
 
     def parse_spec(self, spec: list, logger: logging.Logger = None) -> str:
         """
@@ -127,15 +122,19 @@ class FewShotSpecGenerationTask(SpecGenerationTask):
         # TODO: Add Helper Definitions
         parsed_spec = self.parse_spec(spec, logger=logger)
         self.generated_spec = parsed_spec
+        all_helper_definitions = self.helper_definitions
+        if all_helper_definitions is not None:
+            problem.problem_spec_formal_generated = all_helper_definitions + "\n" + problem.problem_spec_formal_generated
+        # Add the generated spec to the problem view
+        problem.problem_spec_formal_generated += ("\n" + parsed_spec)
+        self.generated_spec_problem_view = problem
         return parsed_spec
 
     def generate_spec_isomorphism_proof(self, timeout_in_ms = 60, logger = None) -> str:
+        assert self.generated_spec_problem_view is not None, "generated_spec_problem_view is None. Please generate the specification first."
         logger = logger if logger else self.logger
         problem = self.problem_view.get_view(self.problem_id)
-        generated_spec = self.generated_spec
-        if self.helper_definitions is not None:
-            generated_spec = self.helper_definitions + "\n" + generated_spec
-        problem.problem_spec_formal_generated += ("\n" + generated_spec)
+        problem.problem_spec_formal_generated = self.generated_spec_problem_view.problem_spec_formal_generated
         try:
             simple_prompter = SimplePrompter(
                 main_sys_prompt_path=self.proof_prompt_settings.system_prompt_path,
@@ -163,21 +162,16 @@ class FewShotSpecGenerationTask(SpecGenerationTask):
                 problem.isomorphism_helper_lemmas.append(Lemma(statement=self.helper_lemmas, proof=""))
             problem.isomorphism_proof = proof
             formatted_problem, _ = format_problem_as_lean_with_line_ranges(problem)
-            logger.info(f"Formatted problem:\n{formatted_problem}")
-            # Submit the proof to the problem view
-            val_result = asyncio.run(
-                self.problem_view.submit_async(
-                    problem=problem,
-                    timeout_in_ms=timeout_in_ms
-                ))
-            self.logger.info(f"Problem ID: {self.problem_id}\nResult:")
-            self.logger.info(f"Validation Result [compilation_ok]: {val_result.compilation_ok}")
-            self.logger.info(f"Validation Result [correctness_ok]: {val_result.correctness_ok}")
-            self.logger.info(f"Validation Result [isomorphism_ok]: {val_result.isomorphism_ok}")
-            if not val_result.compilation_ok:
-                self.logger.error("Compilation failed.")
-                self.logger.error(f"Compilation error: {val_result.error_message}")
-            self.validation_result = val_result
+            # Write the proof to a file
+            report_dir = self.problem_view.report_dir
+            os.makedirs(report_dir, exist_ok=True)
+            base_filename = os.path.basename(self.file_path)[:-len(".lean")] + f"_problem_{self.problem_id}.lean"
+            temporary_file_name = f"{os.path.join(report_dir, base_filename)}"
+            with open(temporary_file_name, "w") as f:
+                f.write(formatted_problem)
+            # Writing the proof to the file
+            self.logger.info(f"Writing the proof to {temporary_file_name}")
+            self.generated_proof_problem_view = problem
             return proof
         finally:
             if os.path.exists(self.file_path):

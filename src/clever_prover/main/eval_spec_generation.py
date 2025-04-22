@@ -3,10 +3,10 @@
 import hydra
 import os
 import time
+import asyncio
 from clever_bench.task import ProblemViewTask, TaskComponent, ValidationResult
 from clever_bench.benchmark import Benchmark
-from clever_prover.main.parse_config import parse_config
-from clever_prover.baselines.few_shot_spec_generation import FewShotSpecGenerationTask
+from clever_prover.main.parse_config import parse_config, parse_spec_generation_class
 from itp_interface.tools.log_utils import setup_logger
 
 @hydra.main(config_path="configs", config_name="few_shot_spec_generation", version_base="1.2")
@@ -27,7 +27,8 @@ def main(cfg):
         report_dir=test_report_dir
     )
     hyper_params = parse_config(cfg)
-    hyper_params["proof_dump_file_name"] = os.path.join(log_dir, hyper_params["proof_dump_file_name"])
+    if "proof_dump_file_name" in hyper_params:
+        hyper_params["proof_dump_file_name"] = os.path.join(log_dir, hyper_params["proof_dump_file_name"])
     problems_to_solve = cfg["problems_to_solve"] if "problems_to_solve" in cfg else "*"
     timeout_in_secs = cfg["timeout_in_secs"] if "timeout_in_secs" in cfg else 600    
     k = cfg["k"] if "k" in cfg else 1
@@ -41,24 +42,46 @@ def main(cfg):
     validation_results : dict[int, ValidationResult] = {}
     problem_solved_map: dict[int, int] = {}
     generated_compilable: dict[int, bool] = {}
+    compilation_timeout = 150*1000 # 150 seconds
     for attempt_idx in range(1, k + 1):
         for idx in problems_to_solve:
             if idx in problem_solved_map:
                 logger.info(f"Problem {idx} already solved in attempt {problem_solved_map[idx]}. Skipping.")
                 continue
-            few_shot_spec_generation_task = FewShotSpecGenerationTask(
+            spec_generation_strategy = parse_spec_generation_class(cfg)
+            spec_generation_task = spec_generation_strategy(
                 problem_id=idx,
                 problem_view=problem_view,
                 logger=logger,
                 **hyper_params)
-            generated_spec = few_shot_spec_generation_task.generate_specification(timeout_in_ms=timeout_in_secs * 1000, logger=logger)
-            logger.info(f"Generated spec for problem {idx}:\n{generated_spec}")
-            proof = few_shot_spec_generation_task.generate_spec_isomorphism_proof(timeout_in_ms=timeout_in_secs * 1000, logger=logger)
-            logger.info(f"Generated proof for problem {idx}:\n{proof}")
-            validation_result = few_shot_spec_generation_task.validation_result
+            _ = spec_generation_task.generate_specification(timeout_in_ms=timeout_in_secs * 1000, logger=logger)
+            validation_result = asyncio.run(
+                problem_view.submit_async(
+                    problem=spec_generation_task.generated_spec_problem_view,
+                    timeout_in_ms=compilation_timeout
+                ))
+            logger.info(f"Validation Result [{idx}] [compilation_ok]: {validation_result.compilation_ok}")
+            validation_results[idx] = validation_result
             if validation_result.compilation_ok:
                 logger.info(f"Problem {idx} was compiled successfully.")
                 generated_compilable[idx] = True
+            else:
+                logger.error("Spec Generation failed.")
+                logger.error(f"Spec Compilation Error: {validation_result.error_message[-300:]}")
+                continue
+                # No point in even attempting the proof if the spec generation failed
+            _ = spec_generation_task.generate_spec_isomorphism_proof(timeout_in_ms=timeout_in_secs * 1000, logger=logger)
+            # Submit the proof to the problem view
+            validation_result = asyncio.run(
+                problem_view.submit_async(
+                    problem=spec_generation_task.generated_proof_problem_view,
+                    timeout_in_ms=compilation_timeout
+                ))
+            logger.info(f"Validation Result [{idx}] [isomorphism_ok]: {validation_result.isomorphism_ok}")
+            if not validation_result.compilation_ok:
+                logger.error("Proof failed.")
+                logger.error(f"Proof error: {validation_result.error_message[-300:]}")
+            validation_result = validation_result
             if validation_result.isomorphism_ok:
                 logger.info(f"Problem {idx} was solved successfully.")
                 problem_solved_map[idx] = attempt_idx
