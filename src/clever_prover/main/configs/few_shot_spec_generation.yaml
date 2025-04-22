@@ -1,0 +1,33 @@
+# @package _global_
+defaults:
+  - override hydra/job_logging: 'disabled'
+
+task_type: SPEC_ISOMORPHISM
+log_dir: ".logs/eval_few_shot_spec_generation"
+exp_name: "few_shot_spec_generation"
+spec_generation_strategy: "FewShotSpecGeneration"
+problems_to_solve: "*"
+k: 1
+spec_prompt_settings:
+  system_prompt_path: "src/clever_prover/prompts/baselines/system/FewShotSpecGeneration.md"
+  example_prompt_path: "src/clever_prover/prompts/baselines/examples/FewShotSpecGeneration.md"
+  max_tokens_per_action: 10000
+  max_history_messages: 0
+  end_tokens: ["[END]"]
+
+spec_model_settings:
+  model_name: "gpt-4o"
+  secret_path: ".secrets/openai_key.json"
+  temperature: 0.75
+
+proof_prompt_settings:
+  system_prompt_path: "src/clever_prover/prompts/baselines/system/FewShotSpecProofGeneration.md"
+  example_prompt_path: "src/clever_prover/prompts/baselines/examples/FewShotSpecProofGeneration.md"
+  max_tokens_per_action: 10000
+  max_history_messages: 0
+  end_tokens: ["[END]"]
+
+proof_model_settings:
+  model_name: "gpt-4o"
+  secret_path: ".secrets/openai_key.json"
+  temperature: 0.75

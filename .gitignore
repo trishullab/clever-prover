@@ -168,6 +168,7 @@ src/clever_prover/.logs/old/*
 !clever_prover.log
 
 .log/
+.logs/
 
 outputs/
 
