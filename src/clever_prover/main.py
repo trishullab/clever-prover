@@ -33,9 +33,9 @@ def main(cfg):
         data_dir = os.path.dirname(root)
         data_dir = os.path.dirname(data_dir)
         data_dir = os.path.join(data_dir, "data")
-        # benchmark = "problem_2_1"
+        benchmark = "problem_3_1"
         # benchmark = "simple_problems_2"
-        benchmark = "random_problems_10"
+        # benchmark = "random_problems_10"
         # benchmark_ext = "csv"
         benchmark_ext = "json"
         logger.info("---Starting Run---")
