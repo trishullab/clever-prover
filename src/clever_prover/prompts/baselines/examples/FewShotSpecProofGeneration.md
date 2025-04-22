@@ -202,32 +202,21 @@ The proof uses the helper lemmas to show that the generated specification is equ
 
 
 [HELPER LEMMAS]
--- start_def iso_helper_lemmas
 theorem fib0_unique (n : ℕ) (h : fibonacci_non_computable 0 n) : n = 0 :=
--- end_def iso_helper_lemmas
--- start_def iso_helper_lemmas_proof
 by
 cases h
 rfl
--- end_def iso_helper_lemmas_proof
 
--- start_def iso_helper_lemmas
 theorem fib1_unique (n : ℕ) (h : fibonacci_non_computable 1 n) : n = 1 :=
--- end_def iso_helper_lemmas
--- start_def iso_helper_lemmas_proof
 by
 cases h
 rfl
--- end_def iso_helper_lemmas_proof
 
--- start_def iso_helper_lemmas
 theorem fib_rec_unique (n m : ℕ):
   fibonacci_non_computable (n + 2) m ↔
   ∃ f₁ f₂, fibonacci_non_computable n f₁ ∧
   fibonacci_non_computable (n + 1) f₂ ∧
   m = f₁ + f₂ :=
--- end_def iso_helper_lemmas
--- start_def iso_helper_lemmas_proof
 by
 apply Iff.intro
 intro h
@@ -239,14 +228,10 @@ intro h
 obtain ⟨f₁, f₂, h₁, h₂, h_eq⟩ := h
 rw [h_eq]
 exact fibonacci_non_computable.step _ _ _ h₁ h₂
--- end_def iso_helper_lemmas_proof
 
--- start_def iso_helper_lemmas
 theorem fib_inversion (n f₁ f₂ : ℕ)
 (h : fibonacci_non_computable n f₁) (h' : fibonacci_non_computable n f₂) :
   f₁ = f₂ :=
--- end_def iso_helper_lemmas
--- start_def iso_helper_lemmas_proof
 by
 revert f₁ f₂
 induction' n using Nat.strong_induction_on with n' ih
@@ -283,7 +268,6 @@ obtain ⟨f₁'', f₂'', h₁', h₂', h_eq'⟩ := h'
 have h_fib_inv_n'' := ih n'' (by linarith) f₁'' f₁' h₁' h₁
 have h_fib_inv_n''_plus_1 := ih (n'' + 1) (by linarith) f₂'' f₂' h₂' h₂
 linarith
--- end_def iso_helper_lemmas_proof
 [END LEMMAS]
 
 [PROOF]
@@ -339,5 +323,85 @@ simp at h_impl_1
 simp [(fib_rec_unique_seq n impl h_impl_0 h_impl_1 h_impl_n')]
 [END]
 
+`example_user`
+[NL Description]
+def is_square(x: int, y: int) -> bool
+"""
+Given two integers x and y, your task is to find if x is a square of y.
+The function should return true if x is a square of y, otherwise false.
+"""
+
+[GROUND TRUTH SPECIFICATION]
+def problem_spec
+-- function signature
+(impl: Int → Int → Bool)
+-- inputs
+(x: Int)
+(y: Int) :=
+-- spec
+let spec (result: Bool) :=
+result = true ↔ x = y^2;
+-- program terminates
+∃ result, impl x y = result ∧
+-- return value satisfies spec
+spec result
+
+[GENERATED SPECIFICATION]
+def generated_spec
+(impl: Int → Int → Bool)
+-- inputs
+(x: Int)
+(y: Int) : Prop :=
+impl x y = if x = y * y then true else false
+
+[ISOMORPHISM STATEMENT]
+theorem spec_isomorphism:
+∀ impl,
+(∀ x y, problem_spec impl x y) ↔
+(∀ x y, generated_spec impl x y) :=
+
+
+`example_assistant`
+[THOUGHTS]
+To prove the equivalence of the two specifications, we can start by analyzing the generated specification.
+The main idea is to create a specific instance of the generated specification and show that it satisfies the properties of the problem specification and vice versa.
+Use `by_cases` to handle the case when x = y * y and when x ≠ y * y.
+We can then simplify `if-else` statements and use an instance of the problem specification to show that the two specifications are equivalent. We might also have to show that y * y = y ^ 2, this can be done using `ring`.
+For the reverse direction, we can use similar reasoning.
+Introduce the `h_specialized_spec` variable to represent the specialized version of the problem specification and show that it satisfies the generated specification.
+[END THOUGHTS]
+
+
+[PROOF]
+by
+intro impl
+apply Iff.intro
+intro h_prob_spec
+intro x y
+have h_specialized_spec := h_prob_spec x y
+simp [generated_spec]
+by_cases h: x = y * y
+simp [h]
+simp [problem_spec] at h_specialized_spec
+rw [h] at h_specialized_spec
+simp [h_specialized_spec]
+ring
+simp [h]
+simp [problem_spec] at h_specialized_spec
+have h_eq: y ^ 2 = y * y := by ring
+rw [h_eq] at h_specialized_spec
+simp [h] at h_specialized_spec
+simp [h_specialized_spec]
+-- Proved the forward direction
+-- Now prove the reverse direction
+intro h_gen_spec
+intro x y
+have h_specialized_spec := h_gen_spec x y
+simp [problem_spec]
+simp [generated_spec] at h_specialized_spec
+simp [h_specialized_spec]
+have h_eq: y ^ 2 = y * y := by ring
+rw [h_eq]
+[END]
 
 `conv end`
