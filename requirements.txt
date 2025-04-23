@@ -106,7 +106,7 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 python-multipart==0.0.9
 pytz==2024.1
-PyYAML==6.0.1
+# PyYAML==6.0.1
 rank-bm25==0.2.2
 ray==2.36.0
 referencing==0.35.1
