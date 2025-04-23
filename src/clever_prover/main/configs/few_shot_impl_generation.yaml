@@ -1,0 +1,33 @@
+# @package _global_
+defaults:
+  - override hydra/job_logging: 'disabled'
+
+task_type: IMPL_CORRECTNESS
+log_dir: ".logs/eval_few_shot_impl_generation"
+exp_name: "few_shot_impl_generation"
+impl_generation_strategy: "FewShotImplGeneration"
+problems_to_solve: "*"
+k: 1
+impl_prompt_settings:
+  system_prompt_path: "src/clever_prover/prompts/baselines/system/FewShotImplGeneration.md"
+  example_prompt_path: "src/clever_prover/prompts/baselines/examples/FewShotImplGeneration.md"
+  max_tokens_per_action: 10000
+  max_history_messages: 0
+  end_tokens: ["[END]"]
+
+impl_model_settings:
+  model_name: "gpt-4o"
+  secret_path: ".secrets/openai_key.json"
+  temperature: 0.75
+
+proof_prompt_settings:
+  system_prompt_path: "src/clever_prover/prompts/baselines/system/FewShotImplProofGeneration.md"
+  example_prompt_path: "src/clever_prover/prompts/baselines/examples/FewShotImplProofGeneration.md"
+  max_tokens_per_action: 10000
+  max_history_messages: 0
+  end_tokens: ["[END]"]
+
+proof_model_settings:
+  model_name: "gpt-4o"
+  secret_path: ".secrets/openai_key.json"
+  temperature: 0.75
