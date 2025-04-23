@@ -2,6 +2,7 @@ import typing
 from enum import Enum
 from clever_prover.utils.configs import PromptSettings, ModelSettings
 from clever_prover.baselines.few_shot_spec_generation import FewShotSpecGenerationTask
+from clever_prover.baselines.few_shot_implementation_generation import FewShotImplementationGenerationTask
 from clever_prover.tasks.spec_generation_task import SpecGenerationTask
 from clever_prover.tasks.implementation_generation_task import ImplementationGenerationTask
 
@@ -47,7 +48,7 @@ def parse_impl_generation_class(cfg) -> typing.Type[ImplementationGenerationTask
     assert task_type == TaskType.IMPL_CORRECTNESS, "Only IMPL_CORRECTNESS can be used for implementation generation"
     impl_generation_strategy = ImplementationGenerationStrategy(cfg["impl_generation_strategy"])
     if impl_generation_strategy == ImplementationGenerationStrategy.FewShotImplGeneration:
-        raise NotImplementedError("FewShotImplGeneration is not implemented yet")
+        return FewShotImplementationGenerationTask
     else:
         raise ValueError(f"Unknown task type: {task_type}")
 
