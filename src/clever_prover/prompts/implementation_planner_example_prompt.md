@@ -59,7 +59,6 @@ spec score_changes threshold result
 
 [FUNCTION IMPLEMENTATION SIGNATURE]
 def implementation (score_changes: List Int) (threshold: Int) : Nat :=
-sorry
 [END]
 
 [TEST CASES]
@@ -118,7 +117,6 @@ spec result
 
 [FUNCTION IMPLEMENTATION SIGNATURE]
 def implementation (x: Int) : Int :=
-sorry
 [END]
 
 [TEST CASES]
@@ -181,7 +179,6 @@ spec result
 
 [FUNCTION IMPLEMENTATION SIGNATURE]
 def implementation (n: Nat) : Nat :=
-sorry
 [END]
 
 [TEST CASES]

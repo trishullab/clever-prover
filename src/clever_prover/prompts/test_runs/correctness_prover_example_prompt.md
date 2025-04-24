@@ -78,8 +78,7 @@ lemma implementation_loop_threshold_invariant
 (k: Int)
 (h_rounds_played: score_changes.length > 0)
 : implementation.loop score_changes (threshold - k) score coins
-= implementation.loop score_changes threshold (score + k) coins := by
-sorry
+= implementation.loop score_changes threshold (score + k) coins :=
 
 lemma implementation_loop_simple_increment
 (head: Int)
@@ -92,8 +91,7 @@ implementation.loop (head :: score_changes_tail) threshold score coins =
 implementation.loop (score_changes_tail) threshold (head + score) coins) ∧
 (head + score ≥ threshold →
 implementation.loop (head :: score_changes_tail) threshold score coins =
-1 + implementation.loop (score_changes_tail) threshold (head + score) coins) := by
-sorry
+1 + implementation.loop (score_changes_tail) threshold (head + score) coins) :=
 
 lemma implementation_loop_coin_monotonic_increasing
 (score_changes: List Int)
@@ -101,8 +99,7 @@ lemma implementation_loop_coin_monotonic_increasing
 (score: Int)
 (coins: Nat)
 (h_rounds_played: score_changes.length > 0)
-: coins ≤ implementation.loop score_changes threshold score coins := by
-sorry
+: coins ≤ implementation.loop score_changes threshold score coins :=
 
 lemma implementation_loop_invariant_stop
 (score_changes: List Int)
@@ -112,8 +109,7 @@ lemma implementation_loop_invariant_stop
 (h_rounds_played: score_changes.length > 0)
 (h_within_threshold: coins = implementation.loop score_changes threshold score coins)
 : ∀ i, 1 ≤ i ∧ i ≤ score_changes.length →
-score + (score_changes.take i).sum < threshold := by
-sorry
+score + (score_changes.take i).sum < threshold :=
 
 lemma implementation_loop_invariant_continue
 (score_changes: List Int)
@@ -127,8 +123,7 @@ lemma implementation_loop_invariant_continue
 implementation.loop score_changes threshold score coins =
 1 + implementation.loop (score_changes.drop i') threshold
 (score + (score_changes.take i').sum) coins →
-∀ i, 1 ≤ i ∧ i < i' → score + (score_changes.take i).sum < threshold := by
-sorry
+∀ i, 1 ≤ i ∧ i < i' → score + (score_changes.take i).sum < threshold :=
 [END]
 
 [CORRECTNESS DEFINITION]
@@ -136,8 +131,7 @@ theorem correctness
 (score_changes: List Int)
 (threshold: Int)
 : problem_spec implementation score_changes threshold
-:= by
-sorry
+:=
 [END]
 
 [PLAN]
@@ -148,11 +142,7 @@ Prove the `correctness` theorem.
 [END]
 
 `example_assistant`
-theorem correctness
-(score_changes: List Int)
-(threshold: Int)
-: problem_spec implementation score_changes threshold
-:= by
+by
 -- sometimes we have to create a temporary variable to use in the proof
 unfold problem_spec
 let result := implementation score_changes threshold
@@ -254,8 +244,7 @@ if x < 0 then -x else x
 [CORRECTNESS DEFINITION]
 theorem correctness
 (x: Int)
-: problem_spec implementation x := by
-sorry
+: problem_spec implementation x :=
 [END]
 
 [PLAN]
@@ -266,9 +255,7 @@ Prove the `correctness` theorem.
 [END]
 
 `example_assistant`
-theorem correctness
-(x: Int)
-: problem_spec implementation x := by
+by
 unfold problem_spec
 let result := implementation x
 use result
@@ -374,16 +361,14 @@ theorem fib_comp_to_non_comp (n : ℕ)
 (h_f_0: f 0 = 1)
 (h_f_1: f 1 = 1)
 (h_f_step: ∀ n, f (n + 2) = f n + f (n + 1))
-: fibonacci_non_computable n (f n) := by
-sorry
+: fibonacci_non_computable n (f n) :=
 [END]
 
 [CORRECTNESS DEFINITION]
 theorem correctness
 (n: Nat)
 : problem_spec implementation n
-:= by
-sorry
+:=
 [END]
 
 [PLAN]
@@ -397,10 +382,7 @@ Prove the `correctness` theorem.
 [END]
 
 `example_assistant`
-theorem correctness
-(n: Nat)
-: problem_spec implementation n
-:= by
+by
 unfold problem_spec
 let result := implementation n
 use result
