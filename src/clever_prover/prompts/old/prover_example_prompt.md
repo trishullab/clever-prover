@@ -1,3 +1,5 @@
+`conv start`
+
 `example_user`
 [PROOF STATE]
 x y : ℝ
@@ -115,3 +117,5 @@ Now that the hypothesis h₁ has been rewritten, find a way to simplify h₁ to 
 [TACTIC]
 norm_num at h₁
 [END]
+
+`conv end`

@@ -1,3 +1,5 @@
+`conv start`
+
 `example_user`
 [PROBLEM STATEMENT]
 /--
@@ -57,7 +59,6 @@ spec score_changes threshold result
 
 [FUNCTION IMPLEMENTATION SIGNATURE]
 def implementation (score_changes: List Int) (threshold: Int) : Nat :=
-sorry
 [END]
 
 [TEST CASES]
@@ -77,7 +78,6 @@ sorry
 [END]
 
 `example_assistant`
-def implementation (score_changes: List Int) (threshold: Int) : Nat :=
 let rec loop (score_changes: List Int) (threshold: Int) (score: Int) (coins: Nat) : Nat :=
   match score_changes with
   | [] => coins
@@ -128,7 +128,6 @@ spec result
 
 [FUNCTION IMPLEMENTATION SIGNATURE]
 def implementation (x: Int) : Int :=
-sorry
 [END]
 
 [TEST CASES]
@@ -144,7 +143,6 @@ The implementation is one line. If `x` is less than 0 then return `-x`, otherwis
 [END]
 
 `example_assistant`
-def implementation (x: Int) : Int :=
 if x < 0 then -x else x
 
 `example_user`
@@ -196,7 +194,6 @@ spec result
 
 [FUNCTION IMPLEMENTATION SIGNATURE]
 def implementation (n: Nat) : Nat :=
-sorry
 [END]
 
 [TEST CASES]
@@ -217,8 +214,9 @@ sorry
 [END]
 
 `example_assistant`
-def implementation (n: Nat) : Nat :=
 match n with
 | 0 => 1
 | 1 => 1
 | n' + 2 => implementation n' + implementation (n' + 1)
+
+`conv end`
