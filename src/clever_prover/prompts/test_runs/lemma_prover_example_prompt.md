@@ -1,3 +1,5 @@
+`conv start`
+
 `example_user`
 [FUNCTION IMPLEMENTATION]
 def implementation (score_changes: List Int) (threshold: Int) : Nat :=
@@ -663,3 +665,5 @@ have h_fib_n''_plus_2_non_computable :=
 rw [←h_fib_n''] at h_fib_n''_plus_2_non_computable
 rw [←h_n''_eq_n_plus_2] at h_fib_n''_plus_2_non_computable
 assumption
+
+`conv end`
