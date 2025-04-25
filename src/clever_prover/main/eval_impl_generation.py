@@ -9,9 +9,9 @@ from clever_bench.benchmark import Benchmark
 from clever_prover.main.parse_config import parse_config, parse_impl_generation_class
 from itp_interface.tools.log_utils import setup_logger
 
-@hydra.main(config_path="configs", config_name="few_shot_impl_generation", version_base="1.2")
+@hydra.main(config_path="configs", config_name="planning_copra_impl_generator", version_base="1.2")
 def main(cfg):
-    log_dir = cfg["log_dir"] if "log_dir" in cfg else "./.logs/eval_few_shot_impl_generation"
+    log_dir = cfg["log_dir"] if "log_dir" in cfg else "./.logs/eval_impl_generation"
     exp_name = cfg["exp_name"] if "exp_name" in cfg else "eval_few_shot_impl_generation"
     timestr = time.strftime("%Y-%m-%d_%H-%M-%S")
     log_dir = os.path.join(log_dir, timestr)
@@ -27,8 +27,8 @@ def main(cfg):
         report_dir=test_report_dir
     )
     hyper_params = parse_config(cfg)
-    if "proof_dump_file_name" in hyper_params:
-        hyper_params["proof_dump_file_name"] = os.path.join(log_dir, hyper_params["proof_dump_file_name"])
+    if "proof_dump_file_path" in hyper_params:
+        hyper_params["proof_dump_file_path"] = os.path.join(log_dir, hyper_params["proof_dump_file_path"])
     problems_to_solve = cfg["problems_to_solve"] if "problems_to_solve" in cfg else "*"
     timeout_in_secs = cfg["timeout_in_secs"] if "timeout_in_secs" in cfg else 600    
     k = cfg["k"] if "k" in cfg else 1
@@ -77,12 +77,12 @@ def main(cfg):
                     problem=impl_generation_task.generated_proof_problem_view,
                     timeout_in_ms=compilation_timeout
                 ))
-            logger.info(f"Validation Result [{idx}] [isomorphism_ok]: {validation_result.isomorphism_ok}")
+            logger.info(f"Validation Result [{idx}] [correctness_ok]: {validation_result.correctness_ok}")
             if not validation_result.compilation_ok:
                 logger.error("Proof failed.")
                 logger.error(f"Proof error: {validation_result.error_message[-300:]}")
             validation_result = validation_result
-            if validation_result.isomorphism_ok:
+            if validation_result.correctness_ok:
                 logger.info(f"Problem {idx} was solved successfully.")
                 problem_solved_map[idx] = attempt_idx
             validation_results[idx] = validation_result

@@ -27,8 +27,8 @@ def main(cfg):
         report_dir=test_report_dir
     )
     hyper_params = parse_config(cfg)
-    if "proof_dump_file_name" in hyper_params:
-        hyper_params["proof_dump_file_name"] = os.path.join(log_dir, hyper_params["proof_dump_file_name"])
+    if "proof_dump_file_path" in hyper_params:
+        hyper_params["proof_dump_file_path"] = os.path.join(log_dir, hyper_params["proof_dump_file_path"])
     problems_to_solve = cfg["problems_to_solve"] if "problems_to_solve" in cfg else "*"
     timeout_in_secs = cfg["timeout_in_secs"] if "timeout_in_secs" in cfg else 600    
     k = cfg["k"] if "k" in cfg else 1

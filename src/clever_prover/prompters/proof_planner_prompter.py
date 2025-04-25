@@ -34,7 +34,7 @@ class ProofPlannerPrompter(Prompter):
         history.append({"role": "user", "content": self.user_prompt.format(problem_statement, problem_spec, implementation, correctness_definition)})
         return history
 
-    def parse_response(self, response: str) -> typing.Union[str, list[str], list[str], str]:
+    def parse_response(self, response: str) -> typing.Tuple[str, list[str], list[str], str]:
         raw_response = response.strip()
 
         lemmas = []
