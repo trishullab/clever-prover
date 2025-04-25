@@ -139,8 +139,10 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
                     proof = "\n".join(proof_steps)
                     proven_lemmas.append(Lemma(statement=theorem_statement, proof=proof))
             problem.correctness_helper_lemmas.clear()
+            # Asssume that the lemma [TODO]
             for proven_lemma in proven_lemmas:
                 problem.correctness_helper_lemmas.append(proven_lemma)
+                # + proven_lemma.statement [TODO]
             proof_result = self._generate_proof(
                 problem=problem,
                 theorem_name=self.lemma_name,
