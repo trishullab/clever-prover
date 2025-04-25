@@ -59,6 +59,14 @@ class ImplementerTool(Tool):
                 def_response = def_response[:def_end_ind]
         else:
             def_response = response
+        def_response = def_response.strip()
+        if def_response.startswith("def"):
+            # Find the first occurrence of ":=" and remove everything before it
+            def_start_ind = def_response.find(":=")
+            if def_start_ind != -1:
+                def_response = def_response[def_start_ind + len(":="):]
+                def_response = def_response.strip()
+        return def_response
 
     def solve_intermediate(self, problem_statement: str, problem_spec: str, implementation_signature: str, test_cases: str, implementation_plan: str) -> str:
         # Prompt the model for the plan
@@ -69,14 +77,21 @@ class ImplementerTool(Tool):
             implementation_signature, 
             test_cases, 
             implementation_plan)
-        self.logger.info(f"[IMPLEMENTER] Raw prompt used:\n{string_utils.history_to_str(self.history)}")
         # Get the model response
         message = self.history[-1]["content"]
+        self.logger.info(f"[IMPLEMENTER] Raw prompt used:\n{message}")
         response = self.simple_prompter.run_prompt(message)
-        self.history.append(response)
-        generated_text = response["content"]
+        self.history.append(response[0])
+        generated_text = response[0]["content"]
         self.logger.info(f"[IMPLEMENTER] Raw implementation generated:\n{generated_text}")
         return self.parse_response(generated_text)
 
     def reset(self):
         self.history = []
+    
+    def __enter__(self):
+        return super().__enter__()
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.reset()
+        return super().__exit__(exc_type, exc_val, exc_tb)

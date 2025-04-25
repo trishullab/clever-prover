@@ -1,8 +1,11 @@
 import typing
 from enum import Enum
+from omegaconf.dictconfig import DictConfig
+from omegaconf.listconfig import ListConfig
 from clever_prover.utils.configs import PromptSettings, ModelSettings
 from clever_prover.baselines.few_shot_spec_generation import FewShotSpecGenerationTask
 from clever_prover.baselines.few_shot_implementation_generation import FewShotImplementationGenerationTask
+from clever_prover.solver.planning_copra_impl_generator import PlanningCopraImplGenerator
 from clever_prover.tasks.spec_generation_task import SpecGenerationTask
 from clever_prover.tasks.implementation_generation_task import ImplementationGenerationTask
 
@@ -27,6 +30,7 @@ class SpecGenerationStrategy(Enum):
 
 class ImplementationGenerationStrategy(Enum):
     FewShotImplGeneration = "FewShotImplGeneration"
+    PlanningCopraImplGenerator = "PlanningCopraImplGenerator"
 
     def __str__(self):
         return self.value
@@ -49,6 +53,8 @@ def parse_impl_generation_class(cfg) -> typing.Type[ImplementationGenerationTask
     impl_generation_strategy = ImplementationGenerationStrategy(cfg["impl_generation_strategy"])
     if impl_generation_strategy == ImplementationGenerationStrategy.FewShotImplGeneration:
         return FewShotImplementationGenerationTask
+    elif impl_generation_strategy == ImplementationGenerationStrategy.PlanningCopraImplGenerator:
+        return PlanningCopraImplGenerator
     else:
         raise ValueError(f"Unknown task type: {task_type}")
 
@@ -62,27 +68,38 @@ def parse_spec_generation_class(cfg) -> typing.Type[SpecGenerationTask]:
         raise ValueError(f"Unknown task type: {task_type}")
 
 def parse_spec_isomorphism_config(cfg):
-    spec_prompt_settings = PromptSettings.from_dict(cfg["spec_prompt_settings"])
-    spec_model_settings = ModelSettings.from_dict(cfg["spec_model_settings"])
-    proof_prompt_settings = PromptSettings.from_dict(cfg["proof_prompt_settings"])
-    proof_model_settings = ModelSettings.from_dict(cfg["proof_model_settings"])
-    return {
-        "spec_prompt_settings": spec_prompt_settings,
-        "spec_model_settings": spec_model_settings,
-        "proof_prompt_settings": proof_prompt_settings,
-        "proof_model_settings": proof_model_settings,
-        "lemma_name": cfg["lemma_name"] if "lemma_name" in cfg else "spec_isomorphism"
-    }
+    params = cfg["params"]
+    params_dict = {}
+    for key, value in params.items():
+        if isinstance(value, DictConfig):
+            if "prompt_settings" in key:
+                value : PromptSettings = PromptSettings.from_dict(value)
+                params_dict[key] = value
+            elif "model_settings" in key:
+                params_dict[key] = ModelSettings.from_dict(value)
+            else:
+                raise ValueError(f"Unknown parameter type for key: {key}")
+        elif isinstance(value, ListConfig):
+            # Convert ListConfig to a regular list
+            params_dict[key] = [item for item in value]
+        else:
+            params_dict[key] = value
+    return params_dict
 
 def parse_impl_correctness_config(cfg):
-    impl_prompt_settings = PromptSettings.from_dict(cfg["impl_prompt_settings"])
-    impl_model_settings = ModelSettings.from_dict(cfg["impl_model_settings"])
-    proof_prompt_settings = PromptSettings.from_dict(cfg["proof_prompt_settings"])
-    proof_model_settings = ModelSettings.from_dict(cfg["proof_model_settings"])
-    return {
-        "impl_prompt_settings": impl_prompt_settings,
-        "impl_model_settings": impl_model_settings,
-        "proof_prompt_settings": proof_prompt_settings,
-        "proof_model_settings": proof_model_settings,
-        "lemma_name": cfg["lemma_name"] if "lemma_name" in cfg else "impl_correctness"
-    }
+    params = cfg["params"]
+    params_dict = {}
+    for key, value in params.items():
+        if isinstance(value, DictConfig):
+            if "prompt_settings" in key:
+                value : PromptSettings = PromptSettings.from_dict(value)
+                params_dict[key] = value
+            elif "model_settings" in key:
+                params_dict[key] = ModelSettings.from_dict(value)
+            else:
+                raise ValueError(f"Unknown parameter type for key: {key}")
+        elif isinstance(value, ListConfig):
+            params_dict[key] = [item for item in value]
+        else:
+            params_dict[key] = value
+    return params_dict

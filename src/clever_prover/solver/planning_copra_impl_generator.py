@@ -1,18 +1,18 @@
 import logging
 import time
 import asyncio
+import os
+from collections import namedtuple
 from clever_bench.task import ProblemViewTask
 from clever_bench.lean_problem import Lemma, LeanProblemView, format_problem_as_lean_with_line_ranges
 from clever_prover.tasks.implementation_generation_task import ImplementationGenerationTask
 from clever_prover.prompters.simple_prompter import SimplePrompter
 from clever_prover.utils.configs import PromptSettings, ModelSettings
-from clever_prover.solver.tools.implementer_tool import ImplementerTool
 from clever_prover.solver.tools.implementation_planner_tool import ImplementationPlannerTool
+from clever_prover.solver.tools.implementer_tool import ImplementerTool
 from clever_prover.solver.tools.proof_planner_tool import ProofPlannerTool
-from clever_prover.prompters.implementer_prompter import ImplementerPrompter
 from clever_prover.utils.copra import get_proof_via_copra, ProofSearchResult
 from itp_interface.tools.lean4_sync_executor import Lean4SyncExecutor
-from collections import namedtuple
 
 
 LemmaPlan = namedtuple("LemmaPlan",
@@ -36,14 +36,12 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
     def __init__(self,
         problem_id: int,
         problem_view: ProblemViewTask,
-        impl_planner_settings: PromptSettings,
+        impl_planner_prompt_settings: PromptSettings,
         impl_planner_model_settings: ModelSettings,
         impl_prompt_settings: PromptSettings,
         impl_model_settings: ModelSettings,
-        proof_planner_settings: PromptSettings,
+        proof_planner_prompt_settings: PromptSettings,
         proof_planner_model_settings: ModelSettings,
-        proof_prompt_settings: PromptSettings,
-        proof_model_settings: ModelSettings,
         copra_prompt_settings: PromptSettings,
         copra_model_settings: ModelSettings,
         proof_dump_file_path: str,
@@ -55,14 +53,12 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
         Initialize the PlanningCopraImplGenerator with project path, file path, and lemma name.
         """
         super().__init__(problem_id=problem_id, problem_view=problem_view, lemma_name=lemma_name, logger=logger)
-        self.impl_planner_settings = impl_planner_settings
+        self.impl_planner_prompt_settings = impl_planner_prompt_settings
         self.impl_planner_model_settings = impl_planner_model_settings
         self.impl_prompt_settings = impl_prompt_settings
         self.impl_model_settings = impl_model_settings
-        self.proof_planner_settings = proof_planner_settings
+        self.proof_planner_prompt_settings = proof_planner_prompt_settings
         self.proof_planner_model_settings = proof_planner_model_settings
-        self.proof_prompt_settings = proof_prompt_settings
-        self.proof_model_settings = proof_model_settings
         self.copra_prompt_settings = copra_prompt_settings
         self.copra_model_settings = copra_model_settings
         self.num_implementation_plan_samples = num_implementation_plan_samples
@@ -83,9 +79,14 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
         time_remaining_in_ms = timeout_in_ms
         while not is_time_elapsed and not implementation_stable and implementation_sample_count < self.num_implementation_plan_samples:
             problem = self.problem_view.get_view(self.problem_id)
+            # Ensure no accidental leakage
+            problem.implementation = None
+            problem.correctness_helper_lemmas.clear()
+            problem.correctness_proof = None
             implementation_plan = self._generate_impl_plan(problem=problem, logger=logger)
             self.implementation_plan = implementation_plan
-            lean_code = self._generate_impl_plan(problem=problem, logger=logger)
+            lean_code = self._generate_impl(problem=problem, logger=logger)
+            problem.implementation = lean_code
             validation_result = asyncio.run(
                 self.problem_view.submit_async(
                     problem,
@@ -110,6 +111,13 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
         time_remaining_in_ms = timeout_in_ms
         while not is_time_elapsed and not proof_found and proof_sample_count < self.num_proof_plan_samples:
             problem = self.problem_view.get_view(self.problem_id)
+            # Ensure no accidental leakage
+            problem.implementation = None
+            problem.correctness_helper_lemmas.clear()
+            problem.correctness_proof = None
+            if self.generated_implementation is None:
+                raise ValueError("Implementation must be generated before generating the proof.")
+            problem.implementation = self.generated_implementation
             proof_plan = self._generate_proof_plan(problem=problem, logger=logger)
             self.proof_plan = proof_plan
             lemma_plans : list[LemmaPlan] = proof_plan.lemma_plans
@@ -139,8 +147,7 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
                 lemma_proof_strategy=proof_plan.correctness_proof_strategy,
                 proof_dump_file_path=self.proof_dump_file_path,
                 timeout_in_ms=time_remaining_in_ms,
-                logger=logger
-            )
+                logger=logger)
             if proof_result.proof_found:
                 proof_steps = [step for proof_step in proof_result.proof_steps for step in proof_step.proof_steps]
                 proof = "\n".join(proof_steps)
@@ -154,19 +161,25 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
             proof_sample_count += 1
         problem.correctness_proof = proof
         self.generated_proof_problem_view = problem
+        full_lean_code, _ = format_problem_as_lean_with_line_ranges(problem)
+        report_dir = self.problem_view.report_dir
+        file_name = f"impl_gen_{self.problem_id}.lean"
+        file_path = os.path.join(report_dir, file_name)
+        with open(file_path, "w") as f:
+            f.write(full_lean_code)
         return proof
 
     def _generate_impl_plan(self, problem: LeanProblemView, logger: logging.Logger = None):
         logger = logger if logger else self.logger
         impl_planner_simple_prompter = SimplePrompter(
-            main_sys_prompt_path=self.impl_planner_settings.system_prompt_path,
-            example_conv_prompt_path=self.impl_planner_settings.example_prompt_path,
+            main_sys_prompt_path=self.impl_planner_prompt_settings.system_prompt_path,
+            example_conv_prompt_path=self.impl_planner_prompt_settings.example_prompt_path,
             temperature=self.impl_planner_model_settings.temperature,
-            max_tokens_per_action=self.impl_planner_settings.max_tokens_per_action,
-            max_history_messages=self.impl_planner_settings.max_history_messages,
+            max_tokens_per_action=self.impl_planner_prompt_settings.max_tokens_per_action,
+            max_history_messages=self.impl_planner_prompt_settings.max_history_messages,
             model_name=self.impl_planner_model_settings.model_name,
             secret_filepath=self.impl_planner_model_settings.secret_path,
-            end_tokens=self.impl_planner_settings.end_tokens,
+            end_tokens=self.impl_planner_prompt_settings.end_tokens,
             logger=logger
         )
         impl_planner = ImplementationPlannerTool(
@@ -204,18 +217,19 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
             test_cases=problem.test_cases_lean,
             implementation_plan=self.implementation_plan
         )
+        lean_code = lean_code.strip()
         return lean_code
 
     def _generate_proof_plan(self, problem: LeanProblemView, logger: logging.Logger = None):
         proof_planner_simple_prompter = SimplePrompter(
-            main_sys_prompt_path=self.proof_planner_settings.system_prompt_path,
-            example_conv_prompt_path=self.proof_planner_settings.example_prompt_path,
+            main_sys_prompt_path=self.proof_planner_prompt_settings.system_prompt_path,
+            example_conv_prompt_path=self.proof_planner_prompt_settings.example_prompt_path,
             temperature=self.proof_planner_model_settings.temperature,
-            max_tokens_per_action=self.proof_planner_settings.max_tokens_per_action,
-            max_history_messages=self.proof_planner_settings.max_history_messages,
+            max_tokens_per_action=self.proof_planner_prompt_settings.max_tokens_per_action,
+            max_history_messages=self.proof_planner_prompt_settings.max_history_messages,
             model_name=self.proof_planner_model_settings.model_name,
             secret_filepath=self.proof_planner_model_settings.secret_path,
-            end_tokens=self.proof_planner_settings.end_tokens,
+            end_tokens=self.proof_planner_prompt_settings.end_tokens,
             logger=logger
         )
         proof_planner = ProofPlannerTool(
@@ -233,13 +247,10 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
             match = Lean4SyncExecutor.theorem_name_match.match(lemma)
             if match:
                 lemma_name = match.group(1).strip()
-                lemma_plans.append(
-                    LemmaPlan(
-                        lemma_name=lemma_name,
-                        lemma=lemma,
-                        lemma_proof_strategy=lemma_plan
-                    )
-                )
+                lemma_plans.append(LemmaPlan(
+                lemma_name=lemma_name,
+                lemma=lemma,
+                lemma_proof_strategy=lemma_plan))
         proof_plan = ProofPlan(
             raw_proof_plan=raw_proof_plan,
             lemma_plans=lemma_plans,
@@ -261,6 +272,7 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
         with open(file_path, "w") as f:
             f.write(full_lean_code)
         proof_search_result = get_proof_via_copra(
+            project_path=self.project_path,
             file_path=file_path,
             lemma_name=theorem_name,
             informal_problem=problem.problem_spec_nl,

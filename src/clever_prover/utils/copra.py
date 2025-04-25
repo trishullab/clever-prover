@@ -61,6 +61,8 @@ def get_proof_via_copra(
         informal_proof_repo=informal_repo,
         language=ProofAction.Language.LEAN4,
         max_history_messages=max_history_messages,
+        num_goal_per_prompt=1,
+        retrieve_prompt_examples=False,
         logger=logger)
     search_algorithm = DFSTreeSearch(language=ProofAction.Language.LEAN4)
     search_policy = GptGuidedTreeSearchPolicy(
@@ -102,8 +104,8 @@ def get_proof_via_copra(
             )
             proof_agent.run_episodes_till_stop(
                 env=proof_env,
-                num_episodes=1,
                 render=False,
+                episodes=1,
                 stop_policy=_stop_policy,
                 policy_info_message=_policy_info_message
             )

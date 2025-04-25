@@ -54,10 +54,17 @@ class ImplementationPlannerTool(Tool):
         # Get the model response
         message = self.history[-1]["content"]
         response = self.simple_prompter.run_prompt(message)
-        self.history.append(response)
-        generated_text = response["content"]
+        self.history.append(response[0])
+        generated_text = response[0]["content"]
         self.logger.info(f"[IMPLEMENTATION PLANNER] Raw response from model:\n{generated_text}")
         return self.parse_response(generated_text)
 
     def reset(self):
         self.history = []
+    
+    def __enter__(self):
+        return super().__enter__()
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.reset()
+        return super().__exit__(exc_type, exc_val, exc_tb)
