@@ -2,31 +2,14 @@
 
 `example_user`
 [PROBLEM STATEMENT]
-/--
-function_signature: "def coins_won(score_changes: List[int], threshold: int) -> int"
-docstring: |
-    In a game, a player's score starts at 0 and is updated round by round using values from the list
-    score_changes (where positive numbers add to the score and negative numbers subtract).
-    After each round, as long as the player's cumulative score is greater than or equal to the given threshold,
-    the player wins a coin for that round.
-    Your task is to compute and return the total number of coins won by the player by the end of the game.
-test_cases:
-  - input:
-      score_changes:
-        - 3
-        - 4
-        - -2
-        - 1
-      threshold: 5
-    expected_output: 1
-  - input:
-      score_changes:
-        - 3
-        - 4
-        - 5
-      threshold: 5
-    expected_output: 2
--/
+def coins_won(score_changes: List[int], threshold: int) -> int
+"""
+In a game, a player's score starts at 0 and is updated round by round using values from the list
+score_changes (where positive numbers add to the score and negative numbers subtract).
+After each round, as long as the player's cumulative score is greater than or equal to the given threshold,
+the player wins a coin for that round.
+Your task is to compute and return the total number of coins won by the player by the end of the game.
+"""
 [END]
 
 [PROBLEM SPEC]
@@ -78,6 +61,7 @@ def implementation (score_changes: List Int) (threshold: Int) : Nat :=
 [END]
 
 `example_assistant`
+```lean
 let rec loop (score_changes: List Int) (threshold: Int) (score: Int) (coins: Nat) : Nat :=
   match score_changes with
   | [] => coins
@@ -86,25 +70,16 @@ let rec loop (score_changes: List Int) (threshold: Int) (score: Int) (coins: Nat
     let coins' := if score' ≥ threshold then coins + 1 else coins
     loop tail threshold score' coins'
 loop score_changes threshold 0 0
+```
+[END]
 
 `example_user`
 [PROBLEM STATEMENT]
-/--
-function_signature: "def find_magnitude(x: int) -> int"
-docstring: |
-    Given an integer x, your task is to find the magnitude of x.
-    The magnitude of an integer is defined as the absolute value of the integer.
-test_cases:
-  - input:
-      -1
-    expected_output: 1
-  - input:
-      0
-    expected_output: 0
-  - input:
-      5
-    expected_output: 5
--/
+def find_magnitude(x: int) -> int
+"""
+Given an integer x, your task is to find the magnitude of x.
+The magnitude of an integer is defined as the absolute value of the integer.
+"""
 [END]
 
 [PROBLEM SPEC]
@@ -143,38 +118,21 @@ The implementation is one line. If `x` is less than 0 then return `-x`, otherwis
 [END]
 
 `example_assistant`
+```lean
 if x < 0 then -x else x
+```
+[END]
 
 `example_user`
 [PROBLEM STATEMENT]
-/--
-function_signature: "def find_fibonacci(n: int) -> int"
-docstring: |
-    Given an integer n, your task is to find the nth Fibonacci number.
-    The Fibonacci sequence is defined as follows:
-    - F(0) = 1
-    - F(1) = 1
-    - F(n) = F(n-1) + F(n-2) for n > 1
-test_cases:
-  - input:
-      0
-    expected_output: 1
-  - input:
-      1
-    expected_output: 1
-  - input:
-      2
-    expected_output: 2
-  - input:
-      3
-    expected_output: 3
-  - input:
-      4
-    expected_output: 5
-  - input:
-      5
-    expected_output: 8
--/
+def find_fibonacci(n: int) -> int
+"""
+Given an integer n, your task is to find the nth Fibonacci number.
+The Fibonacci sequence is defined as follows:
+- F(0) = 1
+- F(1) = 1
+- F(n) = F(n-1) + F(n-2) for n > 1
+"""
 [END]
 
 [PROBLEM SPEC]
@@ -214,9 +172,12 @@ def implementation (n: Nat) : Nat :=
 [END]
 
 `example_assistant`
+```lean
 match n with
 | 0 => 1
 | 1 => 1
 | n' + 2 => implementation n' + implementation (n' + 1)
+```
+[END]
 
 `conv end`
