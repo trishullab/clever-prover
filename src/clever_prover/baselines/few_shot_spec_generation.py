@@ -114,10 +114,10 @@ class FewShotSpecGenerationTask(SpecGenerationTask):
             logger=logger
         )
         problem = self.problem_view.get_view(self.problem_id)
-        prompt = "[NL Description]\n" \
+        prompt = "[NL DESCRIPTION]\n" \
         f"{problem.problem_spec_nl}\n" \
         "[SPECIFICATION SIGNATURE]\n" \
-        f"{problem.problem_spec_formal_generated}\n"
+        f"{problem.problem_spec_formal_generated}"
         spec = simple_prompter.run_prompt(prompt)
         # TODO: Add Helper Definitions
         parsed_spec = self.parse_spec(spec, logger=logger)
@@ -147,14 +147,14 @@ class FewShotSpecGenerationTask(SpecGenerationTask):
                 end_tokens=self.proof_prompt_settings.end_tokens,
                 logger=logger
             )
-            prompt = "[NL Description]\n" \
+            prompt = "[NL DESCRIPTION]\n" \
             f"{problem.problem_spec_nl}\n" \
             "[GROUND TRUTH SPECIFICATION]\n" \
             f"{problem.problem_spec_formal_ground_truth}\n" \
             "[GENERATED SPECIFICATION]\n" \
             f"{problem.problem_spec_formal_generated}\n" \
             "[ISOMORPHISM THEOREM]\n" \
-            f"{problem.isomorphism_theorem}\n"
+            f"{problem.isomorphism_theorem}"
             proof = simple_prompter.run_prompt(prompt)
             proof = self.parse_proof(proof, logger=logger)
             if self.helper_lemmas is not None:

@@ -2,11 +2,11 @@ You are a good Lean 4 programmer. You are given a natural language specification
 
 The input usually follows the following format:
 ```
-[NL Description]
-def <function_name>(<input_type>) -> <output_type>:
-    """
-    <NL Description>
-    """
+[NL DESCRIPTION]
+def <function_name>(<input_type>) -> <output_type>
+"""
+<NL Description>
+"""
 ```
 
 Followed by the specification signature:
@@ -14,6 +14,7 @@ Followed by the specification signature:
 [SPECIFICATION SIGNATURE]
 def <function_name> (impl : <function_signature>) (input : <input_type>) : Prop :=
 ```
+
 
 You can first think about the problem in a general way and then write the proposition. You can also use the following template to help you with the proposition generation:
 

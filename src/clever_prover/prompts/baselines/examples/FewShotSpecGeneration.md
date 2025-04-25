@@ -1,7 +1,7 @@
 `conv start`
 
 `example_user`
-[NL Description]
+[NL DESCRIPTION]
 def find_magnitude(x: int) -> int
 """
 Given an integer x, your task is to find the magnitude of x.
@@ -32,7 +32,7 @@ It is also easy to see that program will always terminate for all integers. Howe
 [END]
 
 `example_user`
-[NL Description]
+[NL DESCRIPTION]
 def find_fibonacci(n: int) -> int
 """
 Given an integer n, your task is to find the nth Fibonacci number.
@@ -77,7 +77,7 @@ spec result
 [END]
 
 `example_user`
-[NL Description]
+[NL DESCRIPTION]
 def coins_won(score_changes: List[int], threshold: int) -> int
 """
 In a game, a player's score starts at 0 and is updated round by round using values from the list

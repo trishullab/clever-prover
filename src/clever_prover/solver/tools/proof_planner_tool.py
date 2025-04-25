@@ -7,21 +7,18 @@ from clever_prover.prompters.prompter import Prompter
 from clever_prover.utils import string_utils
 
 class ProofPlannerTool(Tool):
-    user_prompt = """[PROBLEM STATEMENT]
-    {}
-    [END]
+    user_prompt_format = """[NL DESCRIPTION]
+{}
 
-    [PROBLEM SPEC]
-    {}
-    [END]
+[SPECIFICATION]
+{}
 
-    [FUNCTION IMPLEMENTATION]
-    {}
-    [END]
+[IMPLEMENTATION]
+{}
 
-    [CORRECTNESS DEFINITION]
-    {}
-    [END]"""
+[CORRECTNESS THEOREM]
+{}"""
+
     def __init__(self, 
             simple_prompter: SimplePrompter,
             logger: logging.Logger = None, 
@@ -43,33 +40,29 @@ class ProofPlannerTool(Tool):
         # if not history or history[0]["role"] != "system":
         #     history.insert(0, {"role": "system", "content": self.system_prompt})
         #     history[1:1] = self.example_prompt_list
-        history.append({"role": "user", "content": ProofPlannerTool.user_prompt.format(problem_statement, problem_spec, implementation, correctness_definition)})
+        history.append({"role": "user", "content": ProofPlannerTool.user_prompt_format.format(problem_statement, problem_spec, implementation, correctness_definition)})
         return history
 
     def parse_response(self, response: str):
         raw_response = response.strip()
         lemmas = []
         lemma_plans = []
-        lemma_plan_start_ind = response.find("[LEMMA PLAN]")
+        lemma_plan_start_ind = response.find("[HELPER LEMMA PLAN]")
         while lemma_plan_start_ind != -1:
-            response = response[(lemma_plan_start_ind + len("[LEMMA PLAN]")):]
-            lemma_start_ind = response.find("[LEMMA]")
-            lemma_end_ind = response.find("[END]")
+            response = response[(lemma_plan_start_ind + len("[HELPER LEMMA PLAN]")):]
+            lemma_start_ind = response.find("[HELPER LEMMA]")
+            lemma_end_ind = response.find("[HELPER LEMMA END]")
             if lemma_start_ind != -1 and lemma_end_ind != -1 and lemma_start_ind < lemma_end_ind:
                 lemma_plans.append(response[:lemma_start_ind].strip())
-                lemmas.append(response[(lemma_start_ind + len("[LEMMA]")):lemma_end_ind].strip())
-                response = response[(lemma_end_ind + len("[END]")):]
-            lemma_plan_start_ind = response.find("[LEMMA PLAN]")
+                lemmas.append(response[(lemma_start_ind + len("[HELPER LEMMA]")):lemma_end_ind].strip())
+                response = response[(lemma_end_ind + len("[HELPER LEMMA END]")):]
+            lemma_plan_start_ind = response.find("[HELPER LEMMA PLAN]")
         
         correctness_plan = "N/A"
         correctness_plan_start_ind = response.find("[CORRECTNESS PLAN]")
         if correctness_plan_start_ind != -1:
             correctness_plan_response = response[(correctness_plan_start_ind + len("[CORRECTNESS PLAN]")):]
-            correctness_plan_end_ind = correctness_plan_response.find("[END]")
-            if correctness_plan_end_ind != -1:
-                correctness_plan = correctness_plan_response[:correctness_plan_end_ind].strip()
-            else:
-                correctness_plan = correctness_plan_response.strip()
+            correctness_plan = correctness_plan_response.strip()
         return raw_response, lemmas, lemma_plans, correctness_plan
 
     def solve_intermediate(self, problem_statement: str, problem_spec: str, implementation: str, correctness_definition: str) -> typing.Tuple[str, list[str], list[str], str]:

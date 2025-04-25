@@ -7,8 +7,8 @@ Your task is to write a formal proof in Lean 4 that the function implementation 
 The correctness statement is stated in the following format:
 1. First we state the natural language description of the function in a docstring format:
 ```
-[NL Description]
-def <function_name>(<input_type>) -> <output_type>:
+[NL DESCRIPTION]
+def <function_name>(<input_type>) -> <output_type>
 """
 <NL Description>
 """
@@ -37,6 +37,7 @@ theorem correctness
 :=
 ```
 
+
 You can first think about the problem in a general way and then write the proof. You can also use the following template to help you with the proof generation:
 
 ```
@@ -55,7 +56,6 @@ theorem <lemma_name> : <lemma_statement> :=
 -- more lemmas
 [END LEMMAS]
 ```
-
 
 Finally, write a proof in Lean 4 that the implementation is correct and satisfies the specification. The proof should be in the following format:
 ```
