@@ -38,7 +38,7 @@ def implementation (x: Int) : Int :=
 
 `example_assistant`
 [IMPLEMENTATION PLAN]
-The implementation is one line. If `x` is less than 0 then return `-x`, otherwise return `x`.
+1. The implementation is one line. If `x` is less than 0 then return `-x`, otherwise return `x`.
 [END]
 
 `example_user`
