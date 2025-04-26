@@ -101,10 +101,7 @@ simp made no progress
 
 `example_assistant`
 [RUN TACTIC]
-have h_impl_n : ∀ n', implementation (n' + 2) = implementation n' + implementation (n' + 1) :=
-by
-  intro n'
-  rw [implementation]
+have h_impl_n : ∀ n', implementation (n' + 2) = implementation n' + implementation (n' + 1) := by
 [END]
 
 
@@ -154,14 +151,13 @@ lemma fib_comp_to_non_comp (n : ℕ)
 [STEP] let result := implementation n
 [STEP] use result
 [STEP] simp [result]
-[STEP] have h_impl_n : ∀ n', implementation (n' + 2) = implementation n' + implementation (n' + 1) :=
-by
-  intro n'
-  rw [implementation]
+[STEP] have h_impl_n : ∀ n', implementation (n' + 2) = implementation n' + implementation (n' + 1) := by
+[STEP]   intro n'
+[STEP]   rw [implementation]
 [STEP] have h_impl_0 : implementation 0 = 0 := by
-  rw [implementation]
+[STEP]   rw [implementation]
 [STEP] have h_impl_1 : implementation 1 = 1 := by
-  rw [implementation]
+[STEP]   rw [implementation]
 
 [LAST STEP]
 apply fib_comp_to_non_comp n implementation (by rw [h_impl_0,←Nat.zero_add (1 : ℕ)]) h_impl_1 h_impl_n
@@ -435,10 +431,10 @@ simp [h_implementation_stop]
 [STEP] -- Case 2: where implementation.loop score_changes threshold 0 0 ≠ 0
 simp [h_implementation_stop]
 [STEP] have h_implementation_stop': 0 < implementation.loop score_changes threshold 0 0 := by
-  by_contra
-  rename_i h_implementation_stop_false
-  simp at h_implementation_stop_false
-  contradiction
+[STEP]   by_contra
+[STEP]   rename_i h_implementation_stop_false
+[STEP]   simp at h_implementation_stop_false
+[STEP]   contradiction
 [STEP] have h_continue := implementation_loop_invariant_continue score_changes threshold 0 0 h_rounds_played h_implementation_stop'
 [STEP] simp at h_continue
 [STEP] obtain ⟨i₁⟩ := h_continue
