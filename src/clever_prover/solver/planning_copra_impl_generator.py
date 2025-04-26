@@ -102,8 +102,8 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
         return lean_code
 
     def generate_implementation_correctness_proof(self, timeout_in_ms = 60, logger = None):
+        proof = "by sorry"
         proof_found = False
-        proof_plan = None
         proof_sample_count = 0
         is_time_elapsed = False
         start_time = time.time()
@@ -122,18 +122,24 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
             self.proof_plan = proof_plan
             lemma_plans : list[LemmaPlan] = proof_plan.lemma_plans
             proven_lemmas : list[Lemma] = []
-            # TODO: check compilation; continue if fails, make sure variables at end are updated
             for lemma_plan in lemma_plans:
                 theorem_statement = lemma_plan.lemma
                 problem.correctness_helper_lemmas.append(
                     Lemma(statement=theorem_statement, proof="by sorry"))
-                full_proof_strategy = lemma_plan.lemma_proof_strategy
-                # TODO: add each lemma only once
-                if proven_lemmas:
-                    full_proof_strategy += "\n\nThroughout the proof, you can freely use any of the below helper lemmas, which you can assume to be true:"
-                    full_proof_strategy += "\n[HELPER LEMMAS]"
-                for proven_lemma in proven_lemmas:
-                    full_proof_strategy += ("\n[HELPER LEMMA]\n" + proven_lemma.statement)
+            validation_result = asyncio.run(
+                self.problem_view.submit_async(
+                    problem,
+                    timeout_in_ms=time_remaining_in_ms))
+            if not validation_result.compilation_ok:
+                # TODO: write log message?
+                elapsed_time = time.time() - start_time
+                time_remaining_in_ms = timeout_in_ms - (elapsed_time * 1000)
+                is_time_elapsed = time_remaining_in_ms <= 0
+                proof_sample_count += 1
+                continue
+            proven_lemmas_str = ""
+            for lemma_plan in lemma_plans:
+                full_proof_strategy = lemma_plan.lemma_proof_strategy + proven_lemmas_str
                 proof_result = self._generate_proof(
                     problem=problem,
                     theorem_name=lemma_plan.lemma_name,
@@ -146,15 +152,14 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
                     proof_steps = [step for proof_step in proof_result.proof_steps for step in proof_step.proof_steps]
                     proof = "\n".join(proof_steps)
                     proven_lemmas.append(Lemma(statement=theorem_statement, proof=proof))
+                    if len(proven_lemmas) == 1:
+                        proven_lemmas_str = "\n\nThroughout the proof, you can freely use any of the below helper lemmas, which you can assume to be true:"
+                        proven_lemmas_str += "\n[HELPER LEMMAS]"
+                    proven_lemmas_str += ("\n[HELPER LEMMA]\n" + theorem_statement)
             problem.correctness_helper_lemmas.clear()
-            full_proof_strategy = proof_plan.correctness_proof_strategy
-            if proven_lemmas:
-                full_proof_strategy += "\n\nThroughout the proof, you can freely use any of the below helper lemmas, which you can assume to be true:"
-                full_proof_strategy += "\n[HELPER LEMMAS]"
             for proven_lemma in proven_lemmas:
                 problem.correctness_helper_lemmas.append(proven_lemma)
-                full_proof_strategy += ("\n[HELPER LEMMA]\n" + proven_lemma.statement)
-            # TODO: need to add lemmas to proof file before we can prove them, else error
+            full_proof_strategy = proof_plan.correctness_proof_strategy + proven_lemmas_str
             proof_result = self._generate_proof(
                 problem=problem,
                 theorem_name=self.lemma_name,
@@ -167,8 +172,6 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
                 proof = "by\n" + "\n".join(proof_steps)
                 problem.correctness_proof = proof
                 proof_found = True
-            else:
-                proof = "sorry"
             elapsed_time = time.time() - start_time
             time_remaining_in_ms = timeout_in_ms - (elapsed_time * 1000)
             is_time_elapsed = time_remaining_in_ms <= 0
@@ -206,6 +209,7 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
             implementation_signature=problem.implementation_signature,
             test_cases=problem.test_cases_lean
         )
+        impl_planner.reset()
         return implementation_plan
     
     def _generate_impl(self, problem: LeanProblemView, logger: logging.Logger = None):
@@ -231,6 +235,7 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
             test_cases=problem.test_cases_lean,
             implementation_plan=self.implementation_plan
         )
+        implementation_generator.reset()
         lean_code = lean_code.strip()
         return lean_code
 
@@ -257,6 +262,7 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
             implementation=problem.implementation,
             correctness_definition=problem.correctness_theorem
         )
+        proof_planner.reset()
         lemma_plan_objs = []
         for lemma, lemma_plan in zip(lemmas, lemma_plans):
             match = Lean4SyncExecutor.theorem_name_match.match(lemma)
