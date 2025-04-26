@@ -51,11 +51,11 @@ class ProofPlannerTool(Tool):
         while lemma_plan_start_ind != -1:
             response = response[(lemma_plan_start_ind + len("[HELPER LEMMA PLAN]")):]
             lemma_start_ind = response.find("[HELPER LEMMA]")
-            lemma_end_ind = response.find("[HELPER LEMMA END]")
+            lemma_end_ind = response.find("[END HELPER LEMMA]")
             if lemma_start_ind != -1 and lemma_end_ind != -1 and lemma_start_ind < lemma_end_ind:
                 lemma_plans.append(response[:lemma_start_ind].strip())
                 lemmas.append(response[(lemma_start_ind + len("[HELPER LEMMA]")):lemma_end_ind].strip())
-                response = response[(lemma_end_ind + len("[HELPER LEMMA END]")):]
+                response = response[(lemma_end_ind + len("[END HELPER LEMMA]")):]
             lemma_plan_start_ind = response.find("[HELPER LEMMA PLAN]")
         
         correctness_plan = "N/A"

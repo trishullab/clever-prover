@@ -150,6 +150,7 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
             for proven_lemma in proven_lemmas:
                 problem.correctness_helper_lemmas.append(proven_lemma)
                 full_proof_strategy += ("\n\n" + proven_lemma.statement)
+            # TODO: need to add lemmas to proof file before we can prove them, else error
             proof_result = self._generate_proof(
                 problem=problem,
                 theorem_name=self.lemma_name,
@@ -251,18 +252,18 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
             implementation=problem.implementation,
             correctness_definition=problem.correctness_theorem
         )
-        lemma_plans = []
+        lemma_plan_objs = []
         for lemma, lemma_plan in zip(lemmas, lemma_plans):
             match = Lean4SyncExecutor.theorem_name_match.match(lemma)
             if match:
                 lemma_name = match.group(1).strip()
-                lemma_plans.append(LemmaPlan(
-                lemma_name=lemma_name,
-                lemma=lemma,
-                lemma_proof_strategy=lemma_plan))
+                lemma_plan_objs.append(LemmaPlan(
+                    lemma_name=lemma_name,
+                    lemma=lemma,
+                    lemma_proof_strategy=lemma_plan))
         proof_plan = ProofPlan(
             raw_proof_plan=raw_proof_plan,
-            lemma_plans=lemma_plans,
+            lemma_plans=lemma_plan_objs,
             correctness_proof_strategy=correctness_plan
         )
         return proof_plan
