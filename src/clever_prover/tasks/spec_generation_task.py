@@ -10,9 +10,9 @@ class SpecGenerationTask(ABC):
     Abstract base class for specification generation tasks.
     """
 
-    def __init__(self,    
+    def __init__(self,
         problem_id: int,
-        problem_view: ProblemViewTask, 
+        problem_view: ProblemViewTask,
         lemma_name="spec_isomorphism",
         logger: logging.Logger = None):
         assert isinstance(problem_id, int), "problem_id should be an integer"

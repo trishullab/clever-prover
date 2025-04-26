@@ -17,15 +17,15 @@ from itp_interface.tools.lean4_sync_executor import Lean4SyncExecutor
 
 LemmaPlan = namedtuple("LemmaPlan",
 [
-    "lemma_name", 
-    "lemma", 
+    "lemma_name",
+    "lemma",
     "lemma_proof_strategy"
 ])
 
-ProofPlan = namedtuple("ProofPlan", 
+ProofPlan = namedtuple("ProofPlan",
 [
-    "raw_proof_plan", 
-    "lemma_plans", 
+    "raw_proof_plan",
+    "lemma_plans",
     "correctness_proof_strategy",
 ])
 
@@ -126,10 +126,15 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
                 theorem_statement = lemma_plan.lemma
                 problem.correctness_helper_lemmas.append(
                     Lemma(statement=theorem_statement, proof="sorry"))
+                full_proof_strategy = lemma_plan.lemma_proof_strategy
+                if proven_lemmas:
+                    full_proof_strategy += "\n\nThroughout the proof, you can freely use any of the below lemmas, which you can assume to be true."
+                for proven_lemma in proven_lemmas:
+                    full_proof_strategy += ("\n\n" + proven_lemma.statement)
                 proof_result = self._generate_proof(
                     problem=problem,
                     theorem_name=lemma_plan.lemma_name,
-                    lemma_proof_strategy=lemma_plan.lemma_proof_strategy,
+                    lemma_proof_strategy=full_proof_strategy,
                     proof_dump_file_path=self.proof_dump_file_path,
                     timeout_in_ms=time_remaining_in_ms,
                     logger=logger
@@ -139,20 +144,22 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
                     proof = "\n".join(proof_steps)
                     proven_lemmas.append(Lemma(statement=theorem_statement, proof=proof))
             problem.correctness_helper_lemmas.clear()
-            # Asssume that the lemma [TODO]
+            full_proof_strategy = proof_plan.correctness_proof_strategy
+            if proven_lemmas:
+                full_proof_strategy += "\n\nThroughout the proof, you can freely use any of the below lemmas, which you can assume to be true."
             for proven_lemma in proven_lemmas:
                 problem.correctness_helper_lemmas.append(proven_lemma)
-                # + proven_lemma.statement [TODO]
+                full_proof_strategy += ("\n\n" + proven_lemma.statement)
             proof_result = self._generate_proof(
                 problem=problem,
                 theorem_name=self.lemma_name,
-                lemma_proof_strategy=proof_plan.correctness_proof_strategy,
+                lemma_proof_strategy=full_proof_strategy,
                 proof_dump_file_path=self.proof_dump_file_path,
                 timeout_in_ms=time_remaining_in_ms,
                 logger=logger)
             if proof_result.proof_found:
                 proof_steps = [step for proof_step in proof_result.proof_steps for step in proof_step.proof_steps]
-                proof = "\n".join(proof_steps)
+                proof = "by\n" + "\n".join(proof_steps)
                 problem.correctness_proof = proof
                 proof_found = True
             else:

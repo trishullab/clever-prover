@@ -20,7 +20,6 @@ def main(cfg):
     test_report_dir = os.path.join(log_dir, "test_report")
     os.makedirs(test_report_dir, exist_ok=True)
     benchmark = Benchmark()
-    # benchmark = Benchmark(is_sample=True)
     benchmark.load_all()
     problem_view = ProblemViewTask(
         benchmark=benchmark,
