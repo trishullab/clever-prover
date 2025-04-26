@@ -6,7 +6,7 @@ task_type: IMPL_CORRECTNESS
 log_dir: ".logs/eval_planning_copra_impl_generator"
 exp_name: "planning_copra_impl_generator"
 impl_generation_strategy: "PlanningCopraImplGenerator"
-problems_to_solve: [45] #"*"
+problems_to_solve: [3] #"*"
 k: 1
 timeout_in_ses: 3600
 params:

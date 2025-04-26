@@ -122,11 +122,13 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
             self.proof_plan = proof_plan
             lemma_plans : list[LemmaPlan] = proof_plan.lemma_plans
             proven_lemmas : list[Lemma] = []
+            # TODO: check compilation; continue if fails, make sure variables at end are updated
             for lemma_plan in lemma_plans:
                 theorem_statement = lemma_plan.lemma
                 problem.correctness_helper_lemmas.append(
-                    Lemma(statement=theorem_statement, proof="sorry"))
+                    Lemma(statement=theorem_statement, proof="by sorry"))
                 full_proof_strategy = lemma_plan.lemma_proof_strategy
+                # TODO: add each lemma only once
                 if proven_lemmas:
                     full_proof_strategy += "\n\nThroughout the proof, you can freely use any of the below helper lemmas, which you can assume to be true:"
                     full_proof_strategy += "\n[HELPER LEMMAS]"
@@ -251,6 +253,7 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
         raw_proof_plan, lemmas, lemma_plans, correctness_plan = proof_planner.solve_intermediate(
             problem_statement=problem.problem_spec_nl,
             problem_spec=problem.problem_spec_formal_ground_truth,
+            implementation_signature=problem.implementation_signature,
             implementation=problem.implementation,
             correctness_definition=problem.correctness_theorem
         )
@@ -258,7 +261,7 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
         for lemma, lemma_plan in zip(lemmas, lemma_plans):
             match = Lean4SyncExecutor.theorem_name_match.match(lemma)
             if match:
-                lemma_name = match.group(1).strip()
+                lemma_name = match.group(4).strip()
                 lemma_plan_objs.append(LemmaPlan(
                     lemma_name=lemma_name,
                     lemma=lemma,

@@ -36,11 +36,12 @@ class ProofPlannerTool(Tool):
         # self.inference_kwargs["stop"] = prompter.stop_tokens
         self.history = []
     
-    def get_prompt(self, history: list[dict[str, str]], problem_statement: str, problem_spec: str, implementation: str, correctness_definition: str) -> list[dict[str, str]]:
+    def get_prompt(self, history: list[dict[str, str]], problem_statement: str, problem_spec: str, implementation_signature: str, implementation: str, correctness_definition: str) -> list[dict[str, str]]:
         # if not history or history[0]["role"] != "system":
         #     history.insert(0, {"role": "system", "content": self.system_prompt})
         #     history[1:1] = self.example_prompt_list
-        history.append({"role": "user", "content": ProofPlannerTool.user_prompt_format.format(problem_statement, problem_spec, implementation, correctness_definition)})
+        full_implementation = implementation_signature + "\n" + implementation
+        history.append({"role": "user", "content": ProofPlannerTool.user_prompt_format.format(problem_statement, problem_spec, full_implementation, correctness_definition)})
         return history
 
     def parse_response(self, response: str):
@@ -65,11 +66,11 @@ class ProofPlannerTool(Tool):
             correctness_plan = correctness_plan_response.strip()
         return raw_response, lemmas, lemma_plans, correctness_plan
 
-    def solve_intermediate(self, problem_statement: str, problem_spec: str, implementation: str, correctness_definition: str) -> typing.Tuple[str, list[str], list[str], str]:
+    def solve_intermediate(self, problem_statement: str, problem_spec: str, implementation_signature: str, implementation: str, correctness_definition: str) -> typing.Tuple[str, list[str], list[str], str]:
         # if not self.model.is_loaded():
         #     self.model.__enter__()
         # Prompt the model for the plan
-        self.history = self.get_prompt(self.history, problem_statement, problem_spec, implementation, correctness_definition)
+        self.history = self.get_prompt(self.history, problem_statement, problem_spec, implementation_signature, implementation, correctness_definition)
         # Get the model response
         message = self.history[-1]["content"]
         self.logger.info(f"[PROOF PLANNER] Raw prompt used:\n{message}")
