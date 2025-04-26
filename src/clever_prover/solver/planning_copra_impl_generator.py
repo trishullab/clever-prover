@@ -131,7 +131,7 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
                     full_proof_strategy += "\n\nThroughout the proof, you can freely use any of the below helper lemmas, which you can assume to be true:"
                     full_proof_strategy += "\n[HELPER LEMMAS]"
                 for proven_lemma in proven_lemmas:
-                    full_proof_strategy += ("\n[HELPER LEMMA] " + proven_lemma.statement)
+                    full_proof_strategy += ("\n[HELPER LEMMA]\n" + proven_lemma.statement)
                 proof_result = self._generate_proof(
                     problem=problem,
                     theorem_name=lemma_plan.lemma_name,
@@ -151,7 +151,7 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
                 full_proof_strategy += "\n[HELPER LEMMAS]"
             for proven_lemma in proven_lemmas:
                 problem.correctness_helper_lemmas.append(proven_lemma)
-                full_proof_strategy += ("\n[HELPER LEMMA] " + proven_lemma.statement)
+                full_proof_strategy += ("\n[HELPER LEMMA]\n" + proven_lemma.statement)
             # TODO: need to add lemmas to proof file before we can prove them, else error
             proof_result = self._generate_proof(
                 problem=problem,
