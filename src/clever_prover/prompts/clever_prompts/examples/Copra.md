@@ -4,147 +4,297 @@
 Goals to prove:
 [GOALS]
 [GOAL] 1
-y = 1
+(0 ≤ if x < 0 then -x else x) ∧
+  ((if 0 < x then x else -x) = if x < 0 then -x else x) ∧
+    ((if x < 0 then -x else x) = 0 ↔ x = 0) ∧
+      (0 ≤ x → ((if 0 < x then x else -x) + if x < 0 then -x else x) = 2 * x) ∧
+        (x ≤ 0 → ((if 0 < x then x else -x) + if x < 0 then -x else x) = -(2 * x))
 [HYPOTHESES] 1
-[HYPOTHESIS] x y : ℝ
-[HYPOTHESIS] h₁: x = 3 - 2 * y
-[HYPOTHESIS] h₂: 2 * x - y = 1
+[HYPOTHESIS] x : ℤ
+[HYPOTHESIS] result : ℤ := implementation x
 
 [INFORMAL-THEOREM]
-At which point do the lines $x=3-2y$ and $2x-y=1$ intersect? Give your answer as an ordered pair in the form $(x, y).$ Show that it is (1,1).
-[INFORMAL-PROOFS]
-We can substitute the second equation into the first equation to get $$x=3-2(2x-1)=3-4x+2.$$ Moving the variable terms to the left-hand side and the constants to the right-hand side, we find $$x+4x=5.$$ This gives $x=1$ which we may plug into either equation to get $y$. For example, $$y=2(1)-1=1.$$ So the lines intersect at the point $(1,1)$.
+def find_magnitude(x: int) -> int
+"""
+Given an integer x, your task is to find the magnitude of x.
+The magnitude of an integer is defined as the absolute value of the integer.
+"""
+
+[INFORMAL-PROOF]
+1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
+2. Early on, you will want to break the proof up into cases based on whether `x` is positive, negative, or zero.
+3. Many of the intermediate goals can likely be proven using `linarith`.
 
 [STEPS]
-[STEP] apply And.intro
-[STEP] rw [h₁] at h₂
-linarith
+[STEP] unfold problem_spec
+[STEP] let result := implementation x
+[STEP] use result
+[STEP] simp [result]
+[STEP] simp [implementation]
 
 [INCORRECT STEPS]
-[STEP] rw [h₂] at h₁
+[STEP] cases x with n
 
 [LAST STEP]
-rw [←h₁]
+cases lt_or_ge x 0 with hx hx
 
 [ERROR MESSAGE]
-rewrite tactic failed, did not find instance of the pattern in the target expression
-  3 - 2 * y
+unknown tactic
 [END]
 
 `example_assistant`
 [RUN TACTIC]
-rw [h₁] at h₂
+by_cases h_0_eq_x: x = 0
 [END]
+
 
 `example_user`
 Goals to prove:
 [GOALS]
 [GOAL] 1
-n = 57
+fibonacci_non_computable n (implementation n)
 [HYPOTHESES] 1
 [HYPOTHESIS] n : ℕ
-[HYPOTHESIS] h₀ : n < 398 
-[HYPOTHESIS] h₁ : (n * 7) % 398 = 1
-
+[HYPOTHESIS] result : ℕ := implementation n
 
 [INFORMAL-THEOREM]
-Show that if $n$ is an integer less than 398, and $7 * n$ modulo 398 is 1, then $n$ must be 57. 
-[INFORMAL-PROOFS]
-Since 7 is coprime to 398, it has a unique inverse modulo 398. One can compute that $57 * 7$ is 1 modulo 398, hence the unique inverse must be 57.
+[NL DESCRIPTION]
+def find_fibonacci(n: int) -> int
+"""
+Given an integer n, your task is to find the nth Fibonacci number.
+The Fibonacci sequence is defined as follows:
+- F(0) = 1
+- F(1) = 1
+- F(n) = F(n-1) + F(n-2) for n > 1
+"""
 
+[INFORMAL-PROOF]
+1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
+2. Use the `have` keyword three times to show that `implementation` follows the three properties of the Fibonacci function:
+  - `implementation 0 = 1`
+  - `implementation 1 = 1`
+  - `∀ n', implementation (n' + 2) = implementation n' + implementation (n' + 1)`
+3. Then use these three hypotheses and the `fib_comp_to_non_comp` lemma to show that `implementation` satisfies `fibonacci_non_computable`, as required by the `spec`.
+
+Throughout the proof, you can freely use any of the below helper lemmas, which you can assume to be true:
+[HELPER LEMMAS]
+[HELPER LEMMA]
+lemma fib_comp_to_non_comp (n : ℕ)
+(f : Nat → Nat)
+(h_f_0: f 0 = 1)
+(h_f_1: f 1 = 1)
+(h_f_step: ∀ n, f (n + 2) = f n + f (n + 1))
+: fibonacci_non_computable n (f n) :=
+
+[STEPS]
+[STEP] unfold problem_spec
+[STEP] let result := implementation n
+[STEP] use result
+[STEP] simp [result]
 
 [LAST STEP]
-norm_num
+simp [implementation]
+
 [ERROR MESSAGE]
-norm_num failed to simplify
-state:
-n : ℕ,
-h₀ : n < 398,
-h₁ : n * 7 % 398 = 1
-⊢ n = 57
+simp made no progress
 [END]
 
 `example_assistant`
 [RUN TACTIC]
-have h₂ : 1 % 398 = (57 * 7) % 398 := by norm_num
+have h_impl_n : ∀ n', implementation (n' + 2) = implementation n' + implementation (n' + 1) :=
+by
+  intro n'
+  rw [implementation]
 [END]
+
 
 `example_user`
 Goals to prove:
 [GOALS]
 [GOAL] 1
-s 5 = 16
+fibonacci_non_computable n (implementation n)
 [HYPOTHESES] 1
-[HYPOTHESIS] (s : ℕ → ℝ)
-[HYPOTHESIS] h₀: ∀ n, s (n + 2) = s (n + 1) + s n
-[HYPOTHESIS] h₁ : s 9 = 110
-[HYPOTHESIS] h₂ : s 7 = 42
-[HYPOTHESIS] h : ∀ (n : ℕ), s n = s (n + 2) - s (n + 1)
-[HYPOTHESIS] h₃ : s 9 = s 8 + s 7
-[HYPOTHESIS] h₄ : s 8 = 68
+[HYPOTHESIS] n : ℕ
+[HYPOTHESIS] result : ℕ := implementation n
+[HYPOTHESIS] h_impl_n : ∀ (n' : ℕ), implementation (n' + 2) = implementation n' + implementation (n' + 1)
+[HYPOTHESIS] h_impl_0 : implementation 0 = 0
+[HYPOTHESIS] h_impl_1 : implementation 1 = 1
 
 [INFORMAL-THEOREM]
-The sequence $S_1, S_2, S_3, \\cdots, S_{10}$ has the property that every term beginning with the third is the sum of the previous two.  That is, $S_n = S_{n-2} + S_{n-1} \\text{ for } n \\ge 3. $ Suppose that $S_9 = 110$ and $S_7 = 42$.  What is $S_5$?$ Show that it is $16$.
-[INFORMAL-PROOFS]
-We have $S_9 = 110$, $S_7 = 42$. We have $S_8 = S_9 - S_ 7 = 110 - 42 = 68$. Thus $S_6 = S_8 - S_7 = 68 - 42 = 26$. From this we get $S_5 = S_7 - S_6 = 42 - 26 = 16$. Therefore, the answer is $16$.
+[NL DESCRIPTION]
+def find_fibonacci(n: int) -> int
+"""
+Given an integer n, your task is to find the nth Fibonacci number.
+The Fibonacci sequence is defined as follows:
+- F(0) = 1
+- F(1) = 1
+- F(n) = F(n-1) + F(n-2) for n > 1
+"""
 
-[STEP] have h : ∀ n, s n = s (n + 2) - s (n + 1) := by 
-intro n
-simp [h₀, n] 
-[STEP] have h₃ : s 9 = s 8 + s 7 := h₀ 7
-[STEP] have h₄ : s 8 = 68 := by linarith
+[INFORMAL-PROOF]
+1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
+2. Use the `have` keyword three times to show that `implementation` follows the three properties of the Fibonacci function:
+  - `implementation 0 = 1`
+  - `implementation 1 = 1`
+  - `∀ n', implementation (n' + 2) = implementation n' + implementation (n' + 1)`
+3. Then use these three hypotheses and the `fib_comp_to_non_comp` lemma to show that `implementation` satisfies `fibonacci_non_computable`, as required by the `spec`.
 
+Throughout the proof, you can freely use any of the below helper lemmas, which you can assume to be true:
+[HELPER LEMMAS]
+[HELPER LEMMA]
+lemma fib_comp_to_non_comp (n : ℕ)
+(f : Nat → Nat)
+(h_f_0: f 0 = 1)
+(h_f_1: f 1 = 1)
+(h_f_step: ∀ n, f (n + 2) = f n + f (n + 1))
+: fibonacci_non_computable n (f n) :=
+
+[STEPS]
+[STEP] unfold problem_spec
+[STEP] let result := implementation n
+[STEP] use result
+[STEP] simp [result]
+[STEP] have h_impl_n : ∀ n', implementation (n' + 2) = implementation n' + implementation (n' + 1) :=
+by
+  intro n'
+  rw [implementation]
+[STEP] have h_impl_0 : implementation 0 = 0 := by
+  rw [implementation]
+[STEP] have h_impl_1 : implementation 1 = 1 := by
+  rw [implementation]
 
 [LAST STEP]
-linarith
+apply fib_comp_to_non_comp n implementation (by rw [h_impl_0,←Nat.zero_add (1 : ℕ)]) h_impl_1 h_impl_n
+
 [ERROR MESSAGE]
-linarith failed to find a contradiction
-state:
-s : ℕ → ℕ
-h₀ : ∀ (n : ℕ), s (n + 2) = s (n + 1) + s n
-h₁ : s 9 = 110
-h₂ : s 7 = 42
-h : ∀ (n : ℕ), s n = s (n + 2) - s (n + 1)
-h₃ : s 9 = s 8 + s 7
-h₄ : s 8 = 68
-ᾰ : s 5 < 16
-⊢ false
+tactic 'rewrite' failed, did not find instance of the pattern in the target expression
+ 1
+n : ℕ
+result : ℕ := implementation n
+h_impl_n : ∀ (n' : ℕ), implementation (n' + 2) = implementation n' + implementation (n' + 1)
+h_impl_0 : implementation 0 = 0
+h_impl_1 : implementation 1 = 1
+⊢ 0 = 0
 [END]
 
 `example_assistant`
 [RUN TACTIC]
-rw [(h 5)]
+apply fib_comp_to_non_comp
 [END]
+
 
 `example_user`
 Goals to prove:
 [GOALS]
 [GOAL] 1
-3 ∣ d ^ 3 + 2 * d + 3 * (d ^ 2 + d + 1)
+if implementation.loop score_changes threshold 0 0 = 0 then
+  ∀ (i : ℕ), 1 ≤ i → i ≤ score_changes.length → (List.take i score_changes).sum < threshold
+else
+  ∃ i,
+    1 ≤ i →
+      i ≤ score_changes.length →
+        threshold ≤ (List.take i score_changes).sum →
+          implementation.loop score_changes threshold 0 0 =
+              1 + implementation.loop (List.drop i score_changes) (threshold - (List.take i score_changes).sum) 0 0 →
+            ∀ (i' : ℕ), 1 ≤ i' → i' < i → (List.take i' score_changes).sum < threshold
 [HYPOTHESES] 1
-[HYPOTHESIS] d : ℕ
-[HYPOTHESIS] id : 3 ∣ d ^ 3 + 2 * d
-[HYPOTHESIS] id_expanded : (d + 1) ^ 3 + 2 * (d + 1) = d ^ 3 + 3 * d ^ 2 + 5 * d + 3
-[HYPOTHESIS] id_factored : d ^ 3 + 3 * d ^ 2 + 5 * d + 3 = d ^ 3 + 2 * d + 3 * (d ^ 2 + d + 1)
+[HYPOTHESIS] score_changes : List ℤ
+[HYPOTHESIS] threshold : ℤ
+[HYPOTHESIS] result : ℕ := implementation score_changes threshold
+[HYPOTHESIS] h_rounds_played : 0 < score_changes.length
+[HYPOTHESIS] h_stop : 0 = implementation.loop score_changes threshold 0 0 →
+  ∀ (i : ℕ), 1 ≤ i ∧ i ≤ score_changes.length → 0 + (List.take i score_changes).sum < threshold
 
-[INFORMAL-THEOREM] Show that for any natural number n, 3 divides $n^3 + 2n$.
-[INFORMAL-PROOFS] We induct on $n$. If $n = 0$, then $n^3 + 2n = 0$ which is divisibe by 3. Assume that for a natural number $d$ that 3 divides $d^3 + 2d$. We will show 3 divides $(d+1)^3 + 2(d+1)$. We have $(d+1)^3 + 2(d+1) = d^3 + 3d^2 + 5d + 3 = d^3 + 2d + 3*(d^2 + d + 1)$. Since 3 divides $d^3 + 2d$ by the inductive hypothesis, and clearly 3 divides $3*(d^2 + d + 1)$, we have that 3 divides $(d+1)^3 + 2(d+1)$, and the argument by induction is complete.
+[INFORMAL-THEOREM]
+def coins_won(score_changes: List[int], threshold: int) -> int
+"""
+In a game, a player's score starts at 0 and is updated round by round using values from the list
+score_changes (where positive numbers add to the score and negative numbers subtract).
+After each round, as long as the player's cumulative score is greater than or equal to the given threshold,
+the player wins a coin for that round.
+Your task is to compute and return the total number of coins won by the player by the end of the game.
+"""
+
+[INFORMAL-PROOF]
+1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
+2. Early on, you will want to break the proof up into cases based on whether the output of `implementation_loop` (with initial values as input) is 0.
+3. Use the `implementation_loop_threshold_invariant`, `implementation_loop_invariant_stop`, and `implementation_loop_invariant_continue` lemmas in the proof.
+
+Throughout the proof, you can freely use any of the below helper lemmas, which you can assume to be true:
+[HELPER LEMMAS]
+[HELPER LEMMA]
+lemma implementation_loop_threshold_invariant
+(score_changes: List Int)
+(threshold: Int)
+(score: Int)
+(coins: Nat)
+(k: Int)
+(h_rounds_played: score_changes.length > 0)
+: implementation.loop score_changes (threshold - k) score coins
+= implementation.loop score_changes threshold (score + k) coins :=
+[HELPER LEMMA]
+lemma implementation_loop_simple_increment
+(head: Int)
+(score_changes_tail: List Int)
+(threshold: Int)
+(score: Int)
+(coins: Nat)
+: (head + score < threshold →
+implementation.loop (head :: score_changes_tail) threshold score coins =
+implementation.loop (score_changes_tail) threshold (head + score) coins) ∧
+(head + score ≥ threshold →
+implementation.loop (head :: score_changes_tail) threshold score coins =
+1 + implementation.loop (score_changes_tail) threshold (head + score) coins) :=
+[HELPER LEMMA]
+lemma implementation_loop_coin_monotonic_increasing
+(score_changes: List Int)
+(threshold: Int)
+(score: Int)
+(coins: Nat)
+(h_rounds_played: score_changes.length > 0)
+: coins ≤ implementation.loop score_changes threshold score coins :=
+[HELPER LEMMA]
+lemma implementation_loop_invariant_stop
+(score_changes: List Int)
+(threshold: Int)
+(score: Int)
+(coins: Nat)
+(h_rounds_played: score_changes.length > 0)
+(h_within_threshold: coins = implementation.loop score_changes threshold score coins)
+: ∀ i, 1 ≤ i ∧ i ≤ score_changes.length →
+score + (score_changes.take i).sum < threshold :=
+[HELPER LEMMA]
+lemma implementation_loop_invariant_continue
+(score_changes: List Int)
+(threshold: Int)
+(score: Int)
+(coins: Nat)
+(h_rounds_played: score_changes.length > 0)
+(h_within_threshold: coins < implementation.loop score_changes threshold score coins)
+:∃ i', 1 ≤ i' ∧ i' ≤ score_changes.length →
+(score + (score_changes.take i').sum ≥ threshold) →
+implementation.loop score_changes threshold score coins =
+1 + implementation.loop (score_changes.drop i') threshold
+(score + (score_changes.take i').sum) coins →
+∀ i, 1 ≤ i ∧ i < i' → score + (score_changes.take i).sum < threshold :=
 
 [STEPS]
-[STEP] induction n with d id
-[STEP] simp
-[STEP] have id_expanded : (d + 1)^3 + 2 * (d + 1) = d^3 + 3 * d^2 + 5 * d + 3 := by ring
-[STEP] rw id_expanded
-[STEP] have id_factored : d^3 + 3 * d^2 + 5 * d + 3 = d^3 + 2 * d + 3 * (d^2 + d + 1) := by ring
+[STEP] -- sometimes we have to create a temporary variable to use in the proof
+unfold problem_spec
+[STEP] let result := implementation score_changes threshold
+[STEP] use result
+[STEP] simp [result]
+[STEP] simp [implementation]
+[STEP] intros h_rounds_played
 
 [LAST STEP]
-rw [id_factored]
+have h_stop := implementation_loop_invariant_stop score_changes threshold 0 0 h_rounds_played
 [SUCCESS]
 [END]
 
 `example_assistant`
 [RUN TACTIC]
-apply [dvd_add id]
+by_cases h_implementation_stop: implementation.loop score_changes threshold 0 0 = 0
 [END]
 
 
@@ -152,352 +302,412 @@ apply [dvd_add id]
 Goals to prove:
 [GOALS]
 [GOAL] 1
-b = -2
+implementation.loop score_changes threshold 0 0 =
+    1 + implementation.loop (List.drop i₁ score_changes) (threshold - (List.take i₁ score_changes).sum) 0 0 →
+  ∀ (i' : ℕ), 1 ≤ i' → i' < i₁ → (List.take i' score_changes).sum < threshold
 [HYPOTHESES] 1
-[HYPOTHESIS] b : ℝ
-[HYPOTHESIS] f : ℝ → ℝ
-[HYPOTHESIS] h₀ : ∀ (x : ℝ), f x = 3 * x ^ 4 - 7 * x ^ 3 + 2 * x ^ 2 - b * x + 1
-[HYPOTHESIS] h₁ : 3 * 1 ^ 4 - 7 * 1 ^ 3 + 2 * 1 ^ 2 - b * 1 + 1 = 1
-
-[INFORMAL-THEOREM] Let $f(x)=3x^4-7x^3+2x^2-bx+1$. For what value of $b$ is $f(1)=1$? Show that it is -2.
-[INFORMAL-PROOF] Evaluating, we get $f(1) = 3-7+2-b+1 = -b-1 = 1.$ Solving for $b,$ we find that $b = -2.$
-
-
-[STEPS]
-[STEP] induction n with d id
-[STEP] simp
-[STEP] have id_expanded : (d + 1)^3 + 2 * (d + 1) = d^3 + 3 * d^2 + 5 * d + 3 := by ring
-[STEP] rw id_expanded
-[STEP] have id_factored : d^3 + 3 * d^2 + 5 * d + 3 = d^3 + 2 * d + 3 * (d^2 + d + 1) := by ring
-[LAST STEP]
-rw [h₀] at [h₁]
-[SUCCESS]
-[END]
-
-`example_assistant`
-[RUN TACTIC]
-linarith
-[END]
-
-`example_user`
-Goals to prove:
-[GOALS]
-[GOAL] 1
-∀ (x : ℕ), 1 ≤ x → f x = 3 * x + 1
-[HYPOTHESES] 1
-[HYPOTHESIS] f : ℕ → ℕ
-[HYPOTHESIS] h0 : ∀ x ≥ 1, f x - f (x - 1) = 3
-[HYPOTHESIS] h1 : f 1 = 4
-[HYPOTHESIS] h0' : 4 - f 0 = 3
-
-[INFORMAL-THEOREM] 
-Let $f(x) - f(x-1) = 3$ for all natural numbers $x \ge 1$. Show that $f(x) = 3x + 1$ for all natural numbers $x$ greater than or equal to 1.
-
-[INFORMAL-PROOF] 
-We can prove this by induction on $x$. The base case is $x=1$, where we have $f(1) = 4 = 3*1 + 1$. For the inductive step, we assume that $f(k) = 3k + 1$ for some $k \ge 1$. Then we have $f(k+1) - f(k) = 3$, so $f(k+1) = f(k) + 3 = (3k + 1) + 3 = 3k + 4 = 3(k+1) + 1$. Thus, by induction, we have shown that $f(x) = 3x + 1$ for all natural numbers $x \ge 1$.
-
-[STEPS]
-[STEP] have h0' := h0 1
-[STEP] simp at h0'
-
-[LAST STEP]
-rw [h1] at h0'
-[SUCCESS]
-[END]
-
-`example_assistant`
-[RUN TACTIC]
--- It might be a good idea to first find the value of f(0)
-have h_f0 : f 0 = 1 := by
-[END]
-
-`example_user`
-Goals to prove:
-[GOALS]
-[GOAL] 1
-f 0 = 1
-[HYPOTHESES] 1
-[HYPOTHESIS] f : ℕ → ℕ
-[HYPOTHESIS] h0 : ∀ x ≥ 1, f x - f (x - 1) = 3
-[HYPOTHESIS] h1 : f 1 = 4
-[HYPOTHESIS] h0' : 4 - f 0 = 3
+[HYPOTHESIS] score_changes : List ℤ
+[HYPOTHESIS] threshold : ℤ
+[HYPOTHESIS] result : ℕ := implementation score_changes threshold
+[HYPOTHESIS] h_rounds_played : 0 < score_changes.length
+[HYPOTHESIS] h_stop : 0 = implementation.loop score_changes threshold 0 0 →
+  ∀ (i : ℕ), 1 ≤ i ∧ i ≤ score_changes.length → 0 + (List.take i score_changes).sum < threshold
+[HYPOTHESIS] h_implementation_stop : ¬implementation.loop score_changes threshold 0 0 = 0
+[HYPOTHESIS] h_implementation_stop' : 0 < implementation.loop score_changes threshold 0 0
+[HYPOTHESIS] i₁ : ℕ
+[HYPOTHESIS] h_1_le_i₁ : 1 ≤ i₁
+[HYPOTHESIS] h_iᵢ_score_len : i₁ ≤ score_changes.length
+[HYPOTHESIS] h_threshold : threshold ≤ (List.take i₁ score_changes).sum
+[HYPOTHESIS] h_continue_i₁ : implementation.loop score_changes threshold 0 0 =
+    1 + implementation.loop (List.drop i₁ score_changes) threshold (List.take i₁ score_changes).sum 0 →
+  ∀ (i : ℕ), 1 ≤ i → i < i₁ → (List.take i score_changes).sum < threshold
+[HYPOTHESIS] h_drop_i₁ : (List.drop i₁ score_changes).length > 0
 
 [GOAL] 2
-∀ (x : ℕ), 1 ≤ x → f x = 3 * x + 1
+implementation.loop score_changes threshold 0 0 =
+    1 + implementation.loop (List.drop i₁ score_changes) (threshold - (List.take i₁ score_changes).sum) 0 0 →
+  ∀ (i' : ℕ), 1 ≤ i' → i' < i₁ → (List.take i' score_changes).sum < threshold
 [HYPOTHESES] 1
-[HYPOTHESIS] f : ℕ → ℕ
-[HYPOTHESIS] h0 : ∀ x ≥ 1, f x - f (x - 1) = 3
-[HYPOTHESIS] h1 : f 1 = 4
-[HYPOTHESIS] h0' : 4 - f 0 = 3
+[HYPOTHESIS] score_changes : List ℤ
+[HYPOTHESIS] threshold : ℤ
+[HYPOTHESIS] result : ℕ := implementation score_changes threshold
+[HYPOTHESIS] h_rounds_played : 0 < score_changes.length
+[HYPOTHESIS] h_stop : 0 = implementation.loop score_changes threshold 0 0 →
+  ∀ (i : ℕ), 1 ≤ i ∧ i ≤ score_changes.length → 0 + (List.take i score_changes).sum < threshold
+[HYPOTHESIS] h_implementation_stop : ¬implementation.loop score_changes threshold 0 0 = 0
+[HYPOTHESIS] h_implementation_stop' : 0 < implementation.loop score_changes threshold 0 0
+[HYPOTHESIS] i₁ : ℕ
+[HYPOTHESIS] h_1_le_i₁ : 1 ≤ i₁
+[HYPOTHESIS] h_iᵢ_score_len : i₁ ≤ score_changes.length
+[HYPOTHESIS] h_threshold : threshold ≤ (List.take i₁ score_changes).sum
+[HYPOTHESIS] h_continue_i₁ : implementation.loop score_changes threshold 0 0 =
+    1 + implementation.loop (List.drop i₁ score_changes) threshold (List.take i₁ score_changes).sum 0 →
+  ∀ (i : ℕ), 1 ≤ i → i < i₁ → (List.take i score_changes).sum < threshold
+[HYPOTHESIS] h_drop_i₁ : ¬(List.drop i₁ score_changes).length > 0
 
-[INFORMAL-THEOREM] 
-Let $f(x) - f(x-1) = 3$ for all natural numbers $x \ge 1$. Show that $f(x) = 3x + 1$ for all natural numbers $x$ greater than or equal to 1.
+[INFORMAL-THEOREM]
+def coins_won(score_changes: List[int], threshold: int) -> int
+"""
+In a game, a player's score starts at 0 and is updated round by round using values from the list
+score_changes (where positive numbers add to the score and negative numbers subtract).
+After each round, as long as the player's cumulative score is greater than or equal to the given threshold,
+the player wins a coin for that round.
+Your task is to compute and return the total number of coins won by the player by the end of the game.
+"""
 
-[INFORMAL-PROOF] 
-We can prove this by induction on $x$. The base case is $x=1$, where we have $f(1) = 4 = 3*1 + 1$. For the inductive step, we assume that $f(k) = 3k + 1$ for some $k \ge 1$. Then we have $f(k+1) - f(k) = 3$, so $f(k+1) = f(k) + 3 = (3k + 1) + 3 = 3k + 4 = 3(k+1) + 1$. Thus, by induction, we have shown that $f(x) = 3x + 1$ for all natural numbers $x \ge 1$.
+[INFORMAL-PROOF]
+1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
+2. Early on, you will want to break the proof up into cases based on whether the output of `implementation_loop` (with initial values as input) is 0.
+3. Use the `implementation_loop_threshold_invariant`, `implementation_loop_invariant_stop`, and `implementation_loop_invariant_continue` lemmas in the proof.
+
+Throughout the proof, you can freely use any of the below helper lemmas, which you can assume to be true:
+[HELPER LEMMAS]
+[HELPER LEMMA]
+lemma implementation_loop_threshold_invariant
+(score_changes: List Int)
+(threshold: Int)
+(score: Int)
+(coins: Nat)
+(k: Int)
+(h_rounds_played: score_changes.length > 0)
+: implementation.loop score_changes (threshold - k) score coins
+= implementation.loop score_changes threshold (score + k) coins :=
+[HELPER LEMMA]
+lemma implementation_loop_simple_increment
+(head: Int)
+(score_changes_tail: List Int)
+(threshold: Int)
+(score: Int)
+(coins: Nat)
+: (head + score < threshold →
+implementation.loop (head :: score_changes_tail) threshold score coins =
+implementation.loop (score_changes_tail) threshold (head + score) coins) ∧
+(head + score ≥ threshold →
+implementation.loop (head :: score_changes_tail) threshold score coins =
+1 + implementation.loop (score_changes_tail) threshold (head + score) coins) :=
+[HELPER LEMMA]
+lemma implementation_loop_coin_monotonic_increasing
+(score_changes: List Int)
+(threshold: Int)
+(score: Int)
+(coins: Nat)
+(h_rounds_played: score_changes.length > 0)
+: coins ≤ implementation.loop score_changes threshold score coins :=
+[HELPER LEMMA]
+lemma implementation_loop_invariant_stop
+(score_changes: List Int)
+(threshold: Int)
+(score: Int)
+(coins: Nat)
+(h_rounds_played: score_changes.length > 0)
+(h_within_threshold: coins = implementation.loop score_changes threshold score coins)
+: ∀ i, 1 ≤ i ∧ i ≤ score_changes.length →
+score + (score_changes.take i).sum < threshold :=
+[HELPER LEMMA]
+lemma implementation_loop_invariant_continue
+(score_changes: List Int)
+(threshold: Int)
+(score: Int)
+(coins: Nat)
+(h_rounds_played: score_changes.length > 0)
+(h_within_threshold: coins < implementation.loop score_changes threshold score coins)
+:∃ i', 1 ≤ i' ∧ i' ≤ score_changes.length →
+(score + (score_changes.take i').sum ≥ threshold) →
+implementation.loop score_changes threshold score coins =
+1 + implementation.loop (score_changes.drop i') threshold
+(score + (score_changes.take i').sum) coins →
+∀ i, 1 ≤ i ∧ i < i' → score + (score_changes.take i).sum < threshold :=
 
 [STEPS]
-[STEP] have h0' := h0 1
-[STEP] simp at h0'
+[STEP] -- sometimes we have to create a temporary variable to use in the proof
+unfold problem_spec
+[STEP] let result := implementation score_changes threshold
+[STEP] use result
+[STEP] simp [result]
+[STEP] simp [implementation]
+[STEP] intros h_rounds_played
+[STEP] have h_stop := implementation_loop_invariant_stop score_changes threshold 0 0 h_rounds_played
+[STEP] by_cases h_implementation_stop: implementation.loop score_changes threshold 0 0 = 0
+[STEP] -- Case 1: where implementation.loop score_changes threshold 0 0 = 0
+simp [h_implementation_stop]
+[STEP] simp [h_implementation_stop] at h_stop
+[STEP] exact h_stop
+[STEP] -- Case 2: where implementation.loop score_changes threshold 0 0 ≠ 0
+simp [h_implementation_stop]
+[STEP] have h_implementation_stop': 0 < implementation.loop score_changes threshold 0 0 := by
+  by_contra
+  rename_i h_implementation_stop_false
+  simp at h_implementation_stop_false
+  contradiction
+[STEP] have h_continue := implementation_loop_invariant_continue score_changes threshold 0 0 h_rounds_played h_implementation_stop'
+[STEP] simp at h_continue
+[STEP] obtain ⟨i₁⟩ := h_continue
+[STEP] rename_i h_continue_i₁
+[STEP] use i₁
+[STEP] intro h_1_le_i₁ h_iᵢ_score_len h_threshold
+[STEP] simp [h_1_le_i₁, h_iᵢ_score_len, h_threshold] at h_continue_i₁
 
 [LAST STEP]
--- It might be a good idea to first find the value of f(0)
-have h_f0 : f 0 = 1 := by
+by_cases h_drop_i₁: (List.drop i₁ score_changes).length > 0
 [SUCCESS]
 [END]
 
 `example_assistant`
 [RUN TACTIC]
-  rw [Nat.sub_eq_iff_eq_add'] at h0'
-  symm at h0'
+have h_threshold' := implementation_loop_threshold_invariant (List.drop i₁ score_changes) threshold 0 0 (List.take i₁ score_changes).sum h_drop_i₁
 [END]
+
 
 `example_user`
 Goals to prove:
 [GOALS]
 [GOAL] 1
-f 0 = 1
+problem_spec implementation x y
 [HYPOTHESES] 1
-[HYPOTHESIS] f : ℕ → ℕ
-[HYPOTHESIS] h0 : ∀ x ≥ 1, f x - f (x - 1) = 3
-[HYPOTHESIS] h1 : f 1 = 4
-[HYPOTHESIS] h0' : f 0 + 3 = 4
+[HYPOTHESIS] x y : ℤ
 
-[GOAL] 2
-f 0 ≤ 4
-[HYPOTHESES] 1
-[HYPOTHESIS] f : ℕ → ℕ
-[HYPOTHESIS] h0 : ∀ x ≥ 1, f x - f (x - 1) = 3
-[HYPOTHESIS] h1 : f 1 = 4
-[HYPOTHESIS] h0' : 4 - f 0 = 3
+[INFORMAL-THEOREM]
+def is_square(x: int, y: int) -> bool
+"""
+Given two integers x and y, your task is to find if x is a square of y.
+The function should return true if x is a square of y, otherwise false.
+"""
 
-[GOAL] 3
-∀ (x : ℕ), 1 ≤ x → f x = 3 * x + 1
-[HYPOTHESES] 1
-[HYPOTHESIS] f : ℕ → ℕ
-[HYPOTHESIS] h0 : ∀ x ≥ 1, f x - f (x - 1) = 3
-[HYPOTHESIS] h1 : f 1 = 4
-[HYPOTHESIS] h0' : 4 - f 0 = 3
-
-[INFORMAL-THEOREM] 
-Let $f(x) - f(x-1) = 3$ for all natural numbers $x \ge 1$. Show that $f(x) = 3x + 1$ for all natural numbers $x$ greater than or equal to 1.
-
-[INFORMAL-PROOF] 
-We can prove this by induction on $x$. The base case is $x=1$, where we have $f(1) = 4 = 3*1 + 1$. For the inductive step, we assume that $f(k) = 3k + 1$ for some $k \ge 1$. Then we have $f(k+1) - f(k) = 3$, so $f(k+1) = f(k) + 3 = (3k + 1) + 3 = 3k + 4 = 3(k+1) + 1$. Thus, by induction, we have shown that $f(x) = 3x + 1$ for all natural numbers $x \ge 1$.
-
-[STEPS]
-[STEP] have h0' := h0 1
-[STEP] simp at h0'
-[STEP] -- It might be a good idea to first find the value of f(0)
-have h_f0 : f 0 = 1 := by
-
-[LAST STEP]
-  rw [Nat.sub_eq_iff_eq_add'] at h0'
-  symm at h0'
-[SUCCESS]
+[INFORMAL-PROOF]
+1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
+2. Simplify the goal.
+3. Use the `have` keyword to create a new hypothesis equating the operation of squaring a variable to that of multiplying the variable by itself.
+4. Use this new hypothesis to rewrite the goal.
 [END]
 
 `example_assistant`
 [RUN TACTIC]
-linarith
+unfold problem_spec
 [END]
+
 
 `example_user`
 Goals to prove:
 [GOALS]
 [GOAL] 1
-f 0 ≤ 4
+let spec := fun result => result = true ↔ x = y ^ 2;
+∃ result, implementation x y = result ∧ spec result
 [HYPOTHESES] 1
-[HYPOTHESIS] f : ℕ → ℕ
-[HYPOTHESIS] h0 : ∀ x ≥ 1, f x - f (x - 1) = 3
-[HYPOTHESIS] h1 : f 1 = 4
-[HYPOTHESIS] h0' : 4 - f 0 = 3
+[HYPOTHESIS] x y : ℤ
 
-[GOAL] 2
-∀ (x : ℕ), 1 ≤ x → f x = 3 * x + 1
-[HYPOTHESES] 1
-[HYPOTHESIS] f : ℕ → ℕ
-[HYPOTHESIS] h0 : ∀ x ≥ 1, f x - f (x - 1) = 3
-[HYPOTHESIS] h1 : f 1 = 4
-[HYPOTHESIS] h0' : 4 - f 0 = 3
+[INFORMAL-THEOREM]
+def is_square(x: int, y: int) -> bool
+"""
+Given two integers x and y, your task is to find if x is a square of y.
+The function should return true if x is a square of y, otherwise false.
+"""
 
-[INFORMAL-THEOREM] 
-Let $f(x) - f(x-1) = 3$ for all natural numbers $x \ge 1$. Show that $f(x) = 3x + 1$ for all natural numbers $x$ greater than or equal to 1.
-
-[INFORMAL-PROOF] 
-We can prove this by induction on $x$. The base case is $x=1$, where we have $f(1) = 4 = 3*1 + 1$. For the inductive step, we assume that $f(k) = 3k + 1$ for some $k \ge 1$. Then we have $f(k+1) - f(k) = 3$, so $f(k+1) = f(k) + 3 = (3k + 1) + 3 = 3k + 4 = 3(k+1) + 1$. Thus, by induction, we have shown that $f(x) = 3x + 1$ for all natural numbers $x \ge 1$.
-
-[STEPS]
-[STEP] have h0' := h0 1
-[STEP] simp at h0'
-[STEP] -- It might be a good idea to first find the value of f(0)
-have h_f0 : f 0 = 1 := by
-[STEP]   rw [Nat.sub_eq_iff_eq_add'] at h0'
-  symm at h0'
+[INFORMAL-PROOF]
+1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
+2. Simplify the goal.
+3. Use the `have` keyword to create a new hypothesis equating the operation of squaring a variable to that of multiplying the variable by itself.
+4. Use this new hypothesis to rewrite the goal.
 
 [LAST STEP]
-  linarith
+unfold problem_spec
 [SUCCESS]
 [END]
 
 `example_assistant`
 [RUN TACTIC]
-  by_contra h_f0_gt_4
-  simp at h_f0_gt_4
+let result := implementation x y
 [END]
+
 
 `example_user`
 Goals to prove:
 [GOALS]
 [GOAL] 1
-False
+let spec := fun result => result = true ↔ x = y ^ 2;
+∃ result, implementation x y = result ∧ spec result
 [HYPOTHESES] 1
-[HYPOTHESIS] f : ℕ → ℕ
-[HYPOTHESIS] h0 : ∀ x ≥ 1, f x - f (x - 1) = 3
-[HYPOTHESIS] h1 : f 1 = 4
-[HYPOTHESIS] h0' : 4 - f 0 = 3
-[HYPOTHESIS] h_f0_gt_4 : 4 < f 0
+[HYPOTHESIS] x y : ℤ
+[HYPOTHESIS] result : Bool := implementation x y
 
-[GOAL] 2
-∀ (x : ℕ), 1 ≤ x → f x = 3 * x + 1
-[HYPOTHESES] 1
-[HYPOTHESIS] f : ℕ → ℕ
-[HYPOTHESIS] h0 : ∀ x ≥ 1, f x - f (x - 1) = 3
-[HYPOTHESIS] h1 : f 1 = 4
-[HYPOTHESIS] h0' : 4 - f 0 = 3
+[INFORMAL-THEOREM]
+def is_square(x: int, y: int) -> bool
+"""
+Given two integers x and y, your task is to find if x is a square of y.
+The function should return true if x is a square of y, otherwise false.
+"""
 
-[INFORMAL-THEOREM] 
-Let $f(x) - f(x-1) = 3$ for all natural numbers $x \ge 1$. Show that $f(x) = 3x + 1$ for all natural numbers $x$ greater than or equal to 1.
-
-[INFORMAL-PROOF] 
-We can prove this by induction on $x$. The base case is $x=1$, where we have $f(1) = 4 = 3*1 + 1$. For the inductive step, we assume that $f(k) = 3k + 1$ for some $k \ge 1$. Then we have $f(k+1) - f(k) = 3$, so $f(k+1) = f(k) + 3 = (3k + 1) + 3 = 3k + 4 = 3(k+1) + 1$. Thus, by induction, we have shown that $f(x) = 3x + 1$ for all natural numbers $x \ge 1$.
+[INFORMAL-PROOF]
+1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
+2. Simplify the goal.
+3. Use the `have` keyword to create a new hypothesis equating the operation of squaring a variable to that of multiplying the variable by itself.
+4. Use this new hypothesis to rewrite the goal.
 
 [STEPS]
-[STEP] have h0' := h0 1
-[STEP] simp at h0'
-[STEP] -- It might be a good idea to first find the value of f(0)
-have h_f0 : f 0 = 1 := by
-[STEP]   rw [Nat.sub_eq_iff_eq_add'] at h0'
-  symm at h0'
-[STEP]   linarith
+[STEP] unfold problem_spec
 
 [LAST STEP]
-  by_contra h_f0_gt_4
-  simp at h_f0_gt_4
+let result := implementation x y
 [SUCCESS]
 [END]
 
 `example_assistant`
 [RUN TACTIC]
-  -- Let us show that 4 - f 0 = 0 so that we can use it to show contradiction later 
-  have h_4_minus_f0 : 4 - f 0 = 0 := by
+use result
 [END]
+
 
 `example_user`
 Goals to prove:
 [GOALS]
 [GOAL] 1
-4 - f 0 = 0
+implementation x y = result ∧ (fun result => result = true ↔ x = y ^ 2) result
 [HYPOTHESES] 1
-[HYPOTHESIS] f : ℕ → ℕ
-[HYPOTHESIS] h0 : ∀ x ≥ 1, f x - f (x - 1) = 3
-[HYPOTHESIS] h1 : f 1 = 4
-[HYPOTHESIS] h0' : 4 - f 0 = 3
-[HYPOTHESIS] h_f0_gt_4 : 4 < f 0
+[HYPOTHESIS] x y : ℤ
+[HYPOTHESIS] result : Bool := implementation x y
 
-[GOAL] 2
-False
-[HYPOTHESES] 1
-[HYPOTHESIS] f : ℕ → ℕ
-[HYPOTHESIS] h0 : ∀ x ≥ 1, f x - f (x - 1) = 3
-[HYPOTHESIS] h1 : f 1 = 4
-[HYPOTHESIS] h0' : 4 - f 0 = 3
-[HYPOTHESIS] h_f0_gt_4 : 4 < f 0
+[INFORMAL-THEOREM]
+def is_square(x: int, y: int) -> bool
+"""
+Given two integers x and y, your task is to find if x is a square of y.
+The function should return true if x is a square of y, otherwise false.
+"""
 
-[GOAL] 3
-∀ (x : ℕ), 1 ≤ x → f x = 3 * x + 1
-[HYPOTHESES] 1
-[HYPOTHESIS] f : ℕ → ℕ
-[HYPOTHESIS] h0 : ∀ x ≥ 1, f x - f (x - 1) = 3
-[HYPOTHESIS] h1 : f 1 = 4
-[HYPOTHESIS] h0' : 4 - f 0 = 3
-
-[INFORMAL-THEOREM] 
-Let $f(x) - f(x-1) = 3$ for all natural numbers $x \ge 1$. Show that $f(x) = 3x + 1$ for all natural numbers $x$ greater than or equal to 1.
-
-[INFORMAL-PROOF] 
-We can prove this by induction on $x$. The base case is $x=1$, where we have $f(1) = 4 = 3*1 + 1$. For the inductive step, we assume that $f(k) = 3k + 1$ for some $k \ge 1$. Then we have $f(k+1) - f(k) = 3$, so $f(k+1) = f(k) + 3 = (3k + 1) + 3 = 3k + 4 = 3(k+1) + 1$. Thus, by induction, we have shown that $f(x) = 3x + 1$ for all natural numbers $x \ge 1$.
+[INFORMAL-PROOF]
+1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
+2. Simplify the goal.
+3. Use the `have` keyword to create a new hypothesis equating the operation of squaring a variable to that of multiplying the variable by itself.
+4. Use this new hypothesis to rewrite the goal.
 
 [STEPS]
-[STEP] have h0' := h0 1
-[STEP] simp at h0'
-[STEP] -- It might be a good idea to first find the value of f(0)
-have h_f0 : f 0 = 1 := by
-[STEP]   rw [Nat.sub_eq_iff_eq_add'] at h0'
-  symm at h0'
-[STEP]   linarith
-[STEP]   by_contra h_f0_gt_4
-  simp at h_f0_gt_4
+[STEP] unfold problem_spec
+[STEP] let result := implementation x y
 
 [LAST STEP]
-   -- Let us show that 4 - f 0 = 0 so that we can use it to show contradiction later 
-    have h_4_minus_f0 : 4 - f 0 = 0 := by
+use result
 [SUCCESS]
 [END]
 
 `example_assistant`
 [RUN TACTIC]
-    rw [Nat.lt_iff_le_not_le] at h_f0_gt_4
-    have h_4_le_f0 : 4 ≤ f 0 := by
-      linarith [h_f0_gt_4]
+simp [result]
 [END]
+
 
 `example_user`
 Goals to prove:
 [GOALS]
 [GOAL] 1
-f x = 3 * x + 1
+implementation x y = true ↔ x = y ^ 2
 [HYPOTHESES] 1
-[HYPOTHESIS] f : ℕ → ℕ
-[HYPOTHESIS] h0 : ∀ x ≥ 1, f x - f (x - 1) = 3
-[HYPOTHESIS] h1 : f 1 = 4
-[HYPOTHESIS] h0' : 4 - f 0 = 3
-[HYPOTHESIS] h_f0 : f 0 = 1
-[HYPOTHESIS] x : ℕ
-[HYPOTHESIS] h_1_le_x : 1 ≤ x
+[HYPOTHESIS] x y : ℤ
+[HYPOTHESIS] result : Bool := implementation x y
 
-[INFORMAL-THEOREM] 
-Let $f(x) - f(x-1) = 3$ for all natural numbers $x \ge 1$. Show that $f(x) = 3x + 1$ for all natural numbers $x$ greater than or equal to 1.
+[INFORMAL-THEOREM]
+def is_square(x: int, y: int) -> bool
+"""
+Given two integers x and y, your task is to find if x is a square of y.
+The function should return true if x is a square of y, otherwise false.
+"""
 
-[INFORMAL-PROOF] 
-We can prove this by induction on $x$. The base case is $x=1$, where we have $f(1) = 4 = 3*1 + 1$. For the inductive step, we assume that $f(k) = 3k + 1$ for some $k \ge 1$. Then we have $f(k+1) - f(k) = 3$, so $f(k+1) = f(k) + 3 = (3k + 1) + 3 = 3k + 4 = 3(k+1) + 1$. Thus, by induction, we have shown that $f(x) = 3x + 1$ for all natural numbers $x \ge 1$.
+[INFORMAL-PROOF]
+1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
+2. Simplify the goal.
+3. Use the `have` keyword to create a new hypothesis equating the operation of squaring a variable to that of multiplying the variable by itself.
+4. Use this new hypothesis to rewrite the goal.
 
 [STEPS]
-[STEP] have h0' := h0 1
-[STEP] simp at h0'
-[STEP] -- It might be a good idea to first find the value of f(0)
-have h_f0 : f 0 = 1 := by
-[STEP]   rw [Nat.sub_eq_iff_eq_add'] at h0'
-  symm at h0'
-[STEP]   linarith
-[STEP]   by_contra h_f0_gt_4
-  simp at h_f0_gt_4
-[STEP]   -- Let us show that 4 - f 0 = 0 so that we can use it to show contradiction later 
-    have h_4_minus_f0 : 4 - f 0 = 0 := by
-[STEP]    rw [Nat.lt_iff_le_not_le] at h_f0_gt_4
-[STEP]    have h_4_le_f0 : 4 ≤ f 0 := by
-[STEP]      linarith [h_f0_gt_4]
-[STEP]    rw [←Nat.sub_eq_zero_iff_le] at h_4_le_f0
-[STEP]    linarith
-[STEP]  linarith
+[STEP] unfold problem_spec
+[STEP] let result := implementation x y
+[STEP] use result
 
 [LAST STEP]
-intro x h_1_le_x
+simp [result]
 [SUCCESS]
 [END]
 
 `example_assistant`
 [RUN TACTIC]
-induction' x with x hx
+simp [implementation]
 [END]
+
+
+`example_user`
+Goals to prove:
+[GOALS]
+[GOAL] 1
+x = y * y ↔ x = y ^ 2
+[HYPOTHESES] 1
+[HYPOTHESIS] x y : ℤ
+[HYPOTHESIS] result : Bool := implementation x y
+
+[INFORMAL-THEOREM]
+def is_square(x: int, y: int) -> bool
+"""
+Given two integers x and y, your task is to find if x is a square of y.
+The function should return true if x is a square of y, otherwise false.
+"""
+
+[INFORMAL-PROOF]
+1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
+2. Simplify the goal.
+3. Use the `have` keyword to create a new hypothesis equating the operation of squaring a variable to that of multiplying the variable by itself.
+4. Use this new hypothesis to rewrite the goal.
+
+[STEPS]
+[STEP] unfold problem_spec
+[STEP] let result := implementation x y
+[STEP] use result
+[STEP] simp [result]
+
+[LAST STEP]
+simp [implementation]
+[SUCCESS]
+[END]
+
+`example_assistant`
+[RUN TACTIC]
+have h_eq: y ^ 2 = y * y := by ring
+[END]
+
+
+`example_user`
+Goals to prove:
+[GOALS]
+[GOAL] 1
+x = y * y ↔ x = y ^ 2
+[HYPOTHESES] 1
+[HYPOTHESIS] x y : ℤ
+[HYPOTHESIS] result : Bool := implementation x y
+[HYPOTHESIS] h_eq : y ^ 2 = y * y
+
+[INFORMAL-THEOREM]
+def is_square(x: int, y: int) -> bool
+"""
+Given two integers x and y, your task is to find if x is a square of y.
+The function should return true if x is a square of y, otherwise false.
+"""
+
+[INFORMAL-PROOF]
+1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
+2. Simplify the goal.
+3. Use the `have` keyword to create a new hypothesis equating the operation of squaring a variable to that of multiplying the variable by itself.
+4. Use this new hypothesis to rewrite the goal.
+
+[STEPS]
+[STEP] unfold problem_spec
+[STEP] let result := implementation x y
+[STEP] use result
+[STEP] simp [result]
+[STEP] simp [implementation]
+
+[LAST STEP]
+have h_eq: y ^ 2 = y * y := by ring
+[SUCCESS]
+[END]
+
+`example_assistant`
+[RUN TACTIC]
+rw [h_eq]
+[END]
+
 `conv end`
