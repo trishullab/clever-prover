@@ -174,4 +174,50 @@ let rec loop (score_changes: List Int) (threshold: Int) (score: Int) (coins: Nat
 loop score_changes threshold 0 0
 [END]
 
+
+`example_user`
+[NL DESCRIPTION]
+def find_fermat(n: int) -> int
+"""
+Given an integer n, your task is to find the nth Fermat number.
+The nth Fermat number is defined as follows:
+- F_n = 2^(2^n) + 1
+"""
+
+[SPECIFICATION]
+def problem_spec
+-- function signature
+(impl: Nat → Nat)
+-- inputs
+(n: Nat) :=
+-- spec
+let spec (result: Nat) :=
+result = 2 ^ (2 ^ n) + 1
+-- program terminates
+∃ result, impl n = result ∧
+-- return value satisfies spec
+spec result
+
+[IMPLEMENTATION SIGNATURE]
+def implementation (n: Nat) : Nat :=
+
+[TEST CASES]
+#test implementation 0 = 3
+#test implementation 1 = 5
+#test implementation 2 = 17
+#test implementation 3 = 257
+#test implementation 4 = 65537
+#test implementation 5 = 4294967297
+
+
+`example_assistant`
+[THOUGHTS]
+Lean 4 has a library function `Nat.fermatNumber` that takes in a natural number `n` and outputs the `n`th Fermat number, as desired. We should simply use this library function.
+[END THOUGHTS]
+
+
+[GENERATED IMPLEMENTATION]
+Nat.fermatNumber n
+[END]
+
 `conv end`

@@ -40,4 +40,4 @@ Write the implementation plan in the following format:
 [END]
 ```
 
-Please closely follow the format as shown in the examples below. Make sure that your response always ends with [END]. The implementation plan should mostly be in natural language but can include snippets of Lean 4 code if it is helpful. Try to plan an implementation where termination can be automatically verified; for example, always use library functions or `match` statements if possible.
+Please closely follow the format as shown in the examples below. Make sure that your response always ends with [END]. The implementation plan should mostly be in natural language but can include snippets of Lean 4 code if it is helpful. Try to plan an implementation where termination can be automatically verified; for example, always use library functions (`Int.lcm`, `String.find`, `Nat.fermatNumber`, etc.) or `match` statements if possible.
