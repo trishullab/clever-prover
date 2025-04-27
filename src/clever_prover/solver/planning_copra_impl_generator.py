@@ -131,42 +131,63 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
                     problem,
                     timeout_in_ms=time_remaining_in_ms))
             if not validation_result.compilation_ok:
-                # TODO: write log message?
+                self.logger.info("Lemmas failed to compile.")
                 elapsed_time = time.time() - start_time
                 time_remaining_in_ms = timeout_in_ms - (elapsed_time * 1000)
                 is_time_elapsed = time_remaining_in_ms <= 0
                 proof_sample_count += 1
                 continue
             proven_lemmas_str = ""
+            proof_exception = False
             for lemma_plan in lemma_plans:
                 full_proof_strategy = lemma_plan.lemma_proof_strategy + proven_lemmas_str
-                proof_result = self._generate_proof(
-                    problem=problem,
-                    theorem_name=lemma_plan.lemma_name,
-                    lemma_proof_strategy=full_proof_strategy,
-                    proof_dump_file_path=self.proof_dump_file_path,
-                    timeout_in_ms=time_remaining_in_ms,
-                    logger=logger
-                )
+                try:
+                    proof_result = self._generate_proof(
+                        problem=problem,
+                        theorem_name=lemma_plan.lemma_name,
+                        lemma_proof_strategy=full_proof_strategy,
+                        proof_dump_file_path=self.proof_dump_file_path,
+                        timeout_in_ms=time_remaining_in_ms,
+                        logger=logger
+                    )
+                except Exception as e:
+                    self.logger.exception(e)
+                    proof_exception = True
+                    break
                 if proof_result.proof_found:
+                    theorem_statement = lemma_plan.lemma
                     proof_steps = [step for proof_step in proof_result.proof_steps for step in proof_step.proof_steps]
-                    proof = "\n".join(proof_steps)
+                    proof = "by\n" + "\n".join(proof_steps)
                     proven_lemmas.append(Lemma(statement=theorem_statement, proof=proof))
                     if len(proven_lemmas) == 1:
                         proven_lemmas_str = "\n\nThroughout the proof, you can freely use any of the below helper lemmas, which you can assume to be true:"
                         proven_lemmas_str += "\n[HELPER LEMMAS]"
                     proven_lemmas_str += ("\n[HELPER LEMMA]\n" + theorem_statement)
             problem.correctness_helper_lemmas.clear()
+            if proof_exception:
+                elapsed_time = time.time() - start_time
+                time_remaining_in_ms = timeout_in_ms - (elapsed_time * 1000)
+                is_time_elapsed = time_remaining_in_ms <= 0
+                proof_sample_count += 1
+                continue
             for proven_lemma in proven_lemmas:
                 problem.correctness_helper_lemmas.append(proven_lemma)
             full_proof_strategy = proof_plan.correctness_proof_strategy + proven_lemmas_str
-            proof_result = self._generate_proof(
-                problem=problem,
-                theorem_name=self.lemma_name,
-                lemma_proof_strategy=full_proof_strategy,
-                proof_dump_file_path=self.proof_dump_file_path,
-                timeout_in_ms=time_remaining_in_ms,
-                logger=logger)
+            try:
+                proof_result = self._generate_proof(
+                    problem=problem,
+                    theorem_name=self.lemma_name,
+                    lemma_proof_strategy=full_proof_strategy,
+                    proof_dump_file_path=self.proof_dump_file_path,
+                    timeout_in_ms=time_remaining_in_ms,
+                    logger=logger)
+            except Exception as e:
+                self.logger.exception(e)
+                elapsed_time = time.time() - start_time
+                time_remaining_in_ms = timeout_in_ms - (elapsed_time * 1000)
+                is_time_elapsed = time_remaining_in_ms <= 0
+                proof_sample_count += 1
+                continue
             if proof_result.proof_found:
                 proof_steps = [step for proof_step in proof_result.proof_steps for step in proof_step.proof_steps]
                 proof = "by\n" + "\n".join(proof_steps)

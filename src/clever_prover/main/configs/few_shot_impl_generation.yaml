@@ -6,9 +6,11 @@ task_type: IMPL_CORRECTNESS
 log_dir: ".logs/eval_few_shot_impl_generation"
 exp_name: "few_shot_impl_generation"
 impl_generation_strategy: "FewShotImplGeneration"
-problems_to_solve: "*"
-k: 1
-timeout_in_secs: 3600
+# problems_to_solve: "*"
+problems_to_solve: [2, 8, 13, 23, 27, 31, 42, 45, 48]
+k: 10
+# timeout_in_secs: 3600
+timeout_in_secs: 600
 params:
   impl_prompt_settings:
     system_prompt_path: "src/clever_prover/prompts/baselines/system/FewShotImplGeneration.md"
