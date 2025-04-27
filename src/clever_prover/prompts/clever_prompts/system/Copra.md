@@ -16,6 +16,7 @@ Start your response with `[RUN TACTIC]` followed by the tactic which will help i
 4. Use `rw` when you want to rewrite the goal or the hypotheses with a lemma or a hypothesis. This is useful when you can guess that the goal can be simplified with a lemma or a hypothesis and it is not a simple linear arithmetic goal. Some times with `Nat` the `linarith` tactic may not work, so you have to use `rw` to rewrite the goal with a lemma or a hypothesis.
 5. `[VERY IMPORTANT]` Sometimes breaking the goal into smaller subgoals using `have` tactic is useful. This is especially useful when you have a complex goal and you want to break it down into smaller subgoals.
 6. `[VERY IMPORTANT]` The `linarith` tactic often fails to simply subtraction between two expressions (specially when they are `Nat`), so may instead of using `a - b = c` in your subgoals, you should use `a = b + c`.
+7. Be careful when doing induction. Usually, you will want to use the `induction'` tactic and not the `induction` tactic.
 
 ## IMPORTANT NOTE:
 1. Ensure that the proof step you generate is (1) valid (2) helpful towards proving the proof state and (3) compiles correctly in Lean 4. 

@@ -183,6 +183,39 @@ apply fib_comp_to_non_comp
 Goals to prove:
 [GOALS]
 [GOAL] 1
+implementation.loop score_changes (threshold - k) score coins =
+  implementation.loop score_changes threshold (score + k) coins
+[HYPOTHESES] 1
+[HYPOTHESIS] score_changes : List ℤ
+[HYPOTHESIS] threshold score : ℤ
+[HYPOTHESIS] coins : ℕ
+[HYPOTHESIS] k : ℤ
+[HYPOTHESIS] h_rounds_played : score_changes.length > 0
+
+[INFORMAL-THEOREM]
+def coins_won(score_changes: List[int], threshold: int) -> int
+"""
+In a game, a player's score starts at 0 and is updated round by round using values from the list
+score_changes (where positive numbers add to the score and negative numbers subtract).
+After each round, as long as the player's cumulative score is greater than or equal to the given threshold,
+the player wins a coin for that round.
+Your task is to compute and return the total number of coins won by the player by the end of the game.
+"""
+
+[INFORMAL-PROOF]
+Prove an `implementation_loop_threshold_invariant` lemma that states that for all integers `k`, decreasing the threshold by `k` yields the same output of `implementation.loop` as increasing the score by `k`.
+1. Use induction and break the proof up into cases based on whether the head plus the cumulative score reaches the threshold.
+
+`example_assistant`
+[RUN TACTIC]
+induction' score_changes generalizing score coins
+[END]
+
+
+`example_user`
+Goals to prove:
+[GOALS]
+[GOAL] 1
 if implementation.loop score_changes threshold 0 0 = 0 then
   ∀ (i : ℕ), 1 ≤ i → i ≤ score_changes.length → (List.take i score_changes).sum < threshold
 else
@@ -291,166 +324,6 @@ have h_stop := implementation_loop_invariant_stop score_changes threshold 0 0 h_
 `example_assistant`
 [RUN TACTIC]
 by_cases h_implementation_stop: implementation.loop score_changes threshold 0 0 = 0
-[END]
-
-
-`example_user`
-Goals to prove:
-[GOALS]
-[GOAL] 1
-implementation.loop score_changes threshold 0 0 =
-    1 + implementation.loop (List.drop i₁ score_changes) (threshold - (List.take i₁ score_changes).sum) 0 0 →
-  ∀ (i' : ℕ), 1 ≤ i' → i' < i₁ → (List.take i' score_changes).sum < threshold
-[HYPOTHESES] 1
-[HYPOTHESIS] score_changes : List ℤ
-[HYPOTHESIS] threshold : ℤ
-[HYPOTHESIS] result : ℕ := implementation score_changes threshold
-[HYPOTHESIS] h_rounds_played : 0 < score_changes.length
-[HYPOTHESIS] h_stop : 0 = implementation.loop score_changes threshold 0 0 →
-  ∀ (i : ℕ), 1 ≤ i ∧ i ≤ score_changes.length → 0 + (List.take i score_changes).sum < threshold
-[HYPOTHESIS] h_implementation_stop : ¬implementation.loop score_changes threshold 0 0 = 0
-[HYPOTHESIS] h_implementation_stop' : 0 < implementation.loop score_changes threshold 0 0
-[HYPOTHESIS] i₁ : ℕ
-[HYPOTHESIS] h_1_le_i₁ : 1 ≤ i₁
-[HYPOTHESIS] h_iᵢ_score_len : i₁ ≤ score_changes.length
-[HYPOTHESIS] h_threshold : threshold ≤ (List.take i₁ score_changes).sum
-[HYPOTHESIS] h_continue_i₁ : implementation.loop score_changes threshold 0 0 =
-    1 + implementation.loop (List.drop i₁ score_changes) threshold (List.take i₁ score_changes).sum 0 →
-  ∀ (i : ℕ), 1 ≤ i → i < i₁ → (List.take i score_changes).sum < threshold
-[HYPOTHESIS] h_drop_i₁ : (List.drop i₁ score_changes).length > 0
-
-[GOAL] 2
-implementation.loop score_changes threshold 0 0 =
-    1 + implementation.loop (List.drop i₁ score_changes) (threshold - (List.take i₁ score_changes).sum) 0 0 →
-  ∀ (i' : ℕ), 1 ≤ i' → i' < i₁ → (List.take i' score_changes).sum < threshold
-[HYPOTHESES] 1
-[HYPOTHESIS] score_changes : List ℤ
-[HYPOTHESIS] threshold : ℤ
-[HYPOTHESIS] result : ℕ := implementation score_changes threshold
-[HYPOTHESIS] h_rounds_played : 0 < score_changes.length
-[HYPOTHESIS] h_stop : 0 = implementation.loop score_changes threshold 0 0 →
-  ∀ (i : ℕ), 1 ≤ i ∧ i ≤ score_changes.length → 0 + (List.take i score_changes).sum < threshold
-[HYPOTHESIS] h_implementation_stop : ¬implementation.loop score_changes threshold 0 0 = 0
-[HYPOTHESIS] h_implementation_stop' : 0 < implementation.loop score_changes threshold 0 0
-[HYPOTHESIS] i₁ : ℕ
-[HYPOTHESIS] h_1_le_i₁ : 1 ≤ i₁
-[HYPOTHESIS] h_iᵢ_score_len : i₁ ≤ score_changes.length
-[HYPOTHESIS] h_threshold : threshold ≤ (List.take i₁ score_changes).sum
-[HYPOTHESIS] h_continue_i₁ : implementation.loop score_changes threshold 0 0 =
-    1 + implementation.loop (List.drop i₁ score_changes) threshold (List.take i₁ score_changes).sum 0 →
-  ∀ (i : ℕ), 1 ≤ i → i < i₁ → (List.take i score_changes).sum < threshold
-[HYPOTHESIS] h_drop_i₁ : ¬(List.drop i₁ score_changes).length > 0
-
-[INFORMAL-THEOREM]
-def coins_won(score_changes: List[int], threshold: int) -> int
-"""
-In a game, a player's score starts at 0 and is updated round by round using values from the list
-score_changes (where positive numbers add to the score and negative numbers subtract).
-After each round, as long as the player's cumulative score is greater than or equal to the given threshold,
-the player wins a coin for that round.
-Your task is to compute and return the total number of coins won by the player by the end of the game.
-"""
-
-[INFORMAL-PROOF]
-1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
-2. Early on, you will want to break the proof up into cases based on whether the output of `implementation_loop` (with initial values as input) is 0.
-3. Use the `implementation_loop_threshold_invariant`, `implementation_loop_invariant_stop`, and `implementation_loop_invariant_continue` lemmas in the proof.
-
-Throughout the proof, you can freely use any of the below helper lemmas, which you can assume to be true:
-[HELPER LEMMAS]
-[HELPER LEMMA]
-lemma implementation_loop_threshold_invariant
-(score_changes: List Int)
-(threshold: Int)
-(score: Int)
-(coins: Nat)
-(k: Int)
-(h_rounds_played: score_changes.length > 0)
-: implementation.loop score_changes (threshold - k) score coins
-= implementation.loop score_changes threshold (score + k) coins :=
-[HELPER LEMMA]
-lemma implementation_loop_simple_increment
-(head: Int)
-(score_changes_tail: List Int)
-(threshold: Int)
-(score: Int)
-(coins: Nat)
-: (head + score < threshold →
-implementation.loop (head :: score_changes_tail) threshold score coins =
-implementation.loop (score_changes_tail) threshold (head + score) coins) ∧
-(head + score ≥ threshold →
-implementation.loop (head :: score_changes_tail) threshold score coins =
-1 + implementation.loop (score_changes_tail) threshold (head + score) coins) :=
-[HELPER LEMMA]
-lemma implementation_loop_coin_monotonic_increasing
-(score_changes: List Int)
-(threshold: Int)
-(score: Int)
-(coins: Nat)
-(h_rounds_played: score_changes.length > 0)
-: coins ≤ implementation.loop score_changes threshold score coins :=
-[HELPER LEMMA]
-lemma implementation_loop_invariant_stop
-(score_changes: List Int)
-(threshold: Int)
-(score: Int)
-(coins: Nat)
-(h_rounds_played: score_changes.length > 0)
-(h_within_threshold: coins = implementation.loop score_changes threshold score coins)
-: ∀ i, 1 ≤ i ∧ i ≤ score_changes.length →
-score + (score_changes.take i).sum < threshold :=
-[HELPER LEMMA]
-lemma implementation_loop_invariant_continue
-(score_changes: List Int)
-(threshold: Int)
-(score: Int)
-(coins: Nat)
-(h_rounds_played: score_changes.length > 0)
-(h_within_threshold: coins < implementation.loop score_changes threshold score coins)
-:∃ i', 1 ≤ i' ∧ i' ≤ score_changes.length →
-(score + (score_changes.take i').sum ≥ threshold) →
-implementation.loop score_changes threshold score coins =
-1 + implementation.loop (score_changes.drop i') threshold
-(score + (score_changes.take i').sum) coins →
-∀ i, 1 ≤ i ∧ i < i' → score + (score_changes.take i).sum < threshold :=
-
-[STEPS]
-[STEP] -- sometimes we have to create a temporary variable to use in the proof
-unfold problem_spec
-[STEP] let result := implementation score_changes threshold
-[STEP] use result
-[STEP] simp [result]
-[STEP] simp [implementation]
-[STEP] intros h_rounds_played
-[STEP] have h_stop := implementation_loop_invariant_stop score_changes threshold 0 0 h_rounds_played
-[STEP] by_cases h_implementation_stop: implementation.loop score_changes threshold 0 0 = 0
-[STEP] -- Case 1: where implementation.loop score_changes threshold 0 0 = 0
-simp [h_implementation_stop]
-[STEP] simp [h_implementation_stop] at h_stop
-[STEP] exact h_stop
-[STEP] -- Case 2: where implementation.loop score_changes threshold 0 0 ≠ 0
-simp [h_implementation_stop]
-[STEP] have h_implementation_stop': 0 < implementation.loop score_changes threshold 0 0 := by
-[STEP]   by_contra
-[STEP]   rename_i h_implementation_stop_false
-[STEP]   simp at h_implementation_stop_false
-[STEP]   contradiction
-[STEP] have h_continue := implementation_loop_invariant_continue score_changes threshold 0 0 h_rounds_played h_implementation_stop'
-[STEP] simp at h_continue
-[STEP] obtain ⟨i₁⟩ := h_continue
-[STEP] rename_i h_continue_i₁
-[STEP] use i₁
-[STEP] intro h_1_le_i₁ h_iᵢ_score_len h_threshold
-[STEP] simp [h_1_le_i₁, h_iᵢ_score_len, h_threshold] at h_continue_i₁
-
-[LAST STEP]
-by_cases h_drop_i₁: (List.drop i₁ score_changes).length > 0
-[SUCCESS]
-[END]
-
-`example_assistant`
-[RUN TACTIC]
-have h_threshold' := implementation_loop_threshold_invariant (List.drop i₁ score_changes) threshold 0 0 (List.take i₁ score_changes).sum h_drop_i₁
 [END]
 
 
