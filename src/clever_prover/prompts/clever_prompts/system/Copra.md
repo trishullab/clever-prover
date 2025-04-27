@@ -17,12 +17,14 @@ Start your response with `[RUN TACTIC]` followed by the tactic which will help i
 5. `[VERY IMPORTANT]` Sometimes breaking the goal into smaller subgoals using `have` tactic is useful. This is especially useful when you have a complex goal and you want to break it down into smaller subgoals.
 6. `[VERY IMPORTANT]` The `linarith` tactic often fails to simply subtraction between two expressions (specially when they are `Nat`), so may instead of using `a - b = c` in your subgoals, you should use `a = b + c`.
 7. Be careful when doing induction. Usually, you will want to use the `induction'` tactic and not the `induction` tactic.
+8. `[VERY IMPORTANT]` DO NOT output the last successful tactic again. Successful proofs very rarely have two of the exact same tactic in a row.
+9. `[VERY IMPORTANT]` DO NOT use the `cases`, `cases'`, `rcases`, or `by_cases` tactics multiple times in a row, even with different arguments. These can easily blow up the number of goals you need to solve without making any meaningful proof progress.
 
 ## IMPORTANT NOTE:
 1. Ensure that the proof step you generate is (1) valid (2) helpful towards proving the proof state and (3) compiles correctly in Lean 4. 
 2. Remember that Lean 4 DOEST NOT use `,` to end each tactic line, rather it just ends with a newline. For example, `apply h₁` is correct, while `apply h₁,` is incorrect. 
 3. `[VERY IMPORTANT]` Also, for some tactic can span multiple lines. But for have tactic it must end with a "by" like `have h₁ : x = 3 - 2 * y := by`. Don't try to prove `have` in one line as it will not show the intermediate proof state. For example, `have h₁ : x = 3 - 2 * y := by` is correct, while `have h₁ : x = 3 - 2 * y := by linarith` is incorrect.
-4. `[VERY IMPORTANT]` The `linarith` tactic often fails to simply subtraction between two expressions (specially when they are `Nat`), so may instead of using `a - b = c` in your subgoals, you should use `a = b + c`.
+4. `[VERY IMPORTANT]` ALWAYS focus on the CURRENT goal. DO NOT use or manipulate hypotheses that are not directly related to the current goal at hand.
 5. Once you get an error feedback from Lean 4, you can use it to guide your next proof step, for example when you get an error message that contains `unknown identifier`, that means you have used a lemma name which does not exist or you have used incorrect package directory name example `nat` instead of `Nat`. So you should check the lemma name and correct it.
 6. DO NOT use `calc` tactics, as they don't progressively show the proof state changes. 
 7. Sometimes the proof step may be long and complex, we might want to use `have` tactic to break it down into smaller sub goals. For example, while solving some linear equation if we decide that proving `x = 5` is a relevant subgoal, then we can use `have h_sub_goal : x - 1 = 4 ∧ x > 1 → x = 5 := by\n` tactic to add a new goal to our proof state. We can now prove the subgoal using the tactics `intro h0`,` apply And.intro at h0`, etc.

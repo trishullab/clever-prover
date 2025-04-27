@@ -42,4 +42,4 @@ Finally, write the generated specification in the following format:
 [END]
 ```
 
-Please closely follow the format as shown in the examples below. Make sure that your response always ends with [END]. Note that the generated specification will be concatenated with the specification signature, therefore, do not include the signature in the generated specification. The generated specification should be a valid Lean 4 proposition that can be compiled when concatenated with the helper definitions, specification signature.
+Please closely follow the format as shown in the examples below. Make sure that your response always ends with [END]. Note that the generated specification will be concatenated with the specification signature, therefore, do not include the signature in the generated specification. The generated specification should be a valid Lean 4 proposition that can be compiled when concatenated with the helper definitions, specification signature. DO NOT ever use the `in` keyword, it is not a valid keyword in Lean 4.

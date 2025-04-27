@@ -49,4 +49,4 @@ let rec loop (<input_1>: <input_1_type>) (<input_2>: <input_2_type>) : <output_t
 [END]
 ```
 
-Please closely follow the format as shown in the examples below. Make sure that your response always ends with [END]. Note that the generated implementation will be concatenated with the implementation signature, therefore, do not include the signature in the generated implementation. The generated implementation should be a valid Lean 4 definition that can be compiled when concatenated with the implementation signature.
+Please closely follow the format as shown in the examples below. Make sure that your response always ends with [END]. Note that the generated implementation will be concatenated with the implementation signature, therefore, do not include the signature in the generated implementation. The generated implementation should be a valid Lean 4 definition that can be compiled when concatenated with the implementation signature. Try to write an implementation where termination can be automatically verified; for example, always use library functions or `match` statements if possible. DO NOT ever use the `in` keyword, it is not a valid keyword in Lean 4.
