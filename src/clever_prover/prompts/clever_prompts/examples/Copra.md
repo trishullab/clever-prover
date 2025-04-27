@@ -232,7 +232,7 @@ else
 [HYPOTHESIS] result : ℕ := implementation score_changes threshold
 [HYPOTHESIS] h_rounds_played : 0 < score_changes.length
 [HYPOTHESIS] h_stop : 0 = implementation.loop score_changes threshold 0 0 →
-  ∀ (i : ℕ), 1 ≤ i ∧ i ≤ score_changes.length → 0 + (List.take i score_changes).sum < threshold
+[HYPOTHESIS]   ∀ (i : ℕ), 1 ≤ i ∧ i ≤ score_changes.length → 0 + (List.take i score_changes).sum < threshold
 
 [INFORMAL-THEOREM]
 def coins_won(score_changes: List[int], threshold: int) -> int

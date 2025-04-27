@@ -44,6 +44,7 @@ The implementation is one line. If `x` is less than 0 then return `-x`, otherwis
 if x < 0 then -x else x
 [END]
 
+
 `example_user`
 [NL DESCRIPTION]
 def find_fibonacci(n: int) -> int
@@ -94,6 +95,7 @@ match n with
 | 1 => 1
 | n' + 2 => implementation n' + implementation (n' + 1)
 [END]
+
 
 `example_user`
 [NL DESCRIPTION]

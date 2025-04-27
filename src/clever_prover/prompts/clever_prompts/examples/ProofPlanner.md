@@ -42,6 +42,7 @@ theorem correctness
 3. Many of the intermediate goals can likely be proven using `linarith`.
 [END]
 
+
 `example_user`
 [NL DESCRIPTION]
 def find_fibonacci(n: int) -> int
@@ -101,6 +102,7 @@ lemma fib_comp_to_non_comp (n : ℕ)
   - `∀ n', implementation (n' + 2) = implementation n' + implementation (n' + 1)`
 3. Then use these three hypotheses and the `fib_comp_to_non_comp` lemma to show that `implementation` satisfies `fibonacci_non_computable`, as required by the `spec`.
 [END]
+
 
 `example_user`
 [NL DESCRIPTION]
@@ -247,6 +249,51 @@ implementation.loop score_changes threshold score coins =
 1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
 2. Early on, you will want to break the proof up into cases based on whether the output of `implementation_loop` (with initial values as input) is 0.
 3. Use the `implementation_loop_threshold_invariant`, `implementation_loop_invariant_stop`, and `implementation_loop_invariant_continue` lemmas in the proof.
+[END]
+
+
+`example_user`
+[NL DESCRIPTION]
+def is_square(x: int, y: int) -> bool
+"""
+Given two integers x and y, your task is to find if x is a square of y.
+The function should return true if x is a square of y, otherwise false.
+"""
+
+[SPECIFICATION]
+def problem_spec
+-- function signature
+(impl: Int → Int → Bool)
+-- inputs
+(x: Int)
+(y: Int) :=
+-- spec
+let spec (result: Bool) :=
+result = true ↔ x = y^2;
+-- program terminates
+∃ result, impl x y = result ∧
+-- return value satisfies spec
+spec result
+
+[IMPLEMENTATION]
+def implementation (x: Int) (y: Int) : Bool :=
+if x = y * y then
+  true
+else
+  false
+
+[CORRECTNESS THEOREM]
+theorem correctness
+(x: Int)
+(y: Int)
+: problem_spec implementation x y:=
+
+`example_assistant`
+[CORRECTNESS PLAN]
+1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
+2. Simplify the goal.
+3. Use the `have` keyword to create a new hypothesis equating the operation of squaring a variable to that of multiplying the variable by itself.
+4. Use this new hypothesis to rewrite the goal.
 [END]
 
 `conv end`
