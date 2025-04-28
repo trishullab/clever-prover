@@ -8,7 +8,7 @@ exp_name: "planning_copra_impl_generator"
 impl_generation_strategy: "PlanningCopraImplGenerator"
 # problems_to_solve: "*"
 # problems_to_solve: [2, 8, 13, 23, 27, 31, 42, 45, 48]
-problems_to_solve: [13]
+problems_to_solve: [2]
 k: 1
 # timeout_in_ses: 3600
 timeout_in_ses: 600
@@ -49,10 +49,10 @@ params:
   copra_prompt_settings:
     system_prompt_path: "src/clever_prover/prompts/clever_prompts/system/Copra.md"
     example_prompt_path: "src/clever_prover/prompts/clever_prompts/examples/Copra.md"
-    max_tokens_per_action: 10000
+    max_tokens_per_action: 400
     max_history_messages: 0
     end_tokens: ["[END]"]
   copra_model_settings:
     model_name: "gpt-4o"
     secret_path: ".secrets/openai_key.json"
-    temperature: 0.75
+    temperature: 0.9

@@ -535,7 +535,7 @@ simp [implementation]
 
 `example_assistant`
 [RUN TACTIC]
-have h_eq: y ^ 2 = y * y := by ring
+have h_eq: y ^ 2 = y * y := by
 [END]
 
 
@@ -568,9 +568,10 @@ The function should return true if x is a square of y, otherwise false.
 [STEP] use result
 [STEP] simp [result]
 [STEP] simp [implementation]
+[STEP] have h_eq: y ^ 2 = y * y := by
 
 [LAST STEP]
-have h_eq: y ^ 2 = y * y := by ring
+ring
 [SUCCESS]
 [END]
 
