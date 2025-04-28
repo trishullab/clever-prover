@@ -542,6 +542,50 @@ have h_eq: y ^ 2 = y * y := by
 `example_user`
 Goals to prove:
 [GOALS]
+[DESCRIPTION]
+IMPORTANT NOTE: Working on the sub-goal with have tactic:
+have h_eq: y ^ 2 = y * y := by.
+
+[GOAL] 1
+y ^ 2 = y * y
+[HYPOTHESES] 1
+[HYPOTHESIS] x y : ℤ
+[HYPOTHESIS] result : Bool := implementation x y
+
+[INFORMAL-THEOREM]
+def is_square(x: int, y: int) -> bool
+"""
+Given two integers x and y, your task is to find if x is a square of y.
+The function should return true if x is a square of y, otherwise false.
+"""
+
+[INFORMAL-PROOF]
+1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
+2. Simplify the goal.
+3. Use the `have` keyword to create a new hypothesis equating the operation of squaring a variable to that of multiplying the variable by itself.
+4. Use this new hypothesis to rewrite the goal.
+
+[STEPS]
+[STEP] unfold problem_spec
+[STEP] let result := implementation x y
+[STEP] use result
+[STEP] simp [result]
+[STEP] simp [implementation]
+
+[LAST STEP]
+have h_eq: y ^ 2 = y * y := by
+[SUCCESS]
+[END]
+
+`example_assistant`
+[RUN TACTIC]
+ring
+[END]
+
+
+`example_user`
+Goals to prove:
+[GOALS]
 [GOAL] 1
 x = y * y ↔ x = y ^ 2
 [HYPOTHESES] 1
