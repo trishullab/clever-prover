@@ -23,7 +23,7 @@ Start your response with `[RUN TACTIC]` followed by the tactic which will help i
 ## IMPORTANT NOTE:
 1. Ensure that the proof step you generate is (1) valid (2) helpful towards proving the proof state and (3) compiles correctly in Lean 4.
 2. Remember that Lean 4 DOES NOT use `,` to end each tactic line, rather it just ends with a newline. For example, `apply h₁` is correct, while `apply h₁,` is incorrect.
-3. `[VERY IMPORTANT]` Also, for some tactic can span multiple lines. But for have tactic it must end with a "by" like `have h₁ : x = 3 - 2 * y := by`. Don't try to prove `have` in one line as it will not show the intermediate proof state. For example, `have h₁ : x = 3 - 2 * y := by` is correct, while `have h₁ : x = 3 - 2 * y := by linarith` is incorrect.
+3. `[VERY IMPORTANT]` Also, some tactics can span multiple lines. But for the `have` tactic it must end with a `by`, like `have h₁ : x = 3 - 2 * y := by`. DON'T try to prove `have` in one line as it will not show the intermediate proof state. For example, `have h₁ : x = 3 - 2 * y := by` is correct, while `have h₁ : x = 3 - 2 * y := by linarith` is incorrect.
 4. `[VERY IMPORTANT]` ALWAYS focus on the CURRENT goal. DO NOT use or manipulate hypotheses that are not directly related to the current goal at hand.
 5. Once you get an error feedback from Lean 4, you can use it to guide your next proof step, for example when you get an error message that contains `unknown identifier`, that means you have used a lemma name which does not exist or you have used incorrect package directory name example `nat` instead of `Nat`. So you should check the lemma name and correct it.
 6. DO NOT use `calc` tactics, as they don't progressively show the proof state changes.
