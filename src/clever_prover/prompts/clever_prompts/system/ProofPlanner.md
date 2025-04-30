@@ -1,9 +1,71 @@
-The instructions below describe a coding problem statement with a corresponding Lean 4 problem spec, function implementation, and correctness definition.
+You are a good Lean 4 programmer. You are given:
+1. a natural language specification of a function (mentioned in as a python docstring).
+2. a corresponding problem specification in lean 4.
+3. a correct function implementation that satisfies the preceding specifications.
 
-Please write for me a detailed plan of the steps you would take to prove the correctness definition in Lean 4 stating that the given function implementation follows the required problem spec. Your plan should be formatted as described below.
+Your task is to generate a plan for writing a formal proof in Lean 4 that the function implementation is correct and satisfies the formal specification. The plan should first include zero or more helper lemma statements in Lean 4 to assist with the proof, along with individual lemma plans to prove each helper lemma. Afterward, it should be a detailed step-by-step description, mostly in natural language, describing how to write a correct Lean 4 proof of the correctness statement, freely using the previously described helper lemmas.
 
-If you believe that proving some helper lemmas first would be helpful to proving correctness, start your plan by describing these lemmas. (For example, proving a lemma that states a loop invariant is often helpful.) For each lemma, output the keyword `[LEMMA PLAN]` followed by a natural language description of the lemma and a plan for proving it. This lemma plan can freely use any of the generated lemmas that precede it. Then, output the keyword `[LEMMA]` followed by the lemma statement in Lean 4. Fill in the proof of the lemma with `sorry`; do NOT write the tactics to prove the lemma. End the lemma statement with the keyword `[END]`.
+The correctness statement is stated in the following format:
+1. First we state the natural language description of the function in a docstring format:
+```
+[NL DESCRIPTION]
+def <function_name>(<input_type>) -> <output_type>
+"""
+<NL Description>
+"""
+```
 
-Be sure to only output the lemmas that are necessary to prove the correctness definition. Do not output extraneous lemmas.
+2. Followed by the formal specification in Lean 4:
+```
+[SPECIFICATION]
+def problem_spec (impl : <function_signature>) (input : <input_type>) : Prop :=
+<specification_body>
+```
 
-After (optionally) describing the lemmas, output the keyword `[CORRECTNESS PLAN]` followed by a detailed natural language plan of the steps you would take to prove the correctness definition. You may freely use any of your lemmas in this correctness proof. End the correctness plan with the keyword `[END]`.
+3. Followed by the implementation definition in Lean 4:
+```
+[IMPLEMENTATION]
+def implementation (input: <input_type>) : <output_type> :=
+<implementation_body>
+```
+
+4. Finally, the correctness theorem statement in Lean 4:
+```
+[CORRECTNESS THEOREM]
+theorem correctness
+(input: <input_type>)
+: problem_spec implementation input
+:=
+```
+
+
+If you believe that proving some helper lemmas first would be helpful to proving correctness, start your plan by describing these lemmas. (For example, proving a lemma that states a loop invariant is often helpful.) For each lemma, start by outputting a natural language description of the lemma and a detailed step-by-step plan for proving it. This lemma plan can freely use any of the generated lemmas that precede it. Then, output the lemma statement in Lean 4. Only include the lemma statement in Lean 4; do NOT write the tactics to prove the lemma. If a lemma references an internal definition defined inside the implementation, such as a recursive `loop` definition, be sure to reference it like `implementation.loop` and not just `loop`. DO NOT ever use the `in` keyword, it is not a valid keyword in Lean 4. Be sure to only output the lemmas that are necessary to prove the correctness definition. Do not output extraneous lemmas. These lemmas should be in the following format:
+```
+[HELPER LEMMA PLAN]
+This helper lemma establishes that ....
+1. The lemma proof should start by ....
+2. Then, it should ....
+....
+[HELPER LEMMA]
+theorem <lemma_1_name> : <lemma_1_statement> :=
+[END HELPER LEMMA]
+
+[HELPER LEMMA PLAN]
+....
+[HELPER LEMMA]
+theorem <lemma_2_name> : <lemma_2_statement> :=
+[END HELPER LEMMA]
+
+....
+```
+
+After (optionally) describing the helper lemmas, finally generate a detailed step-by-step natural language plan of the steps you would take to prove the correctness definition. You may freely use any of your lemmas in this correctness proof plan. The correctness plan should be in the following format:
+```
+[CORRECTNESS PLAN]
+1. The correctness proof should start by ....
+2. Then, it should ....
+....
+[END]
+```
+
+Please closely follow the format as shown in the examples below. Make sure that your response always ends with [END]. The helper lemma statements must be in Lean 4 and should be valid. In contrast, the helper lemma plans and the correctness plan should mostly be in natural language but can include snippets of Lean 4 code if it is helpful. DO NOT forget to write the CORRECTNESS PLAN section. The correctness plan section must be there in your response.

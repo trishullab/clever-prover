@@ -1,7 +1,7 @@
 `conv start`
 
 `example_user`
-[NL Description]
+[NL DESCRIPTION]
 def find_magnitude(x: int) -> int
 """
 Given an integer x, your task is to find the magnitude of x.
@@ -92,7 +92,7 @@ contradiction
 [END]
 
 `example_user`
-[NL Description]
+[NL DESCRIPTION]
 def find_fibonacci(n: int) -> int
 """
 Given an integer n, your task is to find the nth Fibonacci number.
@@ -198,7 +198,7 @@ all_goals assumption
 [END]
 
 `example_user`
-[NL Description]
+[NL DESCRIPTION]
 def coins_won(score_changes: List[int], threshold: int) -> int
 """
 In a game, a player's score starts at 0 and is updated round by round using values from the list
@@ -643,6 +643,64 @@ simp [implementation.loop] at h_continue_i₁
 simp [h_i₁_eq_score_changes_len]
 simp [implementation.loop]
 exact h_continue_i₁
+[END]
+
+
+`example_user`
+[NL DESCRIPTION]
+def is_square(x: int, y: int) -> bool
+"""
+Given two integers x and y, your task is to find if x is a square of y.
+The function should return true if x is a square of y, otherwise false.
+"""
+
+[SPECIFICATION]
+def problem_spec
+-- function signature
+(impl: Int → Int → Bool)
+-- inputs
+(x: Int)
+(y: Int) :=
+-- spec
+let spec (result: Bool) :=
+result = true ↔ x = y^2;
+-- program terminates
+∃ result, impl x y = result ∧
+-- return value satisfies spec
+spec result
+
+[IMPLEMENTATION]
+def implementation (x: Int) (y: Int) : Bool :=
+if x = y * y then
+  true
+else
+  false
+
+[CORRECTNESS THEOREM]
+theorem correctness
+(x: Int)
+(y: Int)
+: problem_spec implementation x y:=
+
+
+`example_assistant`
+[THOUGHTS]
+We can start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
+We should then simplify the goal.
+Then use the `have` keyword to create a new hypothesis equating the operation of squaring a variable to that of multiplying the variable by itself.
+Use this new hypothesis to rewrite the goal.
+[END THOUGHTS]
+
+
+[PROOF]
+by
+unfold problem_spec
+let result := implementation x y
+use result
+simp [result]
+simp [implementation]
+have h_eq: y ^ 2 = y * y := by ring
+rw [h_eq]
 [END]
 
 `conv end`

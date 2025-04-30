@@ -4,21 +4,18 @@ from clever_prover.utils import string_utils
 import logging
 
 class ImplementationPlannerTool(Tool):
-    user_prompt_format = """[PROBLEM STATEMENT]
+    user_prompt_format = """[NL DESCRIPTION]
 {}
-[END]
 
-[PROBLEM SPEC]
+[SPECIFICATION]
 {}
-[END]
 
-[FUNCTION IMPLEMENTATION SIGNATURE]
+[IMPLEMENTATION SIGNATURE]
 {}
-[END]
 
 [TEST CASES]
-{}
-[END]"""
+{}"""
+
     def __init__(self, simple_prompter: SimplePrompter, logger: logging.Logger = None, **inference_kwargs):
         assert simple_prompter is not None, "Model must be provided."
         assert logger is not None, "Logger must be provided."
@@ -35,17 +32,22 @@ class ImplementationPlannerTool(Tool):
         #     history[1:1] = self.example_prompt_list
         history.append(
         {
-            "role": "user", 
+            "role": "user",
             "content": ImplementationPlannerTool.user_prompt_format.format(
-                problem_statement, 
-                problem_spec, 
-                implementation_signature, 
+                problem_statement,
+                problem_spec,
+                implementation_signature,
                 test_cases)
         })
         return history
 
     def parse_response(self, response: str) -> str:
-        return response.strip()
+        plan_start_ind = response.find("[IMPLEMENTATION PLAN]")
+        if plan_start_ind != -1:
+            plan_response = response[(plan_start_ind + len("[IMPLEMENTATION PLAN]")):]
+        else:
+            plan_response = response
+        return plan_response.strip()
 
     def solve_intermediate(self, problem_statement: str, problem_spec: str, implementation_signature: str, test_cases: str) -> str:
         # Prompt the model for the plan

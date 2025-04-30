@@ -7,8 +7,8 @@ Your task is to write a formal proof in Lean 4 that both the specifications are 
 The isomorphism statement is stated in the following format:
 1. First we state the natural language description of the function in a docstring format:
 ```
-[NL Description]
-def <function_name>(<input_type>) -> <output_type>:
+[NL DESCRIPTION]
+def <function_name>(<input_type>) -> <output_type>
 """
 <NL Description>
 """
@@ -37,6 +37,7 @@ theorem spec_isomorphism:
 (∀ input, generated_spec impl input) :=
 ```
 
+
 You can first think about the problem in a general way and then write the proposition. You can also use the following template to help you with the proposition generation:
 
 ```
@@ -56,7 +57,6 @@ theorem <lemma_name> : <lemma_statement> :=
 -- more lemmas
 [END LEMMAS]
 ```
-
 
 Finally, write a proof in Lean 4 that both the specifications are equivalent. The proof should be in the following format:
 ```

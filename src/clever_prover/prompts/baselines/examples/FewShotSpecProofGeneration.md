@@ -1,7 +1,7 @@
 `conv start`
 
 `example_user`
-[NL Description]
+[NL DESCRIPTION]
 def find_magnitude(x: int) -> int
 """
 Given an integer x, your task is to find the magnitude of x.
@@ -138,7 +138,7 @@ linarith
 [END]
 
 `example_user`
-[NL Description]
+[NL DESCRIPTION]
 def find_fibonacci(n: int) -> int
 """
 Given an integer n, your task is to find the nth Fibonacci number.
@@ -324,7 +324,7 @@ simp [(fib_rec_unique_seq n impl h_impl_0 h_impl_1 h_impl_n')]
 [END]
 
 `example_user`
-[NL Description]
+[NL DESCRIPTION]
 def is_square(x: int, y: int) -> bool
 """
 Given two integers x and y, your task is to find if x is a square of y.

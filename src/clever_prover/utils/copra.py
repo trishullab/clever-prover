@@ -61,7 +61,6 @@ def get_proof_via_copra(
         informal_proof_repo=informal_repo,
         language=ProofAction.Language.LEAN4,
         max_history_messages=max_history_messages,
-        num_goal_per_prompt=1,
         retrieve_prompt_examples=False,
         logger=logger)
     search_algorithm = DFSTreeSearch(language=ProofAction.Language.LEAN4)

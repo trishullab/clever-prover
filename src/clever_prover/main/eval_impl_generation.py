@@ -9,6 +9,7 @@ from clever_bench.benchmark import Benchmark
 from clever_prover.main.parse_config import parse_config, parse_impl_generation_class
 from itp_interface.tools.log_utils import setup_logger
 
+# @hydra.main(config_path="configs", config_name="few_shot_impl_generation", version_base="1.2")
 @hydra.main(config_path="configs", config_name="planning_copra_impl_generator", version_base="1.2")
 def main(cfg):
     log_dir = cfg["log_dir"] if "log_dir" in cfg else "./.logs/eval_impl_generation"
@@ -20,6 +21,7 @@ def main(cfg):
     test_report_dir = os.path.join(log_dir, "test_report")
     os.makedirs(test_report_dir, exist_ok=True)
     benchmark = Benchmark()
+    # benchmark = Benchmark(is_sample=True)
     benchmark.load_all()
     impl_problem_view = ProblemViewTask(
         benchmark=benchmark,

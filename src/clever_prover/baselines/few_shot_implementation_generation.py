@@ -107,14 +107,14 @@ class FewShotImplementationGenerationTask(ImplementationGenerationTask):
             logger=logger
         )
         problem = self.problem_view.get_view(self.problem_id)
-        prompt = "[NL Description]\n" \
+        prompt = "[NL DESCRIPTION]\n" \
         f"{problem.problem_spec_nl}\n" \
         "[SPECIFICATION]\n" \
         f"{problem.problem_spec_formal_ground_truth}\n" \
         "[IMPLEMENTATION SIGNATURE]\n" \
         f"{problem.implementation_signature}\n" \
         "[TEST CASES]\n" \
-        f"{problem.test_cases_lean}\n"
+        f"{problem.test_cases_lean}"
         implementation = simple_prompter.run_prompt(prompt)
         parsed_implementation = self.parse_implementation(implementation, logger=logger)
         self.generated_implementation = parsed_implementation
@@ -140,14 +140,14 @@ class FewShotImplementationGenerationTask(ImplementationGenerationTask):
                 end_tokens=self.proof_prompt_settings.end_tokens,
                 logger=logger
             )
-            prompt = "[NL Description]\n" \
+            prompt = "[NL DESCRIPTION]\n" \
             f"{problem.problem_spec_nl}\n" \
             "[SPECIFICATION]\n" \
             f"{problem.problem_spec_formal_ground_truth}\n" \
             "[IMPLEMENTATION]\n" \
             f"{problem.implementation}\n" \
             "[CORRECTNESS THEOREM]\n" \
-            f"{problem.correctness_theorem}\n"
+            f"{problem.correctness_theorem}"
             proof = simple_prompter.run_prompt(prompt)
             proof = self.parse_proof(proof, logger=logger)
             if self.helper_lemmas is not None:

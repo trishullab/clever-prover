@@ -5,25 +5,21 @@ from clever_prover.utils import string_utils
 import logging
 
 class ImplementerTool(Tool):
-    prompt_format = """[PROBLEM STATEMENT]
+    user_prompt_format = """[NL DESCRIPTION]
 {}
-[END]
 
-[PROBLEM SPEC]
+[SPECIFICATION]
 {}
-[END]
 
-[FUNCTION IMPLEMENTATION SIGNATURE]
+[IMPLEMENTATION SIGNATURE]
 {}
-[END]
 
 [TEST CASES]
 {}
-[END]
 
-[PLAN]
-{}
-[END]"""
+[IMPLEMENTATION PLAN]
+{}"""
+
     def __init__(self, simple_prompter: SimplePrompter, logger: logging.Logger = None, **inference_kwargs):
         assert simple_prompter is not None, "Model must be provided."
         assert logger is not None, "Logger must be provided."
@@ -40,31 +36,34 @@ class ImplementerTool(Tool):
         #     history[1:1] = self.example_prompt_list
         history.append(
         {
-            "role": "user", 
-            "content": ImplementerTool.prompt_format.format(
-                problem_statement, 
-                problem_spec, 
-                implementation_signature, 
-                test_cases, 
+            "role": "user",
+            "content": ImplementerTool.user_prompt_format.format(
+                problem_statement,
+                problem_spec,
+                implementation_signature,
+                test_cases,
                 implementation_plan)
         })
         return history
 
     def parse_response(self, response: str) -> str:
-        def_start_ind = response.find("```lean")
+        def_start_ind = response.find("[GENERATED IMPLEMENTATION]")
         if def_start_ind != -1:
-            def_response = response[(def_start_ind + len("```lean")):]
+            def_response = response[(def_start_ind + len("[GENERATED IMPLEMENTATION]")):]
+        else:
+            def_response = response
+        def_start_ind = def_response.find("```lean")
+        if def_start_ind != -1:
+            def_response = def_response[(def_start_ind + len("```lean")):]
             def_end_ind = def_response.find("```")
             if def_end_ind != -1:
                 def_response = def_response[:def_end_ind]
-        else:
-            def_response = response
         def_response = def_response.strip()
         if def_response.startswith("def"):
             # Find the first occurrence of ":=" and remove everything before it
             def_start_ind = def_response.find(":=")
             if def_start_ind != -1:
-                def_response = def_response[def_start_ind + len(":="):]
+                def_response = def_response[(def_start_ind + len(":=")):]
                 def_response = def_response.strip()
         return def_response
 
