@@ -37,12 +37,15 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
         problem_id: int,
         problem_view: ProblemViewTask,
         use_impl_planner: bool,
+        use_proof_planner: bool,
+        use_copra: bool,
         impl_planner_prompt_settings: PromptSettings,
         impl_planner_model_settings: ModelSettings,
         impl_prompt_settings: PromptSettings,
         impl_prompt_settings_if_use_impl_planner: PromptSettings,
         impl_model_settings: ModelSettings,
         proof_planner_prompt_settings: PromptSettings,
+        proof_planner_prompt_settings_if_no_proof_planner: PromptSettings,
         proof_planner_model_settings: ModelSettings,
         copra_prompt_settings: PromptSettings,
         copra_model_settings: ModelSettings,
@@ -55,12 +58,16 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
         Initialize the PlanningCopraImplGenerator with project path, file path, and lemma name.
         """
         super().__init__(problem_id=problem_id, problem_view=problem_view, lemma_name=lemma_name, logger=logger)
+        if not use_proof_planner and not use_copra:
+            raise ValueError("If you want 'use_proof_planner' and 'use_copra' both set to 'false', call 'few_shot_impl_generation' instead.")
         self.use_impl_planner = use_impl_planner
+        self.use_proof_planner = use_proof_planner
+        self.use_copra = use_copra
         self.impl_planner_prompt_settings = impl_planner_prompt_settings
         self.impl_planner_model_settings = impl_planner_model_settings
         self.impl_prompt_settings = impl_prompt_settings_if_use_impl_planner if use_impl_planner else impl_prompt_settings
         self.impl_model_settings = impl_model_settings
-        self.proof_planner_prompt_settings = proof_planner_prompt_settings
+        self.proof_planner_prompt_settings = proof_planner_prompt_settings if use_proof_planner else proof_planner_prompt_settings_if_no_proof_planner
         self.proof_planner_model_settings = proof_planner_model_settings
         self.copra_prompt_settings = copra_prompt_settings
         self.copra_model_settings = copra_model_settings
@@ -285,7 +292,8 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
             problem_spec=problem.problem_spec_formal_ground_truth,
             implementation_signature=problem.implementation_signature,
             implementation=problem.implementation,
-            correctness_definition=problem.correctness_theorem
+            correctness_definition=problem.correctness_theorem,
+            use_proof_planner=self.use_proof_planner
         )
         proof_planner.reset()
         lemma_plan_objs = []

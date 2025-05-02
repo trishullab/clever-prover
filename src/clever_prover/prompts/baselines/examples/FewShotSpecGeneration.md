@@ -15,7 +15,6 @@ def generated_spec
 -- inputs
 (x: Int) : Prop :=
 
-
 `example_assistant`
 [THOUGHTS]
 We need to find absolute value of an integer. 
@@ -24,12 +23,12 @@ We can write a specification which return x if x is greater than or equal to 0, 
 It is also easy to see that program will always terminate for all integers. However, it is better to mention that in the specification.
 [END THOUGHTS]
 
-
 [GENERATED SPECIFICATION]
 ∃ result, impl x = result ∧
 (x >= 0 → result = x) ∧
 (x < 0 → result = -x)
 [END]
+
 
 `example_user`
 [NL DESCRIPTION]
@@ -49,8 +48,6 @@ def generated_spec
 -- inputs
 (n: Nat) : Prop :=
 
-
-
 `example_assistant`
 [THOUGHTS]
 We can start with defining the fibonacci sequence as a helper definition, and 
@@ -66,7 +63,6 @@ fibonacci_non_computable (n + 1) f₂ →
 fibonacci_non_computable (n + 2) (f₁ + f₂)
 [END HELPER DEFINITIONS]
 
-
 [GENERATED SPECIFICATION]
 let spec (result: Nat) :=
 fibonacci_non_computable n result
@@ -75,6 +71,7 @@ fibonacci_non_computable n result
 -- return value satisfies spec
 spec result
 [END]
+
 
 `example_user`
 [NL DESCRIPTION]
@@ -95,13 +92,11 @@ def generated_spec
 (score_changes: List Int)
 (threshold: Int) : Prop  :=
 
-
 `example_assistant`
 [THOUGHTS]
 The function takes a list of integers and an integer threshold as input. Clearly, the function is not defined for empty list.
 We can write a specification which checks if the list is empty and returns 0, otherwise we can check if the score is greater than or equal to threshold. If it is, we can check if the score is greater than or equal to threshold and return 1 + impl on the remaining list and threshold - score. Otherwise, we can return 0. It is important to note that when for a sublist, the score increments by 1, then there is no sublist smaller than the current one which can also increment the score.
 [END THOUGHTS]
-
 
 [GENERATED SPECIFICATION]
 let spec (result: Nat) :=

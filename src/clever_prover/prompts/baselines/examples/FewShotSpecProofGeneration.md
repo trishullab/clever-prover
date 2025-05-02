@@ -42,7 +42,6 @@ theorem spec_isomorphism:
 (∀ x, problem_spec impl x) ↔
 (∀ x, generated_spec impl x) :=
 
-
 `example_assistant`
 [THOUGHTS]
 To prove the equivalence of the two specifications, we can start by analyzing the generated specification. 
@@ -50,7 +49,6 @@ The original specification doesn't reveal the implementation details, but we can
 We can use this information to write a proof that shows that the two specifications are equivalent.
 The idea is to try different cases for x, and show that the properties of the generated specification hold true for the original specification as well.
 [END THOUGHTS]
-
 
 [PROOF]
 by
@@ -137,6 +135,7 @@ rw [h_x_eq_0] at h_impl
 linarith
 [END]
 
+
 `example_user`
 [NL DESCRIPTION]
 def find_fibonacci(n: int) -> int
@@ -192,14 +191,12 @@ theorem spec_isomorphism:
 (∀ n, problem_spec impl n) ↔
 (∀ n, generated_spec impl n) :=
 
-
 `example_assistant`
 [THOUGHTS]
 The Fibonacci sequence is defined recursively, and the generated specification captures this recursive structure.
 However, the inductive definition of `fibonacci_non_computable` is a non-computational definition, which means it does not provide a direct way to compute Fibonacci numbers. So we define multiple helper lemmas like `fib0_unique`, `fib1_unique`, and `fib_rec_unique` to help us prove the isomorphism. The `fib_inversion` lemma is used to show that if two Fibonacci numbers are equal, then their corresponding indices must also be equal. This is crucial for proving the uniqueness of Fibonacci numbers.
 The proof uses the helper lemmas to show that the generated specification is equivalent to the problem specification. The proof is structured in a way that it first shows the implication from the problem specification to the generated specification and then vice versa. The use of `by_cases` allows us to handle different cases for the input `n`, which is essential for proving the equivalence of the two specifications. Notice the use of `Nat.strong_induction_on` to handle the recursive nature of the Fibonacci sequence. This is often necessary when recursive definitions uses more than one recursive call to compute the result.
 [END THOUGHTS]
-
 
 [HELPER LEMMAS]
 theorem fib0_unique (n : ℕ) (h : fibonacci_non_computable 0 n) : n = 0 :=
@@ -323,6 +320,7 @@ simp at h_impl_1
 simp [(fib_rec_unique_seq n impl h_impl_0 h_impl_1 h_impl_n')]
 [END]
 
+
 `example_user`
 [NL DESCRIPTION]
 def is_square(x: int, y: int) -> bool
@@ -360,7 +358,6 @@ theorem spec_isomorphism:
 (∀ x y, problem_spec impl x y) ↔
 (∀ x y, generated_spec impl x y) :=
 
-
 `example_assistant`
 [THOUGHTS]
 To prove the equivalence of the two specifications, we can start by analyzing the generated specification.
@@ -370,7 +367,6 @@ We can then simplify `if-else` statements and use an instance of the problem spe
 For the reverse direction, we can use similar reasoning.
 Introduce the `h_specialized_spec` variable to represent the specialized version of the problem specification and show that it satisfies the generated specification.
 [END THOUGHTS]
-
 
 [PROOF]
 by

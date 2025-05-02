@@ -17,6 +17,8 @@ params:
   num_implementation_samples: 5
   num_proof_plan_samples: 5
   use_impl_planner: false
+  use_proof_planner: false
+  use_copra: true
   impl_planner_prompt_settings:
     system_prompt_path: "src/clever_prover/prompts/clever_prompts/system/ImplementationPlanner.md"
     example_prompt_path: "src/clever_prover/prompts/clever_prompts/examples/ImplementationPlanner.md"
@@ -46,6 +48,12 @@ params:
   proof_planner_prompt_settings:
     system_prompt_path: "src/clever_prover/prompts/clever_prompts/system/ProofPlanner.md"
     example_prompt_path: "src/clever_prover/prompts/clever_prompts/examples/ProofPlanner.md"
+    max_tokens_per_action: 10000
+    max_history_messages: 0
+    end_tokens: ["[END]"]
+  proof_planner_prompt_settings_if_no_proof_planner:
+    system_prompt_path: "src/clever_prover/prompts/baselines/system/FewShotImplProofThoughtsGeneration.md"
+    example_prompt_path: "src/clever_prover/prompts/baselines/examples/FewShotImplProofThoughtsGeneration.md"
     max_tokens_per_action: 10000
     max_history_messages: 0
     end_tokens: ["[END]"]

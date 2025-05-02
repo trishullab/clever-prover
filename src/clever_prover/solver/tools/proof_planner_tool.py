@@ -66,7 +66,19 @@ class ProofPlannerTool(Tool):
             correctness_plan = correctness_plan_response.strip()
         return raw_response, lemmas, lemma_plans, correctness_plan
 
-    def solve_intermediate(self, problem_statement: str, problem_spec: str, implementation_signature: str, implementation: str, correctness_definition: str) -> typing.Tuple[str, list[str], list[str], str]:
+    def parse_response_thoughts(self, response: str):
+        raw_response = response.strip()
+        lemmas = []
+        lemma_plans = []
+        
+        correctness_plan = "N/A"
+        correctness_plan_start_ind = response.find("[THOUGHTS]")
+        if correctness_plan_start_ind != -1:
+            correctness_plan_response = response[(correctness_plan_start_ind + len("[THOUGHTS]")):]
+            correctness_plan = correctness_plan_response.strip()
+        return raw_response, lemmas, lemma_plans, correctness_plan
+
+    def solve_intermediate(self, problem_statement: str, problem_spec: str, implementation_signature: str, implementation: str, correctness_definition: str, use_proof_planner: bool) -> typing.Tuple[str, list[str], list[str], str]:
         # if not self.model.is_loaded():
         #     self.model.__enter__()
         # Prompt the model for the plan
@@ -78,7 +90,7 @@ class ProofPlannerTool(Tool):
         self.history.append(response[0])
         generated_text = response[0]["content"]
         self.logger.info(f"[PROOF PLANNER] Proof plan generated:\n{generated_text}")
-        return self.parse_response(generated_text)
+        return self.parse_response(generated_text) if use_proof_planner else self.parse_response_thoughts(generated_text)
 
     def reset(self):
         self.history = []
