@@ -5,21 +5,7 @@ from clever_prover.utils import string_utils
 import logging
 
 class ImplementerTool(Tool):
-#     user_prompt_format = """[NL DESCRIPTION]
-# {}
-
-# [SPECIFICATION]
-# {}
-
-# [IMPLEMENTATION SIGNATURE]
-# {}
-
-# [TEST CASES]
-# {}
-
-# [IMPLEMENTATION PLAN]
-# {}"""
-    user_prompt_format = """[NL DESCRIPTION]
+    user_prompt_format_no_plan = """[NL DESCRIPTION]
 {}
 
 [SPECIFICATION]
@@ -29,6 +15,20 @@ class ImplementerTool(Tool):
 {}
 
 [TEST CASES]
+{}"""
+    user_prompt_format_with_plan = """[NL DESCRIPTION]
+{}
+
+[SPECIFICATION]
+{}
+
+[IMPLEMENTATION SIGNATURE]
+{}
+
+[TEST CASES]
+{}
+
+[IMPLEMENTATION PLAN]
 {}"""
 
     def __init__(self, simple_prompter: SimplePrompter, logger: logging.Logger = None, **inference_kwargs):
@@ -41,25 +41,25 @@ class ImplementerTool(Tool):
         # self.inference_kwargs["stop"] = prompter.stop_tokens
         self.history = []
 
-    # def get_prompt(self, history: list[dict[str, str]], problem_statement: str, problem_spec: str, implementation_signature: str, test_cases: str, implementation_plan: str) -> list[dict[str, str]]:
-    def get_prompt(self, history: list[dict[str, str]], problem_statement: str, problem_spec: str, implementation_signature: str, test_cases: str) -> list[dict[str, str]]:
+    def get_prompt(self, history: list[dict[str, str]], problem_statement: str, problem_spec: str, implementation_signature: str, test_cases: str, implementation_plan: str) -> list[dict[str, str]]:
         # if not history or history[0]["role"] != "system":
         #     history.insert(0, {"role": "system", "content": self.system_prompt})
         #     history[1:1] = self.example_prompt_list
         history.append(
         {
             "role": "user",
-            # "content": ImplementerTool.user_prompt_format.format(
-            #     problem_statement,
-            #     problem_spec,
-            #     implementation_signature,
-            #     test_cases,
-            #     implementation_plan)
-            "content": ImplementerTool.user_prompt_format.format(
-                problem_statement,
-                problem_spec,
-                implementation_signature,
-                test_cases)
+            "content": ImplementerTool.user_prompt_format_no_plan.format(
+                    problem_statement,
+                    problem_spec,
+                    implementation_signature,
+                    test_cases)
+                if implementation_plan is None else
+                    ImplementerTool.user_prompt_format_with_plan.format(
+                    problem_statement,
+                    problem_spec,
+                    implementation_signature,
+                    test_cases,
+                    implementation_plan)
         })
         return history
 
@@ -84,22 +84,15 @@ class ImplementerTool(Tool):
                 def_response = def_response.strip()
         return def_response
 
-    # def solve_intermediate(self, problem_statement: str, problem_spec: str, implementation_signature: str, test_cases: str, implementation_plan: str) -> str:
-    def solve_intermediate(self, problem_statement: str, problem_spec: str, implementation_signature: str, test_cases: str) -> str:
+    def solve_intermediate(self, problem_statement: str, problem_spec: str, implementation_signature: str, test_cases: str, implementation_plan: str) -> str:
         # Prompt the model for the plan
-        # self.history = self.get_prompt(
-        #     self.history, 
-        #     problem_statement, 
-        #     problem_spec, 
-        #     implementation_signature, 
-        #     test_cases, 
-        #     implementation_plan)
         self.history = self.get_prompt(
-            self.history, 
-            problem_statement, 
-            problem_spec, 
-            implementation_signature, 
-            test_cases)
+            self.history,
+            problem_statement,
+            problem_spec,
+            implementation_signature,
+            test_cases,
+            implementation_plan)
         # Get the model response
         message = self.history[-1]["content"]
         self.logger.info(f"[IMPLEMENTER] Raw prompt used:\n{message}")

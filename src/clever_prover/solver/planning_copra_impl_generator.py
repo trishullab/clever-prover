@@ -8,7 +8,7 @@ from clever_bench.lean_problem import Lemma, LeanProblemView, format_problem_as_
 from clever_prover.tasks.implementation_generation_task import ImplementationGenerationTask
 from clever_prover.prompters.simple_prompter import SimplePrompter
 from clever_prover.utils.configs import PromptSettings, ModelSettings
-# from clever_prover.solver.tools.implementation_planner_tool import ImplementationPlannerTool
+from clever_prover.solver.tools.implementation_planner_tool import ImplementationPlannerTool
 from clever_prover.solver.tools.implementer_tool import ImplementerTool
 from clever_prover.solver.tools.proof_planner_tool import ProofPlannerTool
 from clever_prover.utils.copra import get_proof_via_copra, ProofSearchResult
@@ -36,9 +36,11 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
     def __init__(self,
         problem_id: int,
         problem_view: ProblemViewTask,
+        use_impl_planner: bool,
         impl_planner_prompt_settings: PromptSettings,
         impl_planner_model_settings: ModelSettings,
         impl_prompt_settings: PromptSettings,
+        impl_prompt_settings_if_use_impl_planner: PromptSettings,
         impl_model_settings: ModelSettings,
         proof_planner_prompt_settings: PromptSettings,
         proof_planner_model_settings: ModelSettings,
@@ -53,9 +55,10 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
         Initialize the PlanningCopraImplGenerator with project path, file path, and lemma name.
         """
         super().__init__(problem_id=problem_id, problem_view=problem_view, lemma_name=lemma_name, logger=logger)
+        self.use_impl_planner = use_impl_planner
         self.impl_planner_prompt_settings = impl_planner_prompt_settings
         self.impl_planner_model_settings = impl_planner_model_settings
-        self.impl_prompt_settings = impl_prompt_settings
+        self.impl_prompt_settings = impl_prompt_settings_if_use_impl_planner if use_impl_planner else impl_prompt_settings
         self.impl_model_settings = impl_model_settings
         self.proof_planner_prompt_settings = proof_planner_prompt_settings
         self.proof_planner_model_settings = proof_planner_model_settings
@@ -67,7 +70,7 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
         self.generated_implementation = None
         self.helper_lemmas = None
         self.generated_proof = None
-        # self.implementation_plan = None # TODO: get rid of implementation planning entirely instead of just commenting code
+        self.implementation_plan = None
         self.proof_plan = None
     
     def generate_implementation(self, timeout_in_ms = 60, logger = None):
@@ -83,8 +86,9 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
             problem.implementation = None
             problem.correctness_helper_lemmas.clear()
             problem.correctness_proof = None
-            # implementation_plan = self._generate_impl_plan(problem=problem, logger=logger)
-            # self.implementation_plan = implementation_plan
+            if self.use_impl_planner:
+                implementation_plan = self._generate_impl_plan(problem=problem, logger=logger)
+                self.implementation_plan = implementation_plan
             lean_code = self._generate_impl(problem=problem, logger=logger)
             problem.implementation = lean_code
             validation_result = asyncio.run(
@@ -207,31 +211,31 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
             f.write(full_lean_code)
         return proof
 
-    # def _generate_impl_plan(self, problem: LeanProblemView, logger: logging.Logger = None):
-    #     logger = logger if logger else self.logger
-    #     impl_planner_simple_prompter = SimplePrompter(
-    #         main_sys_prompt_path=self.impl_planner_prompt_settings.system_prompt_path,
-    #         example_conv_prompt_path=self.impl_planner_prompt_settings.example_prompt_path,
-    #         temperature=self.impl_planner_model_settings.temperature,
-    #         max_tokens_per_action=self.impl_planner_prompt_settings.max_tokens_per_action,
-    #         max_history_messages=self.impl_planner_prompt_settings.max_history_messages,
-    #         model_name=self.impl_planner_model_settings.model_name,
-    #         secret_filepath=self.impl_planner_model_settings.secret_path,
-    #         end_tokens=self.impl_planner_prompt_settings.end_tokens,
-    #         logger=logger
-    #     )
-    #     impl_planner = ImplementationPlannerTool(
-    #         simple_prompter=impl_planner_simple_prompter,
-    #         logger=logger
-    #     )
-    #     implementation_plan = impl_planner.solve_intermediate(
-    #         problem_statement=problem.problem_spec_nl,
-    #         problem_spec=problem.problem_spec_formal_ground_truth,
-    #         implementation_signature=problem.implementation_signature,
-    #         test_cases=problem.test_cases_lean
-    #     )
-    #     impl_planner.reset()
-    #     return implementation_plan
+    def _generate_impl_plan(self, problem: LeanProblemView, logger: logging.Logger = None):
+        logger = logger if logger else self.logger
+        impl_planner_simple_prompter = SimplePrompter(
+            main_sys_prompt_path=self.impl_planner_prompt_settings.system_prompt_path,
+            example_conv_prompt_path=self.impl_planner_prompt_settings.example_prompt_path,
+            temperature=self.impl_planner_model_settings.temperature,
+            max_tokens_per_action=self.impl_planner_prompt_settings.max_tokens_per_action,
+            max_history_messages=self.impl_planner_prompt_settings.max_history_messages,
+            model_name=self.impl_planner_model_settings.model_name,
+            secret_filepath=self.impl_planner_model_settings.secret_path,
+            end_tokens=self.impl_planner_prompt_settings.end_tokens,
+            logger=logger
+        )
+        impl_planner = ImplementationPlannerTool(
+            simple_prompter=impl_planner_simple_prompter,
+            logger=logger
+        )
+        implementation_plan = impl_planner.solve_intermediate(
+            problem_statement=problem.problem_spec_nl,
+            problem_spec=problem.problem_spec_formal_ground_truth,
+            implementation_signature=problem.implementation_signature,
+            test_cases=problem.test_cases_lean
+        )
+        impl_planner.reset()
+        return implementation_plan
     
     def _generate_impl(self, problem: LeanProblemView, logger: logging.Logger = None):
         logger = logger if logger else self.logger
@@ -253,8 +257,8 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
             problem_statement=problem.problem_spec_nl,
             problem_spec=problem.problem_spec_formal_ground_truth,
             implementation_signature=problem.implementation_signature,
-            test_cases=problem.test_cases_lean
-            # implementation_plan=self.implementation_plan
+            test_cases=problem.test_cases_lean,
+            implementation_plan=self.implementation_plan
         )
         implementation_generator.reset()
         lean_code = lean_code.strip()
