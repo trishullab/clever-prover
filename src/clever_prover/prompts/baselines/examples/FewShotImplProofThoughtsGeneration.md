@@ -26,23 +26,20 @@ let spec (result: Int) :=
 -- return value satisfies spec
 spec result
 
-[IMPLEMENTATION SIGNATURE]
+[IMPLEMENTATION]
 def implementation (x: Int) : Int :=
+if x < 0 then -x else x
 
-[TEST CASES]
-#test implementation (-1) = 1
-#test implementation 0 = 0
-#test implementation 5 = 5
-#test implementation (-100) = 100
-#test implementation 100 = 100
+[CORRECTNESS THEOREM]
+theorem correctness
+(x: Int)
+: problem_spec implementation x :=
 
 `example_assistant`
 [THOUGHTS]
-If `x` is less than 0 then return `-x`, otherwise return `x`.
-[END THOUGHTS]
-
-[GENERATED IMPLEMENTATION]
-if x < 0 then -x else x
+We can start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
+Early on, we will want to break the proof up into cases based on whether `x` is positive, negative, or zero.
+Many of the intermediate goals can likely be proven using `linarith`.
 [END]
 
 
@@ -71,31 +68,27 @@ fibonacci_non_computable n result
 -- return value satisfies spec
 spec result
 
-[IMPLEMENTATION SIGNATURE]
+[IMPLEMENTATION]
 def implementation (n: Nat) : Nat :=
-
-[TEST CASES]
-#test implementation 0 = 0
-#test implementation 1 = 1
-#test implementation 2 = 1
-#test implementation 3 = 2
-#test implementation 4 = 3
-#test implementation 5 = 5
-#test implementation 6 = 8
-#test implementation 7 = 13
-
-`example_assistant`
-[THOUGHTS]
-We should start with a `match` statement on `n` to cover both the base cases and the recursive case.
-Cover the base cases. If `n` is 0 or `n` is 1 then output 1.
-Finish with the recursive case. If `n` matches with `n' + 2` for a value `n'`, recursively call `implementation` on the two previous values `n'` and `n' + 1` and add the results for the output.
-[END THOUGHTS]
-
-[GENERATED IMPLEMENTATION]
 match n with
 | 0 => 0
 | 1 => 1
 | n' + 2 => implementation n' + implementation (n' + 1)
+
+[CORRECTNESS THEOREM]
+theorem correctness
+(n: Nat)
+: problem_spec implementation n
+:=
+
+`example_assistant`
+[THOUGHTS]
+We can start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
+Use the `have` keyword three times to show that `implementation` follows the three properties of the Fibonacci function:
+  - `implementation 0 = 1`
+  - `implementation 1 = 1`
+  - `∀ n', implementation (n' + 2) = implementation n' + implementation (n' + 1)`
+Then use these three hypotheses to show that `implementation` satisfies `fibonacci_non_computable`, as required by the `spec`.
 [END]
 
 
@@ -137,26 +130,8 @@ else
 -- return value satisfies spec
 spec score_changes threshold result
 
-[IMPLEMENTATION SIGNATURE]
+[IMPLEMENTATION]
 def implementation (score_changes: List Int) (threshold: Int) : Nat :=
-
-[TEST CASES]
-#test implementation [3, 4, -2, 1] 5 = 3
-#test implementation [3, 4, 5] 5 = 2
-#test implementation [3, 4, -3] 5 = 1
-#test implementation [-3] (-4) = 1
-
-`example_assistant`
-[THOUGHTS]
-We should define a recursive helper function `loop` to keep track of the running cumulative score and coins while traversing through the list of score changes. Let this helper function return the total number of coins.
-Within this `loop` function, use a `match` statement on the remaining list of score changes.
-If the remaining list is empty, just return the input coin count, which will be the total number of coins.
-If not, split the list into a `head` and a `tail`. Calculate the new cumulative score using the score change at the `head` of the list, then calculate the new coin count based on whether the new cumulative score passes the threshold.
-Still within the `match` statement, recursively call `loop` with the `tail` list of score changes and the new cumulative score and coin count.
-Finally, outside of the `match` statement and `loop` definition, call `loop` with initial parameters. This should be the implementation function's output.
-[END THOUGHTS]
-
-[GENERATED IMPLEMENTATION]
 let rec loop (score_changes: List Int) (threshold: Int) (score: Int) (coins: Nat) : Nat :=
   match score_changes with
   | [] => coins
@@ -165,50 +140,64 @@ let rec loop (score_changes: List Int) (threshold: Int) (score: Int) (coins: Nat
     let coins' := if score' ≥ threshold then coins + 1 else coins
     loop tail threshold score' coins'
 loop score_changes threshold 0 0
+
+[CORRECTNESS THEOREM]
+theorem correctness
+(score_changes: List Int)
+(threshold: Int)
+: problem_spec implementation score_changes threshold
+:=
+
+`example_assistant`
+[THOUGHTS]
+We should start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
+Early on, we will want to break the proof up into cases based on whether the output of `implementation_loop` (with initial values as input) is 0.
 [END]
 
 
 `example_user`
 [NL DESCRIPTION]
-def find_fermat(n: int) -> int
+def is_square(x: int, y: int) -> bool
 """
-Given an integer n, your task is to find the nth Fermat number.
-The nth Fermat number is defined as follows:
-- F_n = 2^(2^n) + 1
+Given two integers x and y, your task is to find if x is a square of y.
+The function should return true if x is a square of y, otherwise false.
 """
 
 [SPECIFICATION]
 def problem_spec
 -- function signature
-(impl: Nat → Nat)
+(impl: Int → Int → Bool)
 -- inputs
-(n: Nat) :=
+(x: Int)
+(y: Int) :=
 -- spec
-let spec (result: Nat) :=
-result = 2 ^ (2 ^ n) + 1
+let spec (result: Bool) :=
+result = true ↔ x = y^2;
 -- program terminates
-∃ result, impl n = result ∧
+∃ result, impl x y = result ∧
 -- return value satisfies spec
 spec result
 
-[IMPLEMENTATION SIGNATURE]
-def implementation (n: Nat) : Nat :=
+[IMPLEMENTATION]
+def implementation (x: Int) (y: Int) : Bool :=
+if x = y * y then
+  true
+else
+  false
 
-[TEST CASES]
-#test implementation 0 = 3
-#test implementation 1 = 5
-#test implementation 2 = 17
-#test implementation 3 = 257
-#test implementation 4 = 65537
-#test implementation 5 = 4294967297
+[CORRECTNESS THEOREM]
+theorem correctness
+(x: Int)
+(y: Int)
+: problem_spec implementation x y:=
+
 
 `example_assistant`
 [THOUGHTS]
-Lean 4 has a library function `Nat.fermatNumber` that takes in a natural number `n` and outputs the `n`th Fermat number, as desired. We should simply use this library function.
-[END THOUGHTS]
-
-[GENERATED IMPLEMENTATION]
-Nat.fermatNumber n
+We can start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
+We should then simplify the goal.
+Then use the `have` keyword to create a new hypothesis equating the operation of squaring a variable to that of multiplying the variable by itself.
+Use this new hypothesis to rewrite the goal.
 [END]
 
 `conv end`

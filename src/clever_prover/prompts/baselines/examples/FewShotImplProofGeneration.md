@@ -35,14 +35,12 @@ theorem correctness
 (x: Int)
 : problem_spec implementation x :=
 
-
 `example_assistant`
 [THOUGHTS]
 We can start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
 Early on, we will want to break the proof up into cases based on whether `x` is positive, negative, or zero.
 Many of the intermediate goals can likely be proven using `linarith`.
 [END THOUGHTS]
-
 
 [PROOF]
 by
@@ -91,6 +89,7 @@ have h_x_eq_0: x = 0 := by
 contradiction
 [END]
 
+
 `example_user`
 [NL DESCRIPTION]
 def find_fibonacci(n: int) -> int
@@ -129,7 +128,6 @@ theorem correctness
 : problem_spec implementation n
 :=
 
-
 `example_assistant`
 [THOUGHTS]
 We should first prove a `fib_comp_to_non_comp` lemma that states that given a computable function `f : Nat → Nat` that follows the Fibonacci base cases (`f 0 = 1`, `f 1 = 1`) and recursive case (`∀ n, f (n + 2) = f n + f (n + 1)`), the built-in Lean 4 function `fibonacci_non_computable` called on `n` and `(f n)` outputs `True` (for all `n`).
@@ -142,7 +140,6 @@ Use the `have` keyword three times to show that `implementation` follows the thr
   - `∀ n', implementation (n' + 2) = implementation n' + implementation (n' + 1)`
 Then use these three hypotheses and the `fib_comp_to_non_comp` lemma to show that `implementation` satisfies `fibonacci_non_computable`, as required by the `spec`.
 [END THOUGHTS]
-
 
 [HELPER LEMMAS]
 theorem fib_comp_to_non_comp (n : ℕ)
@@ -196,6 +193,7 @@ have h_impl_1 : implementation 1 = 1 := by
 apply fib_comp_to_non_comp
 all_goals assumption
 [END]
+
 
 `example_user`
 [NL DESCRIPTION]
@@ -253,7 +251,6 @@ theorem correctness
 : problem_spec implementation score_changes threshold
 :=
 
-
 `example_assistant`
 [THOUGHTS]
 We should first prove an `implementation_loop_threshold_invariant` lemma that states that for all integers `k`, decreasing the threshold by `k` yields the same output of `implementation.loop` as increasing the score by `k`.
@@ -272,7 +269,7 @@ For the second case, break the proof up into more cases based on whether the tai
 Use the `implementation_loop_simple_increment` lemma in the proof.
 We can then prove the `correctness` theorem.
 Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
-Early on, you will want to break the proof up into cases based on whether the output of `implementation_loop` (with initial values as input) is 0.
+Early on, we will want to break the proof up into cases based on whether the output of `implementation_loop` (with initial values as input) is 0.
 Use the `implementation_loop_threshold_invariant`, `implementation_loop_invariant_stop`, and `implementation_loop_invariant_continue` lemmas in the proof.
 [END THOUGHTS]
 
@@ -682,7 +679,6 @@ theorem correctness
 (y: Int)
 : problem_spec implementation x y:=
 
-
 `example_assistant`
 [THOUGHTS]
 We can start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
@@ -690,7 +686,6 @@ We should then simplify the goal.
 Then use the `have` keyword to create a new hypothesis equating the operation of squaring a variable to that of multiplying the variable by itself.
 Use this new hypothesis to rewrite the goal.
 [END THOUGHTS]
-
 
 [PROOF]
 by
