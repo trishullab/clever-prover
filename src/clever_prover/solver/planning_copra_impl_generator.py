@@ -2,6 +2,8 @@ import logging
 import time
 import asyncio
 import os
+import tempfile
+import subprocess
 from collections import namedtuple
 from clever_bench.task import ProblemViewTask
 from clever_bench.lean_problem import Lemma, LeanProblemView, format_problem_as_lean_with_line_ranges
@@ -11,6 +13,7 @@ from clever_prover.utils.configs import PromptSettings, ModelSettings
 from clever_prover.solver.tools.implementation_planner_tool import ImplementationPlannerTool
 from clever_prover.solver.tools.implementer_tool import ImplementerTool
 from clever_prover.solver.tools.proof_planner_tool import ProofPlannerTool
+from clever_prover.solver.tools.few_shot_prover_tool import FewShotProverTool
 from clever_prover.utils.copra import get_proof_via_copra, ProofSearchResult
 from itp_interface.tools.lean4_sync_executor import Lean4SyncExecutor
 
@@ -49,6 +52,8 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
         proof_planner_model_settings: ModelSettings,
         copra_prompt_settings: PromptSettings,
         copra_model_settings: ModelSettings,
+        few_shot_prover_prompt_settings: PromptSettings,
+        few_shot_prover_model_settings: ModelSettings,
         proof_dump_file_path: str,
         lemma_name="correctness",
         num_implementation_samples=5,
@@ -71,6 +76,8 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
         self.proof_planner_model_settings = proof_planner_model_settings
         self.copra_prompt_settings = copra_prompt_settings
         self.copra_model_settings = copra_model_settings
+        self.few_shot_prover_prompt_settings = few_shot_prover_prompt_settings
+        self.few_shot_prover_model_settings = few_shot_prover_model_settings
         self.num_implementation_samples = num_implementation_samples
         self.num_proof_plan_samples = num_proof_plan_samples
         self.proof_dump_file_path = proof_dump_file_path
@@ -152,28 +159,49 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
             proof_exception = False
             for lemma_plan in lemma_plans:
                 full_proof_strategy = lemma_plan.lemma_proof_strategy + proven_lemmas_str
-                try:
-                    proof_result = self._generate_proof(
-                        problem=problem,
-                        theorem_name=lemma_plan.lemma_name,
-                        lemma_proof_strategy=full_proof_strategy,
-                        proof_dump_file_path=self.proof_dump_file_path,
-                        timeout_in_ms=time_remaining_in_ms,
-                        logger=logger
-                    )
-                except Exception as e:
-                    self.logger.exception(e)
-                    proof_exception = True
-                    break
-                if proof_result.proof_found:
-                    theorem_statement = lemma_plan.lemma
-                    proof_steps = [step for proof_step in proof_result.proof_steps for step in proof_step.proof_steps]
-                    proof = "by\n" + "\n".join(proof_steps)
-                    proven_lemmas.append(Lemma(statement=theorem_statement, proof=proof))
-                    if len(proven_lemmas) == 1:
-                        proven_lemmas_str = "\n\nThroughout the proof, you can freely use any of the below helper lemmas, which you can assume to be true:"
-                        proven_lemmas_str += "\n[HELPER LEMMAS]"
-                    proven_lemmas_str += ("\n[HELPER LEMMA]\n" + theorem_statement)
+                if self.use_copra:
+                    try:
+                        proof_result = self._generate_proof(
+                            problem=problem,
+                            theorem_name=lemma_plan.lemma_name,
+                            lemma_proof_strategy=full_proof_strategy,
+                            proof_dump_file_path=self.proof_dump_file_path,
+                            timeout_in_ms=time_remaining_in_ms,
+                            logger=logger
+                        )
+                    except Exception as e:
+                        self.logger.exception(e)
+                        proof_exception = True
+                        break
+                    if proof_result.proof_found:
+                        theorem_statement = lemma_plan.lemma
+                        proof_steps = [step for proof_step in proof_result.proof_steps for step in proof_step.proof_steps]
+                        proof = "by\n" + "\n".join(proof_steps)
+                        proven_lemmas.append(Lemma(statement=theorem_statement, proof=proof))
+                        if len(proven_lemmas) == 1:
+                            proven_lemmas_str = "\n\nThroughout the proof, you can freely use any of the below helper lemmas, which you can assume to be true:"
+                            proven_lemmas_str += "\n[HELPER LEMMAS]"
+                        proven_lemmas_str += ("\n[HELPER LEMMA]\n" + theorem_statement)
+                else:
+                    try:
+                        proof, proof_success = self._generate_few_shot_proof(
+                            problem=problem,
+                            theorem_statement=lemma_plan.lemma,
+                            proof_plan=full_proof_strategy,
+                            proven_lemmas=proven_lemmas,
+                            logger=logger
+                        )
+                    except Exception as e:
+                        self.logger.exception(e)
+                        proof_exception = True
+                        break
+                    if proof_success:
+                        theorem_statement = lemma_plan.lemma
+                        proven_lemmas.append(Lemma(statement=theorem_statement, proof=proof))
+                        if len(proven_lemmas) == 1:
+                            proven_lemmas_str = "\n\nThroughout the proof, you can freely use any of the below helper lemmas, which you can assume to be true:"
+                            proven_lemmas_str += "\n[HELPER LEMMAS]"
+                        proven_lemmas_str += ("\n[HELPER LEMMA]\n" + theorem_statement)
             problem.correctness_helper_lemmas.clear()
             if proof_exception:
                 elapsed_time = time.time() - start_time
@@ -184,26 +212,46 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
             for proven_lemma in proven_lemmas:
                 problem.correctness_helper_lemmas.append(proven_lemma)
             full_proof_strategy = proof_plan.correctness_proof_strategy + proven_lemmas_str
-            try:
-                proof_result = self._generate_proof(
-                    problem=problem,
-                    theorem_name=self.lemma_name,
-                    lemma_proof_strategy=full_proof_strategy,
-                    proof_dump_file_path=self.proof_dump_file_path,
-                    timeout_in_ms=time_remaining_in_ms,
-                    logger=logger)
-            except Exception as e:
-                self.logger.exception(e)
-                elapsed_time = time.time() - start_time
-                time_remaining_in_ms = timeout_in_ms - (elapsed_time * 1000)
-                is_time_elapsed = time_remaining_in_ms <= 0
-                proof_sample_count += 1
-                continue
-            if proof_result.proof_found:
-                proof_steps = [step for proof_step in proof_result.proof_steps for step in proof_step.proof_steps]
-                proof = "by\n" + "\n".join(proof_steps)
-                problem.correctness_proof = proof
-                proof_found = True
+            if self.use_copra:
+                try:
+                    proof_result = self._generate_proof(
+                        problem=problem,
+                        theorem_name=self.lemma_name,
+                        lemma_proof_strategy=full_proof_strategy,
+                        proof_dump_file_path=self.proof_dump_file_path,
+                        timeout_in_ms=time_remaining_in_ms,
+                        logger=logger)
+                except Exception as e:
+                    self.logger.exception(e)
+                    elapsed_time = time.time() - start_time
+                    time_remaining_in_ms = timeout_in_ms - (elapsed_time * 1000)
+                    is_time_elapsed = time_remaining_in_ms <= 0
+                    proof_sample_count += 1
+                    continue
+                if proof_result.proof_found:
+                    proof_steps = [step for proof_step in proof_result.proof_steps for step in proof_step.proof_steps]
+                    proof = "by\n" + "\n".join(proof_steps)
+                    problem.correctness_proof = proof
+                    proof_found = True
+            else:
+                try:
+                    proof, proof_success = self._generate_few_shot_proof(
+                        problem=problem,
+                        theorem_statement=problem.correctness_theorem,
+                        proof_plan=full_proof_strategy,
+                        proven_lemmas=problem.correctness_helper_lemmas,
+                        logger=logger
+                    )
+                except Exception as e:
+                    self.logger.exception(e)
+                    elapsed_time = time.time() - start_time
+                    time_remaining_in_ms = timeout_in_ms - (elapsed_time * 1000)
+                    is_time_elapsed = time_remaining_in_ms <= 0
+                    proof_sample_count += 1
+                    continue
+                if proof_success:
+                    problem.correctness_proof = proof
+                    proof_found = True
             elapsed_time = time.time() - start_time
             time_remaining_in_ms = timeout_in_ms - (elapsed_time * 1000)
             is_time_elapsed = time_remaining_in_ms <= 0
@@ -343,3 +391,64 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
             logger=self.logger
         )
         return proof_search_result
+    
+    def _generate_few_shot_proof(
+        self,
+        problem: LeanProblemView,
+        theorem_statement: str,
+        proof_plan: str,
+        proven_lemmas: list[Lemma],
+        logger: logging.Logger = None) -> str:
+        few_shot_prover_simple_prompter = SimplePrompter(
+            main_sys_prompt_path=self.few_shot_prover_prompt_settings.system_prompt_path,
+            example_conv_prompt_path=self.few_shot_prover_prompt_settings.example_prompt_path,
+            temperature=self.few_shot_prover_model_settings.temperature,
+            max_tokens_per_action=self.few_shot_prover_prompt_settings.max_tokens_per_action,
+            max_history_messages=self.few_shot_prover_prompt_settings.max_history_messages,
+            model_name=self.few_shot_prover_model_settings.model_name,
+            secret_filepath=self.few_shot_prover_model_settings.secret_path,
+            end_tokens=self.few_shot_prover_prompt_settings.end_tokens,
+            logger=logger
+        )
+        few_shot_prover = FewShotProverTool(
+            simple_prompter=few_shot_prover_simple_prompter,
+            logger=logger
+        )
+        proof = few_shot_prover.solve_intermediate(
+            problem_statement=problem.problem_spec_nl,
+            problem_spec=problem.problem_spec_formal_ground_truth,
+            implementation_signature=problem.implementation_signature,
+            implementation=problem.implementation,
+            theorem_statement=theorem_statement,
+            proof_plan=proof_plan
+        )
+        few_shot_prover.reset()
+
+        full_implementation = problem.implementation_signature + "\n" + problem.implementation
+        proven_lemmas_with_sorry = []
+        for proven_lemma in proven_lemmas:
+            proven_lemmas_with_sorry.append(proven_lemma.statement + "\nby sorry")
+        proven_lemmas_str = "\n\n".join(proven_lemmas_with_sorry)
+        theorem_statement_with_proof = theorem_statement + "\n" + proof
+        temp_lean_file_text = f"""import Imports.AllImports
+
+{problem.problem_spec_formal_ground_truth}
+
+{full_implementation}
+
+{proven_lemmas_str}
+
+{theorem_statement_with_proof}
+"""
+        
+        with tempfile.NamedTemporaryFile(mode="w+", suffix=".lean") as temp_lean_file:
+            temp_lean_file.write(temp_lean_file_text)
+            temp_lean_file.flush()
+
+            result = subprocess.run(["lake", "env", "lean", temp_lean_file.name], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=self.project_path, text=True)
+
+        self.logger.info(f"Check few shot proof output:\n{result.stdout.strip()}")
+
+        proof_success = (result.returncode == 0)
+        
+        return proof, proof_success
