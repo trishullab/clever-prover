@@ -294,7 +294,7 @@ theorem correctness
 Prove a `fib_comp_to_non_comp` lemma that states that given a computable function `f : Nat → Nat` that follows the Fibonacci base cases (`f 0 = 1`, `f 1 = 1`) and recursive case (`∀ n, f (n + 2) = f n + f (n + 1)`), the built-in Lean 4 function `fibonacci_non_computable` called on `n` and `(f n)` outputs `True` (for all `n`).
   - Use induction and break the proof up into the base cases and the recursive case.
 [LEMMA]
-theorem fib_comp_to_non_comp (n : ℕ)
+lemma fib_comp_to_non_comp (n : ℕ)
 (f : Nat → Nat)
 (h_f_0: f 0 = 1)
 (h_f_1: f 1 = 1)

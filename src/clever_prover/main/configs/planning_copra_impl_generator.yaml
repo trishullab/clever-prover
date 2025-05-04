@@ -7,8 +7,8 @@ log_dir: ".logs/eval_planning_copra_impl_generator"
 exp_name: "planning_copra_impl_generator"
 impl_generation_strategy: "PlanningCopraImplGenerator"
 # problems_to_solve: "*"
-# problems_to_solve: [2, 8, 13, 23, 27, 31, 42, 45, 48]
-problems_to_solve: [2]
+# problems_to_solve: [2, 8, 17, 23, 26, 30, 41, 45, 65]
+problems_to_solve: [45]
 k: 1
 # timeout_in_ses: 3600
 timeout_in_ses: 600
@@ -17,7 +17,7 @@ params:
   num_implementation_samples: 5
   num_proof_plan_samples: 5
   use_impl_planner: false
-  use_proof_planner: false
+  use_proof_planner: true
   use_copra: true
   impl_planner_prompt_settings:
     system_prompt_path: "src/clever_prover/prompts/clever_prompts/system/ImplementationPlanner.md"
@@ -71,3 +71,13 @@ params:
     model_name: "gpt-4o"
     secret_path: ".secrets/openai_key.json"
     temperature: 0.9
+  few_shot_prover_prompt_settings:
+    system_prompt_path: "src/clever_prover/prompts/baselines/system/FewShotImplSingleProofGeneration.md"
+    example_prompt_path: "src/clever_prover/prompts/baselines/examples/FewShotImplSingleProofGeneration.md"
+    max_tokens_per_action: 10000
+    max_history_messages: 0
+    end_tokens: ["[END]"]
+  few_shot_prover_model_settings:
+    model_name: "gpt-4o"
+    secret_path: ".secrets/openai_key.json"
+    temperature: 0.75

@@ -356,7 +356,7 @@ match n with
 [END]
 
 [LEMMAS]
-theorem fib_comp_to_non_comp (n : ℕ)
+lemma fib_comp_to_non_comp (n : ℕ)
 (f : Nat → Nat)
 (h_f_0: f 0 = 1)
 (h_f_1: f 1 = 1)

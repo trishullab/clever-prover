@@ -123,7 +123,7 @@ class FewShotImplementationGenerationTask(ImplementationGenerationTask):
         self.generated_impl_problem_view = problem
         return parsed_implementation
 
-    def generate_implementation_correctness_proof(self, timeout_in_ms = 60, logger = None) -> str:
+    def generate_implementation_correctness_proof(self, timeout_in_ms = 60, logger = None) -> str: # TODO: modify to use FewShotProverTool?
         assert self.generated_impl_problem_view is not None, "generated_impl_problem_view is None. Please generate the implementation first."
         logger = logger if logger else self.logger
         problem = self.problem_view.get_view(self.problem_id)
