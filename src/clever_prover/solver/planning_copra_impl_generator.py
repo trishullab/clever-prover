@@ -155,13 +155,16 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
                         plan_generation_failed = True
                         self.logger.info("Lemmas failed to compile.")
                     else:
+                        plan_generation_failed = False
                         self.logger.info("Lemmas compiled successfully.")
                 else:
+                    plan_generation_failed = False
                     self.logger.info("No helper lemmas generated.")
             else:
                 proof_plan = None
                 lemma_plans = []
                 proven_lemmas = []
+                plan_generation_failed = False
             if not plan_generation_failed:
                 if len(lemma_plans) > 0:
                     proven_lemmas, proven_lemmas_str, time_remaining_in_ms = self._generate_proof_for_all_lemmas(
