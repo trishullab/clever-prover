@@ -372,6 +372,8 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
                 )
         except Exception as e:
             self.logger.exception(e)
+            proof = "by sorry"
+            proof_success = False
         elapsed_time = time.time() - start_time
         time_remaining_in_ms = time_remaining_in_ms - (elapsed_time * 1000)
         return proof, proof_success, time_remaining_in_ms
