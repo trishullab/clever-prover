@@ -149,10 +149,15 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
                     theorem_statement = lemma_plan.lemma
                     problem.correctness_helper_lemmas.append(
                         Lemma(statement=theorem_statement, proof="by sorry"))
-                validation_result = len(lemma_plans) == 0 or self._submit(problem, time_remaining_in_ms)
-                if not validation_result.compilation_ok:
-                    plan_generation_failed = True
-                    self.logger.info("Lemmas failed to compile.")
+                if len(lemma_plans) > 0:
+                    validation_result = self._submit(problem, time_remaining_in_ms)
+                    if not validation_result.compilation_ok:
+                        plan_generation_failed = True
+                        self.logger.info("Lemmas failed to compile.")
+                    else:
+                        self.logger.info("Lemmas compiled successfully.")
+                else:
+                    self.logger.info("No helper lemmas generated.")
             else:
                 proof_plan = None
                 lemma_plans = []
