@@ -30,7 +30,7 @@ def implementation (input: <input_type>) : <output_type> :=
 
 4. Finally, the correctness theorem statement in Lean 4:
 ```
-[CORRECTNESS THEOREM]
+[THEOREM STATEMENT]
 theorem correctness
 (input: <input_type>)
 : problem_spec implementation input
@@ -45,16 +45,6 @@ You can first think about the problem in a general way and then write the proof.
 The implementation should match the problem_spec in the first case because
 The implementation should match the problem_spec in the second case because ....
 [END THOUGHTS]
-```
-
-Optionally, you can add some helper lemmas which can be used in the proof. These lemmas should be in the following format:
-```
-[HELPER LEMMAS]
-theorem <lemma_name> : <lemma_statement> :=
-<proof>
-
--- more lemmas
-[END LEMMAS]
 ```
 
 Finally, write a proof in Lean 4 that the implementation is correct and satisfies the specification. The proof should be in the following format:

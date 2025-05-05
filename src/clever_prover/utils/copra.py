@@ -26,10 +26,10 @@ def get_proof_via_copra(
     project_path: str,
     file_path: str,
     lemma_name: str,
-    informal_problem: str,
-    informal_hints: str,
-    timeout_in_ms: int,
-    proof_dump_file_path: str,
+    informal_problem: str = None,
+    informal_hints: str = None,
+    timeout_in_ms: int = 600000,
+    proof_dump_file_path: str = "proof_dump.txt",
     system_prompt: str = None,
     example_prompt: str = None,
     model_name: str = "gpt-3.5-turbo",
@@ -45,11 +45,14 @@ def get_proof_via_copra(
         timeout_in_secs=60,
         keep_local_context=True
     )
-    informal_repo = TempInformalProofRepo(
-        theorem_name=lemma_name,
-        informal_problem=informal_problem,
-        informal_hint=informal_hints
-    )
+    if informal_problem is None:
+        informal_repo = None
+    else:
+        informal_repo = TempInformalProofRepo(
+            theorem_name=lemma_name,
+            informal_problem=informal_problem,
+            informal_hint=informal_hints
+        )
     policy_prompter = DfsCoqGptPolicyPrompter(
         main_sys_prompt_path=system_prompt,
         example_conv_prompt_path=example_prompt,

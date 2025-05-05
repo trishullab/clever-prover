@@ -28,7 +28,7 @@ def implementation (input: <input_type>) : <output_type> :=
 <implementation_body>
 ```
 
-4. Finally, the correctness theorem statement in Lean 4:
+4. Followed by, the correctness theorem statement in Lean 4:
 ```
 [THEOREM STATEMENT]
 theorem correctness
@@ -37,14 +37,30 @@ theorem correctness
 :=
 ```
 
+5. Followed by the proof plan with some helper lemmas which can be used in the proof:
+```
+[PROOF PLAN]
+1. Start by unfolding the `problem_spec` and ...
+...
+...
 
-Please use the following template to write down your thoughts on generating the proof:
+Throughout the proof, you can freely use any of the below helper lemmas, which you can assume to be true:
+[HELPER LEMMA]
+lemma <some-lemma> 
+:=
+```
+
+Please use the following template to write down the proof:
 
 ```
-[THOUGHTS]
-The implementation should match the problem_spec in the first case because
-The implementation should match the problem_spec in the second case because ....
+[PROOF]
+by
+unfold problem_spec
+let result := implementation n
+use result
+....
+....
 [END]
 ```
 
-Please closely follow the format as shown in the examples below. Make sure that your response always ends with [END]. The thoughts should be mostly in natural language.
+Please closely follow the format as shown in the examples below. Make sure that your response always ends with [END]. 

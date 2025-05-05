@@ -10,7 +10,7 @@ from clever_prover.main.parse_config import parse_config, parse_impl_generation_
 from itp_interface.tools.log_utils import setup_logger
 
 # @hydra.main(config_path="configs", config_name="few_shot_impl_generation", version_base="1.2")
-@hydra.main(config_path="configs", config_name="planning_copra_impl_generator", version_base="1.2")
+@hydra.main(config_path="configs", config_name="few_shot_impl_few_shot_proof", version_base="1.2")
 def main(cfg):
     log_dir = cfg["log_dir"] if "log_dir" in cfg else "./.logs/eval_impl_generation"
     exp_name = cfg["exp_name"] if "exp_name" in cfg else "eval_few_shot_impl_generation"
@@ -56,7 +56,10 @@ def main(cfg):
                 problem_view=impl_problem_view,
                 logger=logger,
                 **hyper_params)
+            time_start = time.time()
             _ = impl_generation_task.generate_implementation(timeout_in_ms=timeout_in_secs * 1000, logger=logger)
+            elapsed_time = time.time() - time_start
+            time_remaining = max(0, timeout_in_secs - elapsed_time)
             validation_result = asyncio.run(
                 impl_problem_view.submit_async(
                     problem=impl_generation_task.generated_impl_problem_view,
@@ -72,7 +75,7 @@ def main(cfg):
                 logger.error(f"Implementation Compilation Error: {validation_result.error_message[-300:]}")
                 continue
                 # No point in even attempting the proof if the implementation generation failed
-            _ = impl_generation_task.generate_implementation_correctness_proof(timeout_in_ms=timeout_in_secs * 1000, logger=logger)
+            _ = impl_generation_task.generate_implementation_correctness_proof(timeout_in_ms=time_remaining * 1000, logger=logger)
             # Submit the proof to the problem view
             validation_result = asyncio.run(
                 impl_problem_view.submit_async(
