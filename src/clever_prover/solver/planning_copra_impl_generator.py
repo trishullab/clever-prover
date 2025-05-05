@@ -184,6 +184,7 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
                     full_proof_strategy = ""
                 proof, proof_found, time_remaining_in_ms = self._generate_proof(
                     problem=problem,
+                    theorem_description=problem.problem_spec_nl,
                     proof_strategy=full_proof_strategy,
                     start_time=start_time,
                     time_remaining_in_ms=time_remaining_in_ms,
@@ -319,6 +320,7 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
             full_proof_strategy = lemma_plan.lemma_proof_strategy + proven_lemmas_str
             proof, proof_found, time_remaining_in_ms = self._generate_proof(
                 problem=problem,
+                theorem_description=lemma_plan.lemma,
                 proof_strategy=full_proof_strategy,
                 start_time=start_time,
                 time_remaining_in_ms=time_remaining_in_ms,
@@ -341,6 +343,7 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
     def _generate_proof(
             self,
             problem: LeanProblemView,
+            theorem_description: str,
             proof_strategy: str,
             start_time: float,
             time_remaining_in_ms: int,
@@ -353,6 +356,7 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
                 proof_result = self._generate_proof_via_copra(
                     problem=problem,
                     theorem_name=theorem_name,
+                    lemma_description=theorem_description,
                     lemma_proof_strategy=proof_strategy,
                     proof_dump_file_path=self.proof_dump_file_path,
                     timeout_in_ms=time_remaining_in_ms,
@@ -382,6 +386,7 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
         self,
         problem: LeanProblemView,
         theorem_name: str,
+        lemma_description: str,
         lemma_proof_strategy: str,
         proof_dump_file_path: str,
         timeout_in_ms: int = 60,
@@ -391,15 +396,13 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
         full_lean_code, _ = format_problem_as_lean_with_line_ranges(problem)
         with open(file_path, "w") as f:
             f.write(full_lean_code)
-        if lemma_proof_strategy is None:
-            problem_spec_nl = None
-        else:
-            problem_spec_nl = problem.problem_spec_nl
+        if lemma_description is None:
+            lemma_description = problem.problem_spec_nl
         proof_search_result = get_proof_via_copra(
             project_path=self.project_path,
             file_path=file_path,
             lemma_name=theorem_name,
-            informal_problem=problem_spec_nl,
+            informal_problem=lemma_description,
             informal_hints=lemma_proof_strategy,
             timeout_in_ms=timeout_in_ms,
             proof_dump_file_path=proof_dump_file_path,
