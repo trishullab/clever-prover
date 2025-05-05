@@ -45,7 +45,7 @@ dependencies = [
     "setuptools==69.5.1",
     "matplotlib==3.9.0",
     "dataclasses-json==0.5.7",
-    "copra-theorem-prover>=1.1.2",
+    "copra-theorem-prover>=1.1.3",
     "itp-interface>=1.1.10"
 ]
 
