@@ -3,8 +3,8 @@ defaults:
   - override hydra/job_logging: 'disabled'
 
 task_type: IMPL_CORRECTNESS
-log_dir: ".logs/eval_impl_proof_plan_copra"
-exp_name: "planning_copra_impl_generator"
+log_dir: ".logs/eval_few_shot_impl_proof_plan_copra"
+exp_name: "few_shot_impl_copra_proof"
 impl_generation_strategy: "PlanningCopraImplGenerator"
 # problems_to_solve: "*"
 problems_to_solve: [2, 8, 17, 23, 26, 30, 41, 45, 65]
@@ -36,16 +36,8 @@ params:
     model_name: "gpt-4o"
     secret_path: ".secrets/openai_key.json"
     temperature: 0.9
-  proof_planner_prompt_settings:
-    system_prompt_path: "src/clever_prover/prompts/clever_prompts/system/ProofPlanner.md"
-    example_prompt_path: "src/clever_prover/prompts/clever_prompts/examples/ProofPlanner.md"
-    max_tokens_per_action: 10000
-    max_history_messages: 0
-    end_tokens: ["[END]"]
-  proof_planner_model_settings:
-    model_name: "gpt-4o"
-    secret_path: ".secrets/openai_key.json"
-    temperature: 0.9
+  proof_planner_prompt_settings: null
+  proof_planner_model_settings: null
   impl_planner_model_settings: null
   impl_planner_prompt_settings: null
   # impl_planner_prompt_settings:

@@ -30,7 +30,7 @@ spec result
 def implementation (x: Int) : Int :=
 if x < 0 then -x else x
 
-[CORRECTNESS THEOREM]
+[THEOREM STATEMENT]
 theorem correctness
 (x: Int)
 : problem_spec implementation x :=
@@ -75,7 +75,7 @@ match n with
 | 1 => 1
 | n' + 2 => implementation n' + implementation (n' + 1)
 
-[CORRECTNESS THEOREM]
+[THEOREM STATEMENT]
 theorem correctness
 (n: Nat)
 : problem_spec implementation n
@@ -141,7 +141,7 @@ let rec loop (score_changes: List Int) (threshold: Int) (score: Int) (coins: Nat
     loop tail threshold score' coins'
 loop score_changes threshold 0 0
 
-[CORRECTNESS THEOREM]
+[THEOREM STATEMENT]
 theorem correctness
 (score_changes: List Int)
 (threshold: Int)
@@ -185,7 +185,7 @@ if x = y * y then
 else
   false
 
-[CORRECTNESS THEOREM]
+[THEOREM STATEMENT]
 theorem correctness
 (x: Int)
 (y: Int)
