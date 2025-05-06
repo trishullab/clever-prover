@@ -48,16 +48,6 @@ is only checked for the valid inputs ....
 [END THOUGHTS]
 ```
 
-Optionally, you can add some helper lemmas which can be used in the proof. These lemmas should be in the following format:
-```
-[HELPER LEMMAS]
-theorem <lemma_name> : <lemma_statement> :=
-<proof>
-
--- more lemmas
-[END LEMMAS]
-```
-
 Finally, write a proof in Lean 4 that both the specifications are equivalent. The proof should be in the following format:
 ```
 [PROOF]
