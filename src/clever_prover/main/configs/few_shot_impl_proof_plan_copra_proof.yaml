@@ -3,19 +3,19 @@ defaults:
   - override hydra/job_logging: 'disabled'
 
 task_type: IMPL_CORRECTNESS
-log_dir: ".logs/eval_few_shot_impl_plan_few_shot_proof"
-exp_name: "few_shot_impl_plan_few_shot_proof"
+log_dir: ".logs/eval_few_shot_impl_proof_plan_copra_proof"
+exp_name: "few_shot_impl_proof_plan_copra_proof"
 impl_generation_strategy: "PlanningCopraImplGenerator"
 # problems_to_solve: "*"
 problems_to_solve: [2, 8, 17, 23, 26, 30, 41, 45, 65]
 k: 1
 # timeout_in_ses: 3600
-timeout_in_ses: 600
+timeout_in_ses: 1000
 params:
   proof_dump_file_path: "proofs.txt"
   num_implementation_samples: 5
   num_proof_plan_samples: 5
-  uses_copra_prover: false
+  uses_copra_prover: true
   impl_prompt_settings:
     system_prompt_path: "src/clever_prover/prompts/baselines/system/FewShotImplGeneration.md"
     example_prompt_path: "src/clever_prover/prompts/baselines/examples/FewShotImplGeneration.md"
@@ -27,9 +27,9 @@ params:
     secret_path: ".secrets/openai_key.json"
     temperature: 0.75
   prover_prompt_settings:
-    system_prompt_path: "src/clever_prover/prompts/baselines/system/FewShotImplProofGenerationBasedOnPlan.md"
-    example_prompt_path: "src/clever_prover/prompts/baselines/examples/FewShotImplProofGenerationBasedOnPlan.md"
-    max_tokens_per_action: 10000
+    system_prompt_path: "src/clever_prover/prompts/clever_prompts/system/Copra.md"
+    example_prompt_path: "src/clever_prover/prompts/clever_prompts/examples/Copra.md"
+    max_tokens_per_action: 400
     max_history_messages: 0
     end_tokens: ["[END]"]
   prover_model_settings:

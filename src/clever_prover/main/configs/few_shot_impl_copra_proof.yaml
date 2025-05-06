@@ -10,7 +10,7 @@ impl_generation_strategy: "PlanningCopraImplGenerator"
 problems_to_solve: [2, 8, 17, 23, 26, 30, 41, 45, 65]
 k: 1
 # timeout_in_ses: 3600
-timeout_in_ses: 600
+timeout_in_ses: 1000
 params:
   proof_dump_file_path: "proofs.txt"
   num_implementation_samples: 5
