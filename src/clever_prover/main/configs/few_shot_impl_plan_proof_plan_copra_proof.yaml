@@ -5,7 +5,7 @@ defaults:
 task_type: IMPL_CORRECTNESS
 log_dir: ".logs/eval_few_shot_impl_plan_proof_plan_copra_proof"
 exp_name: "few_shot_impl_plan_proof_plan_copra_proof"
-impl_generation_strategy: "PlanningCopraImplGenerator"
+impl_generation_strategy: "ImplGenerator"
 # problems_to_solve: "*"
 problems_to_solve: [2, 8, 17, 23, 26, 30, 41, 45, 65]
 k: 1

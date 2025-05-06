@@ -5,7 +5,8 @@ from omegaconf.listconfig import ListConfig
 from clever_prover.utils.configs import PromptSettings, ModelSettings
 from clever_prover.baselines.few_shot_spec_generation import FewShotSpecGenerationTask
 from clever_prover.baselines.few_shot_implementation_generation import FewShotImplementationGenerationTask
-from clever_prover.solver.planning_copra_impl_generator import PlanningCopraImplGenerator
+from clever_prover.solver.impl_generator import ImplGenerator
+from clever_prover.solver.iso_generator import IsoGenerator
 from clever_prover.tasks.spec_generation_task import SpecGenerationTask
 from clever_prover.tasks.implementation_generation_task import ImplementationGenerationTask
 
@@ -21,6 +22,7 @@ class TaskType(Enum):
     
 class SpecGenerationStrategy(Enum):
     FewShotSpecGeneration = "FewShotSpecGeneration"
+    IsoGenerator = "IsoGenerator"
 
     def __str__(self):
         return self.value
@@ -30,7 +32,7 @@ class SpecGenerationStrategy(Enum):
 
 class ImplementationGenerationStrategy(Enum):
     FewShotImplGeneration = "FewShotImplGeneration"
-    PlanningCopraImplGenerator = "PlanningCopraImplGenerator"
+    ImplGenerator = "ImplGenerator"
 
     def __str__(self):
         return self.value
@@ -53,8 +55,8 @@ def parse_impl_generation_class(cfg) -> typing.Type[ImplementationGenerationTask
     impl_generation_strategy = ImplementationGenerationStrategy(cfg["impl_generation_strategy"])
     if impl_generation_strategy == ImplementationGenerationStrategy.FewShotImplGeneration:
         return FewShotImplementationGenerationTask
-    elif impl_generation_strategy == ImplementationGenerationStrategy.PlanningCopraImplGenerator:
-        return PlanningCopraImplGenerator
+    elif impl_generation_strategy == ImplementationGenerationStrategy.ImplGenerator:
+        return ImplGenerator
     else:
         raise ValueError(f"Unknown task type: {task_type}")
 
@@ -64,6 +66,8 @@ def parse_spec_generation_class(cfg) -> typing.Type[SpecGenerationTask]:
     spec_generation_strategy = SpecGenerationStrategy(cfg["spec_generation_strategy"])
     if spec_generation_strategy == SpecGenerationStrategy.FewShotSpecGeneration:
         return FewShotSpecGenerationTask
+    elif spec_generation_strategy == SpecGenerationStrategy.IsoGenerator:
+        return IsoGenerator
     else:
         raise ValueError(f"Unknown task type: {task_type}")
 

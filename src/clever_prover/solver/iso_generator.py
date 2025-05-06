@@ -6,13 +6,13 @@ import copy
 from collections import namedtuple
 from clever_bench.task import ProblemViewTask
 from clever_bench.lean_problem import Lemma, LeanProblemView, format_problem_as_lean_with_line_ranges
-from clever_prover.tasks.implementation_generation_task import ImplementationGenerationTask
+from clever_prover.tasks.spec_generation_task import SpecGenerationTask
 from clever_prover.prompters.simple_prompter import SimplePrompter
 from clever_prover.utils.configs import PromptSettings, ModelSettings
-from clever_prover.solver.tools.implementation_planner_tool import ImplementationPlannerTool
-from clever_prover.solver.tools.implementer_tool import ImplementerTool
+from clever_prover.solver.tools.specification_planner_tool import SpecificationPlannerTool
+from clever_prover.solver.tools.spec_generator_tool import SpecGeneratorTool
 from clever_prover.solver.tools.proof_planner_tool import ProofPlannerTool
-from clever_prover.solver.tools.few_shot_prover_tool import FewShotProverTool
+from clever_prover.solver.tools.few_shot_iso_prover_tool import FewShotIsoProverTool
 from clever_prover.utils.copra import get_proof_via_copra, ProofSearchResult
 from itp_interface.tools.lean4_sync_executor import Lean4SyncExecutor
 
@@ -28,62 +28,62 @@ ProofPlan = namedtuple("ProofPlan",
 [
     "raw_proof_plan",
     "lemma_plans",
-    "correctness_proof_strategy",
+    "isomorphism_proof_strategy",
 ])
 
-class PlanningCopraImplGenerator(ImplementationGenerationTask):
+class IsoGenerator(SpecGenerationTask):
     """
-    Implementation generation task for CoPrA.
+    Isomorphism generation task for CoPrA.
     """
     def __init__(self,
         problem_id: int,
         problem_view: ProblemViewTask,
         proof_dump_file_path: str,
-        impl_prompt_settings: PromptSettings,
-        impl_model_settings: ModelSettings,
+        spec_prompt_settings: PromptSettings,
+        spec_model_settings: ModelSettings,
         prover_prompt_settings: PromptSettings,
         prover_model_settings: ModelSettings,
         uses_copra_prover: bool,
         proof_planner_model_settings: ModelSettings = None,
         proof_planner_prompt_settings: PromptSettings = None,
-        impl_planner_prompt_settings: PromptSettings = None,
-        impl_planner_model_settings: ModelSettings = None,
-        lemma_name="correctness",
-        num_implementation_samples=5,
+        spec_planner_prompt_settings: PromptSettings = None,
+        spec_planner_model_settings: ModelSettings = None,
+        lemma_name="spec_isomorphism",
+        num_spec_samples=5,
         num_proof_plan_samples=5,
         logger: logging.Logger = None):
         """
-        Initialize the PlanningCopraImplGenerator with project path, file path, and lemma name.
+        Initialize the IsoGenerator with project path, file path, and lemma name.
         """
         super().__init__(problem_id=problem_id, problem_view=problem_view, lemma_name=lemma_name, logger=logger)
-        self.impl_planner_prompt_settings = impl_planner_prompt_settings
-        self.impl_planner_model_settings = impl_planner_model_settings
-        if impl_planner_prompt_settings is None:
-            assert impl_planner_model_settings is None, "If prompt settings are None, model settings should also be None."
+        self.spec_planner_prompt_settings = spec_planner_prompt_settings
+        self.spec_planner_model_settings = spec_planner_model_settings
+        if spec_planner_prompt_settings is None:
+            assert spec_planner_model_settings is None, "If prompt settings are None, model settings should also be None."
         else:
-            assert impl_planner_model_settings is not None, "If prompt settings are provided, model settings should also be provided."
+            assert spec_planner_model_settings is not None, "If prompt settings are provided, model settings should also be provided."
         if proof_planner_prompt_settings is None:
             assert proof_planner_model_settings is None, "If prompt settings are None, model settings should also be None."
         else:
             assert proof_planner_model_settings is not None, "If prompt settings are provided, model settings should also be provided."
         self.proof_planner_prompt_settings = proof_planner_prompt_settings
         self.proof_planner_model_settings = proof_planner_model_settings
-        self.impl_prompt_settings = impl_prompt_settings
-        self.impl_model_settings = impl_model_settings
+        self.spec_prompt_settings = spec_prompt_settings
+        self.spec_model_settings = spec_model_settings
         self.prover_prompt_settings = prover_prompt_settings
         self.prover_model_settings = prover_model_settings
-        self.num_implementation_samples = num_implementation_samples
+        self.num_spec_samples = num_spec_samples
         self.num_proof_plan_samples = num_proof_plan_samples
         self.proof_dump_file_path = proof_dump_file_path
         self.use_copra_prover = uses_copra_prover
-        self.generated_implementation = None
+        self.generated_spec = None
         self.helper_lemmas = None
         self.generated_proof = None
-        self.implementation_plan = None
+        self.spec_plan = None
     
     @property
-    def use_impl_planner(self):
-        return self.impl_planner_prompt_settings is not None and self.impl_planner_model_settings is not None
+    def use_spec_planner(self):
+        return self.spec_planner_prompt_settings is not None and self.spec_planner_model_settings is not None
 
     @property
     def use_proof_planner(self):
@@ -93,35 +93,34 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
     def use_copra(self):
         return self.use_copra_prover
     
-    def generate_implementation(self, timeout_in_ms = 60, logger = None):
+    def generate_specification(self, timeout_in_ms = 60, logger = None):
         logger = logger if logger else self.logger
-        implementation_stable = False
-        implementation_sample_count = 0
+        spec_stable = False
+        spec_sample_count = 0
         is_time_elapsed = False
         start_time = time.time()
         elapsed_time = 0
         time_remaining_in_ms = timeout_in_ms
-        while not is_time_elapsed and not implementation_stable and implementation_sample_count < self.num_implementation_samples:
-            logger.info(f"(Try #{implementation_sample_count + 1}) Generating implementation for problem {self.problem_id}...")
+        while not is_time_elapsed and not spec_stable and spec_sample_count < self.num_spec_samples:
+            logger.info(f"(Try #{spec_sample_count + 1}) Generating isomorphism spec for problem {self.problem_id}...")
             problem = self.problem_view.get_view(self.problem_id)
             # Ensure no accidental leakage
-            problem.implementation = None
-            problem.correctness_helper_lemmas.clear()
-            problem.correctness_proof = None
-            lean_code = self._generate_impl(problem=problem, logger=logger)
-            problem.implementation = lean_code
+            problem.problem_spec_formal_generated += "\n"
+            problem.isomorphism_helper_lemmas.clear()
+            problem.isomorphism_proof = None
+            lean_code = self._generate_spec(problem=problem, logger=logger)
+            problem.problem_spec_formal_generated += lean_code
             validation_result =  self._submit(problem, time_remaining_in_ms)
-            implementation_stable = validation_result.compilation_ok
+            spec_stable = validation_result.compilation_ok
             elapsed_time = time.time() - start_time
             time_remaining_in_ms = timeout_in_ms - (elapsed_time * 1000)
             is_time_elapsed = time_remaining_in_ms <= 0
-            implementation_sample_count += 1
-        problem.implementation = lean_code
-        self.generated_implementation = lean_code
-        self.generated_impl_problem_view = problem
+            spec_sample_count += 1
+        self.generated_spec = lean_code
+        self.generated_spec_problem_view = problem
         return lean_code
 
-    def generate_implementation_correctness_proof(self, timeout_in_ms = 60, logger = None):
+    def generate_spec_isomorphism_proof(self, timeout_in_ms = 60, logger = None):
         logger = logger if logger else self.logger
         proof = "by sorry"
         proof_found = False
@@ -135,19 +134,19 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
             logger.info(f"(Try #{proof_sample_count + 1}) Generating proof for problem {self.problem_id}...")
             problem = self.problem_view.get_view(self.problem_id)
             # Ensure no accidental leakage
-            problem.implementation = None
-            problem.correctness_helper_lemmas.clear()
-            problem.correctness_proof = None
-            if self.generated_implementation is None:
-                raise ValueError("Implementation must be generated before generating the proof.")
-            problem.implementation = self.generated_implementation
+            problem.problem_spec_formal_generated += "\n"
+            problem.isomorphism_helper_lemmas.clear()
+            problem.isomorphism_proof = None
+            if self.generated_spec is None:
+                raise ValueError("Isomorphism must be generated before generating the proof.")
+            problem.problem_spec_formal_generated += self.generated_spec
             if self.use_proof_planner:
                 proof_plan = self._generate_proof_plan(problem=problem, logger=logger)
                 lemma_plans : list[LemmaPlan] = proof_plan.lemma_plans
                 proven_lemmas : list[Lemma] = []
                 for lemma_plan in lemma_plans:
                     theorem_statement = lemma_plan.lemma
-                    problem.correctness_helper_lemmas.append(
+                    problem.isomorphism_helper_lemmas.append(
                         Lemma(statement=theorem_statement, proof="by sorry"))
                 if len(lemma_plans) > 0:
                     validation_result = self._submit(problem, time_remaining_in_ms)
@@ -175,11 +174,11 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
                 else:
                     proven_lemmas = []
                     proven_lemmas_str = ""
-                problem.correctness_helper_lemmas.clear()
+                problem.isomorphism_helper_lemmas.clear()
                 for proven_lemma in proven_lemmas:
-                    problem.correctness_helper_lemmas.append(proven_lemma)
+                    problem.isomorphism_helper_lemmas.append(proven_lemma)
                 if proof_plan is not None:
-                    full_proof_strategy = proof_plan.correctness_proof_strategy + proven_lemmas_str
+                    full_proof_strategy = proof_plan.isomorphism_proof_strategy + proven_lemmas_str
                 else:
                     full_proof_strategy = ""
                 proof, proof_found, time_remaining_in_ms = self._generate_proof(
@@ -190,7 +189,7 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
                     time_remaining_in_ms=time_remaining_in_ms,
                     theorem_name=self.lemma_name,
                     logger=logger)
-                problem.correctness_proof = proof
+                problem.isomorphism_proof = proof
             else:
                 proven_lemmas = []
                 proven_lemmas_str = ""
@@ -198,67 +197,65 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
             time_remaining_in_ms = timeout_in_ms - (elapsed_time * 1000)
             is_time_elapsed = time_remaining_in_ms <= 0
             proof_sample_count += 1
-        problem.correctness_proof = proof
+        problem.isomorphism_proof = proof
         self.generated_proof_problem_view = problem
         full_lean_code, _ = format_problem_as_lean_with_line_ranges(problem)
         report_dir = self.problem_view.report_dir
-        file_name = f"impl_gen_{self.problem_id}.lean"
+        file_name = f"iso_gen_{self.problem_id}.lean"
         file_path = os.path.join(report_dir, file_name)
         with open(file_path, "w") as f:
             f.write(full_lean_code)
         return proof
 
-    def _generate_impl(self, problem: LeanProblemView, logger: logging.Logger = None):
+    def _generate_spec(self, problem: LeanProblemView, logger: logging.Logger = None):
         logger = logger if logger else self.logger
-        if self.use_impl_planner:
-            implementation_plan = self._generate_impl_plan(problem=problem, logger=logger)
-            self.implementation_plan = implementation_plan
-        impl_simple_prompter = SimplePrompter(
-            main_sys_prompt_path=self.impl_prompt_settings.system_prompt_path,
-            example_conv_prompt_path=self.impl_prompt_settings.example_prompt_path,
-            temperature=self.impl_model_settings.temperature,
-            max_tokens_per_action=self.impl_prompt_settings.max_tokens_per_action,
-            max_history_messages=self.impl_prompt_settings.max_history_messages,
-            model_name=self.impl_model_settings.model_name,
-            secret_filepath=self.impl_model_settings.secret_path,
-            end_tokens=self.impl_prompt_settings.end_tokens,
+        if self.use_spec_planner:
+            isomorphism_plan = self._generate_spec_plan(problem=problem, logger=logger)
+            self.spec_plan = isomorphism_plan
+        iso_simple_prompter = SimplePrompter(
+            main_sys_prompt_path=self.spec_prompt_settings.system_prompt_path,
+            example_conv_prompt_path=self.spec_prompt_settings.example_prompt_path,
+            temperature=self.spec_model_settings.temperature,
+            max_tokens_per_action=self.spec_prompt_settings.max_tokens_per_action,
+            max_history_messages=self.spec_prompt_settings.max_history_messages,
+            model_name=self.spec_model_settings.model_name,
+            secret_filepath=self.spec_model_settings.secret_path,
+            end_tokens=self.spec_prompt_settings.end_tokens,
             logger=logger)
-        implementation_generator = ImplementerTool(
-            simple_prompter=impl_simple_prompter,
+        specification_generator = SpecGeneratorTool(
+            simple_prompter=iso_simple_prompter,
             logger=logger
         )
-        lean_code = implementation_generator.solve_intermediate(
+        lean_code = specification_generator.solve_intermediate(
             problem_statement=problem.problem_spec_nl,
-            problem_spec=problem.problem_spec_formal_ground_truth,
-            implementation_signature=problem.implementation_signature,
-            test_cases=problem.test_cases_lean,
-            implementation_plan=self.implementation_plan
+            spec_signature=problem.problem_spec_formal_generated,
+            spec_plan=self.spec_plan
         )
-        implementation_generator.reset()
+        specification_generator.reset()
         lean_code = lean_code.strip()
         return lean_code
 
-    def _generate_impl_plan(self, problem: LeanProblemView, logger: logging.Logger = None):
+    def _generate_spec_plan(self, problem: LeanProblemView, logger: logging.Logger = None):
         logger = logger if logger else self.logger
         impl_planner_simple_prompter = SimplePrompter(
-            main_sys_prompt_path=self.impl_planner_prompt_settings.system_prompt_path,
-            example_conv_prompt_path=self.impl_planner_prompt_settings.example_prompt_path,
-            temperature=self.impl_planner_model_settings.temperature,
-            max_tokens_per_action=self.impl_planner_prompt_settings.max_tokens_per_action,
-            max_history_messages=self.impl_planner_prompt_settings.max_history_messages,
-            model_name=self.impl_planner_model_settings.model_name,
-            secret_filepath=self.impl_planner_model_settings.secret_path,
-            end_tokens=self.impl_planner_prompt_settings.end_tokens,
+            main_sys_prompt_path=self.spec_planner_prompt_settings.system_prompt_path,
+            example_conv_prompt_path=self.spec_planner_prompt_settings.example_prompt_path,
+            temperature=self.spec_planner_model_settings.temperature,
+            max_tokens_per_action=self.spec_planner_prompt_settings.max_tokens_per_action,
+            max_history_messages=self.spec_planner_prompt_settings.max_history_messages,
+            model_name=self.spec_planner_model_settings.model_name,
+            secret_filepath=self.spec_planner_model_settings.secret_path,
+            end_tokens=self.spec_planner_prompt_settings.end_tokens,
             logger=logger
         )
-        impl_planner = ImplementationPlannerTool(
+        impl_planner = SpecificationPlannerTool(
             simple_prompter=impl_planner_simple_prompter,
             logger=logger
         )
         implementation_plan = impl_planner.solve_intermediate(
             problem_statement=problem.problem_spec_nl,
             problem_spec=problem.problem_spec_formal_ground_truth,
-            implementation_signature=problem.implementation_signature,
+            spec_signature=problem.implementation_signature,
             test_cases=problem.test_cases_lean
         )
         impl_planner.reset()
@@ -280,12 +277,12 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
             simple_prompter=proof_planner_simple_prompter,
             logger=logger
         )
-        raw_proof_plan, lemmas, lemma_plans, correctness_plan = proof_planner.solve_intermediate(
+        raw_proof_plan, lemmas, lemma_plans, isomorphism_proof_plan = proof_planner.solve_intermediate(
             problem_statement=problem.problem_spec_nl,
             problem_spec=problem.problem_spec_formal_ground_truth,
             implementation_signature=problem.implementation_signature,
             implementation=problem.implementation,
-            correctness_definition=problem.correctness_theorem
+            correctness_definition=problem.isomorphism_theorem
         )
         proof_planner.reset()
         lemma_plan_objs = []
@@ -302,7 +299,7 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
         proof_plan = ProofPlan(
             raw_proof_plan=raw_proof_plan,
             lemma_plans=lemma_plan_objs,
-            correctness_proof_strategy=correctness_plan
+            isomorphism_proof_strategy=isomorphism_proof_plan
         )
         return proof_plan
     
@@ -436,40 +433,40 @@ class PlanningCopraImplGenerator(ImplementationGenerationTask):
             end_tokens=self.prover_prompt_settings.end_tokens,
             logger=logger
         )
-        few_shot_prover = FewShotProverTool(
+        few_shot_prover = FewShotIsoProverTool(
             simple_prompter=few_shot_prover_simple_prompter,
             logger=logger
         )
-        # Find the lemma using lemma_name in correctness_helper_lemmas
+        # Find the lemma using lemma_name in isomorphism_helper_lemmas
         lemma_statement = None
         helper_lemma_idx = None
-        for idx, lemma in enumerate(problem.correctness_helper_lemmas):
+        for idx, lemma in enumerate(problem.isomorphism_helper_lemmas):
             lemma_name = self._get_lemma_name(lemma.statement)
             if lemma_name == theorem_name:
                 lemma_statement = lemma.statement
                 helper_lemma_idx = idx
                 break
         if lemma_statement is None:
-            lemma_statement = problem.correctness_theorem
+            lemma_statement = problem.isomorphism_theorem
         proof = few_shot_prover.solve_intermediate(
             problem_statement=problem.problem_spec_nl,
             problem_spec=problem.problem_spec_formal_ground_truth,
-            implementation=problem.implementation_signature + "\n" + problem.implementation,
+            generated_spec=problem.problem_spec_formal_generated,
             theorem_statement=lemma_statement,
             proof_plan=lemma_proof_strategy
         )
         problem_view_copy = copy.deepcopy(problem)
         if helper_lemma_idx is not None:
-            problem_view_copy.correctness_helper_lemmas[helper_lemma_idx].proof = proof 
-            for idx, lemma in enumerate(problem_view_copy.correctness_helper_lemmas):
+            problem_view_copy.isomorphism_helper_lemmas[helper_lemma_idx].proof = proof 
+            for idx, lemma in enumerate(problem_view_copy.isomorphism_helper_lemmas):
                 if idx != helper_lemma_idx:
-                    problem_view_copy.correctness_helper_lemmas[idx].proof = "\nby sorry"
+                    problem_view_copy.isomorphism_helper_lemmas[idx].proof = "\nby sorry"
             validation_result = self._submit(problem_view_copy, timeout_in_ms)
             proof_found = validation_result.compilation_ok
         else:
-            problem_view_copy.correctness_proof = proof
+            problem_view_copy.isomorphism_proof = proof
             validation_result = self._submit(problem_view_copy, timeout_in_ms)
-            proof_found = validation_result.compilation_ok and validation_result.correctness_ok
+            proof_found = validation_result.compilation_ok and validation_result.isomorphism_ok
         return proof, proof_found
 
     def _submit(self, problem: LeanProblemView, time_remaining_in_ms: int):

@@ -4,7 +4,7 @@ import re
 from clever_prover.prompters.simple_prompter import SimplePrompter
 from clever_prover.solver.abs_solver_and_tool import Tool
 
-class FewShotProverTool(Tool):
+class FewShotImplProverTool(Tool):
     generated_proof_regex = re.compile(r"\[PROOF\]\s*([\s\S]*?)\s*\[END\]", re.MULTILINE)
     def format_prompt(self, 
     problem_spec_nl: str, 
