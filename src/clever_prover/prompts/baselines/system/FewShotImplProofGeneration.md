@@ -42,8 +42,9 @@ You can first think about the problem in a general way and then write the proof.
 
 ```
 [THOUGHTS]
-The implementation should match the problem_spec in the first case because
+The implementation should match the problem_spec in the first case because ....
 The implementation should match the problem_spec in the second case because ....
+....
 [END THOUGHTS]
 ```
 

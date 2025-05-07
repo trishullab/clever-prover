@@ -36,6 +36,11 @@ theorem correctness
 : problem_spec implementation x :=
 
 `example_assistant`
+[THOUGHTS]
+This proof is easy.
+We should not generate any helper lemmas.
+[END THOUGHTS]
+
 [CORRECTNESS PLAN]
 1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
 2. Early on, you will want to break the proof up into cases based on whether `x` is positive, negative, or zero.
@@ -82,6 +87,11 @@ theorem correctness
 :=
 
 `example_assistant`
+[THOUGHTS]
+This proof has moderate difficulty.
+We should generate a single helper lemma that shows equivalence between a computable fibonacci definition and the built-in non-computable `fibonacci_non_computable`.
+[END THOUGHTS]
+
 [HELPER LEMMA PLAN]
 Prove a `fib_comp_to_non_comp` lemma that states that given a computable function `f : Nat → Nat` that follows the Fibonacci base cases (`f 0 = 1`, `f 1 = 1`) and recursive case (`∀ n, f (n + 2) = f n + f (n + 1)`), the built-in Lean 4 function `fibonacci_non_computable` called on `n` and `(f n)` outputs `True` (for all `n`).
 1. Use induction and break the proof up into the base cases and the recursive case.
@@ -161,6 +171,15 @@ theorem correctness
 :=
 
 `example_assistant`
+[THOUGHTS]
+This proof is very difficult.
+We should generate a helper lemma that states that decreasing the threshold by an integer yields the same output of `implementation.loop` as increasing the score by the same integer.
+We should generate a helper lemma that compares the value of `implementation.loop` across one iteration; it will either stay constant or increase by 1, depending on whether the score reaches the threshold.
+We should generate a helper lemma that states that the output of `implementation.loop` will always be greater than or equal to the coin count input.
+We should generate a helper lemma that states that if the output of `implementation.loop` is exactly equal to the coin count input, then the input score plus the prefix sum of the score changes list up to any index must be less than the threshold.
+We should generate a helper lemma that states that if the output of `implementation.loop` is strictly greater than the coin count input, then there exists an index at which the coin count output by `implementation.loop` increased by 1 and all previous indices did not change the coin count output of `implementation.loop`.
+[END THOUGHTS]
+
 [HELPER LEMMA PLAN]
 Prove an `implementation_loop_threshold_invariant` lemma that states that for all integers `k`, decreasing the threshold by `k` yields the same output of `implementation.loop` as increasing the score by `k`.
 1. Use induction and break the proof up into cases based on whether the head plus the cumulative score reaches the threshold.
@@ -195,7 +214,7 @@ implementation.loop (head :: score_changes_tail) threshold score coins =
 [END HELPER LEMMA]
 
 [HELPER LEMMA PLAN]
-Prove an `implementation_loop_coin_monotonic_increasing` lemma that states that the output of `implementation.loop` will always be greater then or equal to the coin count input.
+Prove an `implementation_loop_coin_monotonic_increasing` lemma that states that the output of `implementation.loop` will always be greater than or equal to the coin count input.
 1. Use induction and break the proof up into cases based on whether the head plus the cumulative score reaches the threshold.
 [HELPER LEMMA]
 lemma implementation_loop_coin_monotonic_increasing
@@ -289,6 +308,11 @@ theorem correctness
 : problem_spec implementation x y:=
 
 `example_assistant`
+[THOUGHTS]
+This proof is easy.
+We should not generate any helper lemmas.
+[END THOUGHTS]
+
 [CORRECTNESS PLAN]
 1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
 2. Simplify the goal.

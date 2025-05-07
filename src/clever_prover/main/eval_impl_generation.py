@@ -10,7 +10,7 @@ from clever_prover.main.parse_config import parse_config, parse_impl_generation_
 from itp_interface.tools.log_utils import setup_logger
 
 # @hydra.main(config_path="configs", config_name="few_shot_impl_generation", version_base="1.2")
-@hydra.main(config_path="configs", config_name="few_shot_impl_few_shot_proof", version_base="1.2")
+@hydra.main(config_path="configs", config_name="few_shot_impl_proof_plan_copra_proof", version_base="1.2")
 def main(cfg):
     log_dir = cfg["log_dir"] if "log_dir" in cfg else "./.logs/eval_impl_generation"
     exp_name = cfg["exp_name"] if "exp_name" in cfg else "eval_few_shot_impl_generation"
