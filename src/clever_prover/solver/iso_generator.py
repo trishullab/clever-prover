@@ -116,6 +116,10 @@ class IsoGenerator(SpecGenerationTask):
             time_remaining_in_ms = timeout_in_ms - (elapsed_time * 1000)
             is_time_elapsed = time_remaining_in_ms <= 0
             spec_sample_count += 1
+            if spec_stable:
+                logger.info("Isomorphism spec generation succeeded.")
+            else:
+                logger.info("Isomorphism spec generation failed.")
         self.generated_spec = lean_code
         self.generated_spec_problem_view = problem
         return lean_code

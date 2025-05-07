@@ -54,18 +54,10 @@ We can start with defining the fibonacci sequence as a helper definition, and
 then we can use it to write the specification.
 [END THOUGHTS]
 
-[HELPER DEFINITIONS]
-inductive fibonacci_non_computable : ℕ → ℕ → Prop
-| base0 : fibonacci_non_computable 0 0
-| base1 : fibonacci_non_computable 1 1
-| step  : ∀ n f₁ f₂, fibonacci_non_computable n f₁ →
-fibonacci_non_computable (n + 1) f₂ →
-fibonacci_non_computable (n + 2) (f₁ + f₂)
-[END HELPER DEFINITIONS]
-
 [GENERATED SPECIFICATION]
 let spec (result: Nat) :=
-fibonacci_non_computable n result
+(n ≤ 1 → result = n) ∧
+(1 < n → (result = impl (n - 1) + impl (n - 2)))
 -- program terminates
 ∃ result, impl n = result ∧
 -- return value satisfies spec

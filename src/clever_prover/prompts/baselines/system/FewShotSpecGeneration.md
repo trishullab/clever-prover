@@ -26,14 +26,6 @@ is only checked for the valid inputs ....
 [END THOUGHTS]
 ```
 
-Followed by some optional Lean 4 helper definitions which can be used while writing the proposition:
-```
-[HELPER DEFINITIONS]
--- Optional helper definitions
-def <some_helper> : <type> := <value>
-[END DEFINITIONS]
-```
-
 Finally, write the generated specification in the following format:
 ```
 [GENERATED SPECIFICATION]
