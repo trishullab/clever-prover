@@ -7,13 +7,24 @@ from clever_prover.prompters.prompter import Prompter
 from clever_prover.utils import string_utils
 
 class ProofPlannerTool(Tool):
-    user_prompt_format = """[NL DESCRIPTION]
+    user_prompt_format_impl = """[NL DESCRIPTION]
 {}
 
 [SPECIFICATION]
 {}
 
 [IMPLEMENTATION]
+{}
+
+[THEOREM STATEMENT]
+{}"""
+    user_prompt_format_spec = """[NL DESCRIPTION]
+{}
+
+[GROUND TRUTH SPECIFICATION]
+{}
+
+[GENERATED SPECIFICATION]
 {}
 
 [THEOREM STATEMENT]
@@ -28,12 +39,14 @@ class ProofPlannerTool(Tool):
         self.logger = logger
         self.history = []
     
-    def get_prompt(self, history: list[dict[str, str]], problem_statement: str, problem_spec: str, implementation_signature: str, implementation: str, correctness_definition: str) -> list[dict[str, str]]:
-        full_implementation = implementation_signature + "\n" + implementation
-        history.append({"role": "user", "content": ProofPlannerTool.user_prompt_format.format(problem_statement, problem_spec, full_implementation, correctness_definition)})
+    def get_prompt(self, history: list[dict[str, str]], problem_statement: str, problem_spec: str, full_implementation_or_generated_spec: str, correctness_or_isomorphism_definition: str, is_impl_proof_planner: bool) -> list[dict[str, str]]:
+        if is_impl_proof_planner:
+            history.append({"role": "user", "content": ProofPlannerTool.user_prompt_format_impl.format(problem_statement, problem_spec, full_implementation_or_generated_spec, correctness_or_isomorphism_definition)})
+        else:
+            history.append({"role": "user", "content": ProofPlannerTool.user_prompt_format_spec.format(problem_statement, problem_spec, full_implementation_or_generated_spec, correctness_or_isomorphism_definition)})
         return history
 
-    def parse_response(self, response: str):
+    def parse_response(self, response: str, is_impl_proof_planner: bool):
         raw_response = response.strip()
         lemmas = []
         lemma_plans = []
@@ -48,12 +61,13 @@ class ProofPlannerTool(Tool):
                 response = response[(lemma_end_ind + len("[END HELPER LEMMA]")):]
             lemma_plan_start_ind = response.find("[HELPER LEMMA PLAN]")
         
-        correctness_plan = "N/A"
-        correctness_plan_start_ind = response.find("[CORRECTNESS PLAN]")
-        if correctness_plan_start_ind != -1:
-            correctness_plan_response = response[(correctness_plan_start_ind + len("[CORRECTNESS PLAN]")):]
-            correctness_plan = correctness_plan_response.strip()
-        return raw_response, lemmas, lemma_plans, correctness_plan
+        correctness_or_isomorphism_plan = "N/A"
+        correctness_or_isomorphism_keyword = "[CORRECTNESS PLAN]" if is_impl_proof_planner else "[ISOMORPHISM PLAN]"
+        correctness_or_isomorphism_plan_start_ind = response.find(correctness_or_isomorphism_keyword)
+        if correctness_or_isomorphism_plan_start_ind != -1:
+            correctness_or_isomorphism_plan_response = response[(correctness_or_isomorphism_plan_start_ind + len(correctness_or_isomorphism_keyword)):]
+            correctness_or_isomorphism_plan = correctness_or_isomorphism_plan_response.strip()
+        return raw_response, lemmas, lemma_plans, correctness_or_isomorphism_plan
 
     # def parse_response_thoughts(self, response: str):
     #     raw_response = response.strip()
@@ -67,20 +81,20 @@ class ProofPlannerTool(Tool):
     #         correctness_plan = correctness_plan_response.strip()
     #     return raw_response, lemmas, lemma_plans, correctness_plan
 
-    def solve_intermediate(self, 
-        problem_statement: str, 
-        problem_spec: str, 
-        implementation_signature: str, 
-        implementation: str, 
-        correctness_definition: str) -> typing.Tuple[str, list[str], list[str], str]:
-        self.history = self.get_prompt(self.history, problem_statement, problem_spec, implementation_signature, implementation, correctness_definition)
+    def solve_intermediate(self,
+        problem_statement: str,
+        problem_spec: str,
+        full_implementation_or_generated_spec: str,
+        correctness_or_isomorphism_definition: str,
+        is_impl_proof_planner: bool) -> typing.Tuple[str, list[str], list[str], str]:
+        self.history = self.get_prompt(self.history, problem_statement, problem_spec, full_implementation_or_generated_spec, correctness_or_isomorphism_definition, is_impl_proof_planner)
         # Get the model response
         message = self.history[-1]["content"]
         response = self.simple_prompter.run_prompt(message)
         self.history.append(response[0])
         generated_text = response[0]["content"]
         self.logger.info(f"[PROOF PLANNER] Proof plan generated:\n{generated_text}")
-        return self.parse_response(generated_text) # if use_proof_planner else self.parse_response_thoughts(generated_text)
+        return self.parse_response(generated_text, is_impl_proof_planner) # if use_proof_planner else self.parse_response_thoughts(generated_text)
 
     def reset(self):
         self.history = []

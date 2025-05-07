@@ -37,8 +37,8 @@ params:
     secret_path: ".secrets/openai_key.json"
     temperature: 0.9
   proof_planner_prompt_settings:
-    system_prompt_path: "src/clever_prover/prompts/clever_prompts/system/ProofPlanner.md"
-    example_prompt_path: "src/clever_prover/prompts/clever_prompts/examples/ProofPlanner.md"
+    system_prompt_path: "src/clever_prover/prompts/clever_prompts/system/ImplProofPlanner.md"
+    example_prompt_path: "src/clever_prover/prompts/clever_prompts/examples/ImplProofPlanner.md"
     max_tokens_per_action: 10000
     max_history_messages: 0
     end_tokens: ["[END]"]

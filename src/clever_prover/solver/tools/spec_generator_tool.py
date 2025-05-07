@@ -11,7 +11,7 @@ class SpecGeneratorTool(Tool):
             spec_plan: str = None,
     ):
         prompt = "[NL DESCRIPTION]\n" \
-        f"{problem_spec_nl}\n" \
+        f"{problem_spec_nl}\n\n" \
         "[SPECIFICATION SIGNATURE]\n" \
         f"{spec_signature}\n"
         if spec_plan is not None:

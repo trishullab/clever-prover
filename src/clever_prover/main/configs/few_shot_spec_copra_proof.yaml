@@ -7,7 +7,8 @@ log_dir: ".logs/eval_few_shot_spec_copra_proof"
 exp_name: "few_shot_spec_copra_proof"
 spec_generation_strategy: "IsoGenerator"
 # problems_to_solve: "*"
-problems_to_solve: [2, 8, 17, 23, 26, 30, 41, 45, 65]
+# problems_to_solve: [2, 8, 17, 23, 26, 30, 41, 45, 65]
+problems_to_solve: [2]
 k: 1
 timeout_in_ses: 1000
 params:
