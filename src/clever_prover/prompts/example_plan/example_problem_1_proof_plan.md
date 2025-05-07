@@ -4,7 +4,7 @@ Prove an `implementation_loop_threshold_invariant` lemma that states that for al
 Prove an `implementation_loop_simple_increment` lemma that compares the value of `implementation.loop` across one iteration. It will either stay constant or increase by 1, depending on whether the score reaches the threshold; this lemma should prove both cases.
   - For the second case, use induction and break the proof up into cases based on whether the head plus the next head plus the cumulative score reaches the threshold.
 
-Prove an `implementation_loop_coin_monotonic_increasing` lemma that states that the output of `implementation.loop` will always be greater then or equal to the coin count input.
+Prove an `implementation_loop_coin_monotonic_increasing` lemma that states that the output of `implementation.loop` will always be greater than or equal to the coin count input.
   - Use induction and break the proof up into cases based on whether the head plus the cumulative score reaches the threshold.
 
 Prove an `implementation_loop_invariant_stop` lemma that states that if the output of `implementation.loop` is exactly equal to the coin count input, then for all indices `i`, the input score plus the prefix sum of the score changes list up to index `i` must be less than the threshold.

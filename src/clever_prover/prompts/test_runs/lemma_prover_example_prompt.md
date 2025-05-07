@@ -221,7 +221,7 @@ lemma implementation_loop_coin_monotonic_increasing
 [END]
 
 [PLAN]
-Prove an `implementation_loop_coin_monotonic_increasing` lemma that states that the output of `implementation.loop` will always be greater then or equal to the coin count input.
+Prove an `implementation_loop_coin_monotonic_increasing` lemma that states that the output of `implementation.loop` will always be greater than or equal to the coin count input.
   - Use induction and break the proof up into cases based on whether the head plus the cumulative score reaches the threshold.
 [END]
 
