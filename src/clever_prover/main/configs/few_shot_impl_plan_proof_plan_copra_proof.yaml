@@ -28,7 +28,7 @@ params:
     temperature: 0.75
   prover_prompt_settings:
     system_prompt_path: "src/clever_prover/prompts/clever_prompts/system/Copra.md"
-    example_prompt_path: "src/clever_prover/prompts/clever_prompts/examples/Copra.md"
+    example_prompt_path: "src/clever_prover/prompts/clever_prompts/examples/ImplCopra.md"
     max_tokens_per_action: 400
     max_history_messages: 0
     end_tokens: ["[END]"]
