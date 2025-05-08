@@ -284,9 +284,9 @@ class IsoGenerator(SpecGenerationTask):
         raw_proof_plan, lemmas, lemma_plans, isomorphism_proof_plan = proof_planner.solve_intermediate(
             problem_statement=problem.problem_spec_nl,
             problem_spec=problem.problem_spec_formal_ground_truth,
-            implementation_signature=problem.implementation_signature,
-            implementation=problem.implementation,
-            correctness_definition=problem.isomorphism_theorem
+            full_implementation_or_generated_spec=problem.problem_spec_formal_generated,
+            correctness_or_isomorphism_definition=problem.isomorphism_theorem,
+            is_impl_proof_planner=False
         )
         proof_planner.reset()
         lemma_plan_objs = []
@@ -481,9 +481,9 @@ class IsoGenerator(SpecGenerationTask):
         return validation_result
 
     def _get_lemma_name(self, lemma: str):
-            match = Lean4SyncExecutor.theorem_name_match.match(lemma)
-            if match:
-                lemma_name = match.group(4).strip()
-                return lemma_name
-            else:
-                raise ValueError(f"Invalid lemma name format: {lemma}. Expected format: 'theorem <name> : <type>'")
+        match = Lean4SyncExecutor.theorem_name_match.match(lemma)
+        if match:
+            lemma_name = match.group(4).strip()
+            return lemma_name
+        else:
+            raise ValueError(f"Invalid lemma name format: {lemma}. Expected format: 'theorem <name> : <type>'")

@@ -28,9 +28,9 @@ def generated_spec(impl : <function_signature>) (input : <input_type>) : Prop :=
 <generated_specification>
 ```
 
-4. Finally, the isomorphism statement in Lean 4
+4. Finally, the isomorphism theorem statement in Lean 4
 ```
-[ISOMORPHISM STATEMENT]
+[THEOREM STATEMENT]
 theorem spec_isomorphism:
 ∀ impl,
 (∀ input, problem_spec impl input) ↔

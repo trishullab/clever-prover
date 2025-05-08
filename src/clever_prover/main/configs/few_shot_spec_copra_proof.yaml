@@ -7,7 +7,8 @@ log_dir: ".logs/eval_few_shot_spec_copra_proof"
 exp_name: "few_shot_spec_copra_proof"
 spec_generation_strategy: "IsoGenerator"
 # problems_to_solve: "*"
-problems_to_solve: [2, 8, 17, 23, 26, 30, 41, 45, 65]
+# problems_to_solve: [2, 8, 17, 23, 26, 30, 41, 45, 65]
+problems_to_solve: [2]
 k: 1
 timeout_in_ses: 1000
 params:
@@ -27,7 +28,7 @@ params:
     temperature: 0.75
   prover_prompt_settings:
     system_prompt_path: "src/clever_prover/prompts/clever_prompts/system/Copra.md"
-    example_prompt_path: "src/clever_prover/prompts/clever_prompts/examples/Copra.md"
+    example_prompt_path: "src/clever_prover/prompts/clever_prompts/examples/SpecCopra.md"
     max_tokens_per_action: 400
     max_history_messages: 0
     end_tokens: ["[END]"]
