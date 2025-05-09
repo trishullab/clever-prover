@@ -13,6 +13,13 @@ from clever_prover.main.checkpoint import CheckpointWrapper, ExecutionInfo
 from clever_prover.main.parse_config import parse_config, parse_spec_generation_class, parse_impl_generation_class, TaskType
 from itp_interface.tools.log_utils import setup_logger
 
+def save_checkpoint(problem_idx: int, execution_info: ExecutionInfo, checkpoint_wrapper: CheckpointWrapper, logger: logging.Logger):
+    logger.info(f"Saving results for problem {problem_idx} to checkpoint.")
+    checkpoint_wrapper.add(execution_info)
+    checkpoint_wrapper.save()
+    logger.info(f"Checkpoint saved to {checkpoint_wrapper.save_path}")
+
+
 @ray.remote
 def eval_spec_generation(
         cfg, 
@@ -61,12 +68,14 @@ def eval_spec_generation(
     else:
         logger.error("Spec Generation failed.")
         logger.error(f"Spec Compilation Error: {validation_result.error_message[-300:]}")
+        save_checkpoint(idx, execution_info, checkpoint_wrapper, logger)
         return validation_result
         # No point in even attempting the proof if the spec generation failed
     logger.info(f"For problem {idx}, proof generation will be attempted.")
     logger.info(f"Time remaining for proof generation: {timeout_in_secs} seconds")
     if timeout_in_secs <= 0:
         logger.error("Timeout for proof generation reached. Skipping proof generation.")
+        save_checkpoint(idx, execution_info, checkpoint_wrapper, logger)
         return validation_result
     start_time = time.time()
     _ = spec_generation_task.generate_spec_isomorphism_proof(timeout_in_ms=timeout_in_secs * 1000, logger=logger)
@@ -87,10 +96,7 @@ def eval_spec_generation(
         logger.error(f"Proof error: {validation_result.error_message[-300:]}")
     else:
         logger.info(f"Problem {idx} was solved successfully.")
-    logger.info(f"Saving results for problem {idx} to checkpoint.")
-    checkpoint_wrapper.add(execution_info)
-    checkpoint_wrapper.save()
-    logger.info(f"Checkpoint saved to {checkpoint_wrapper.save_path}")
+    save_checkpoint(idx, execution_info, checkpoint_wrapper, logger)
     return validation_result
 
 @ray.remote
@@ -141,12 +147,14 @@ def eval_impl_generation(
     else:
         logger.error("Implementation Generation failed.")
         logger.error(f"Implementation Compilation Error: {validation_result.error_message[-300:]}")
+        save_checkpoint(idx, execution_info, checkpoint_wrapper, logger)
         return validation_result
     timeout_in_secs = max(0, timeout_in_secs - generation_time)
     logger.info(f"For problem {idx}, proof generation will be attempted.")
     logger.info(f"Time remaining for proof generation: {timeout_in_secs} seconds")
     if timeout_in_secs <= 0:
         logger.error("Timeout for proof generation reached. Skipping proof generation.")
+        save_checkpoint(idx, execution_info, checkpoint_wrapper, logger)
         return validation_result
     # No point in even attempting the proof if the implementation generation failed
     start_time = time.time()
@@ -170,10 +178,7 @@ def eval_impl_generation(
         logger.error(f"Proof error: {validation_result.error_message[-300:]}")
     else:
         logger.info(f"Problem {idx} was solved successfully.")
-    logger.info(f"Saving results for problem {idx} to checkpoint.")
-    checkpoint_wrapper.add(execution_info)
-    checkpoint_wrapper.save()
-    logger.info(f"Checkpoint saved to {checkpoint_wrapper.save_path}")
+    save_checkpoint(idx, execution_info, checkpoint_wrapper, logger)
     return validation_result
 
 @hydra.main(config_path="configs", config_name="few_shot_spec_proof_plan_copra_proof", version_base="1.2")
@@ -205,12 +210,20 @@ def main(cfg):
     timeout_in_secs = cfg["timeout_in_secs"] if "timeout_in_secs" in cfg else 600    
     k = cfg["k"] if "k" in cfg else 1
     if problems_to_solve == "*":
-        problems_to_solve = list(range(len(benchmark.problems)))
+        problems_to_solve = [x.problem_id for x in benchmark.problems]
     else:
+        valid_problem_id = set(x.problem_id for x in benchmark.problems)
         assert all(isinstance(x, int) for x in problems_to_solve), "problems_to_solve should be a list of integers"
-        assert all(x < len(benchmark.problems) for x in problems_to_solve), "problems_to_solve should be a list of integers less than the number of problems"
         assert all(x >= 0 for x in problems_to_solve), "problems_to_solve should be a list of integers greater than or equal to 0"
-        problems_to_solve = list(set(problems_to_solve))
+        assert all(x in valid_problem_id for x in problems_to_solve), f"problems_to_solve should be a list of integers in {valid_problem_id}"
+        problems_to_solve_set = set()
+        ordered_problems_to_solve = []
+        for problem_idx in problems_to_solve:
+            if problem_idx in problems_to_solve_set:
+                continue
+            problems_to_solve_set.add(problem_idx)
+            ordered_problems_to_solve.append(problem_idx)
+        problems_to_solve = ordered_problems_to_solve
     compilation_timeout = 150*1000 # 150 seconds
     for attempt_idx in range(k):
         remotes = []
