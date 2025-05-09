@@ -32,6 +32,12 @@ def eval_spec_generation(
         compilation_timeout: int,
         checkpoint_actor: ray.actor.ActorHandle, 
         save_path: str):
+    if "proof_dump_file_path" in hyper_params:
+        filename = hyper_params["proof_dump_file_path"]
+        filename = str(os.path.basename(filename))
+        filename = filename.split(".")[0]
+        final_filename = f"{filename}_{idx}.{filename.split('.')[-1]}"
+        hyper_params["proof_dump_file_path"] = os.path.join(logging_dir, final_filename)
     checkpoint_wrapper = CheckpointWrapper(actor=checkpoint_actor, save_path=save_path)
     spec_generation_strategy = parse_spec_generation_class(cfg)
     logger = setup_logger(
@@ -111,6 +117,12 @@ def eval_impl_generation(
         compilation_timeout: int,
         checkpoint_actor: ray.actor.ActorHandle, 
         save_path: str):
+    if "proof_dump_file_path" in hyper_params:
+        filename = hyper_params["proof_dump_file_path"]
+        filename = str(os.path.basename(filename))
+        filename = filename.split(".")[0]
+        final_filename = f"{filename}_{idx}.{filename.split('.')[-1]}"
+        hyper_params["proof_dump_file_path"] = os.path.join(logging_dir, final_filename)
     # Similar to eval_spec_generation but for implementation generation
     checkpoint_wrapper = CheckpointWrapper(actor=checkpoint_actor, save_path=save_path)
     impl_generation_strategy = parse_impl_generation_class(cfg)
