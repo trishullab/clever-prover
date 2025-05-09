@@ -182,7 +182,7 @@ def main(cfg):
     exp_name = cfg["exp_name"] if "exp_name" in cfg else "eval_few_shot_spec_generation"
     checkpoint_dir = cfg["checkpoint_dir"] if "checkpoint_dir" in cfg else "./.logs/checkpoints"
     os.makedirs(checkpoint_dir, exist_ok=True)
-    checkpoint_file = os.path.join(checkpoint_dir, f"{exp_name}.json")
+    checkpoint_file = os.path.join(checkpoint_dir, f"{exp_name}.jsonl")
     checkpoint = CheckpointWrapper.from_file(checkpoint_file)
     timestr = time.strftime("%Y-%m-%d_%H-%M-%S")
     log_dir = os.path.join(log_dir, timestr)
@@ -212,7 +212,7 @@ def main(cfg):
         assert all(x >= 0 for x in problems_to_solve), "problems_to_solve should be a list of integers greater than or equal to 0"
         problems_to_solve = list(set(problems_to_solve))
     compilation_timeout = 150*1000 # 150 seconds
-    for attempt_idx in range(1, k + 1):
+    for attempt_idx in range(k):
         remotes = []
         for idx in problems_to_solve:
             if checkpoint.is_attempted_k_times(idx, attempt_idx + 1):
