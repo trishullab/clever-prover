@@ -26,7 +26,7 @@ def main(cfg):
         component=TaskComponent.SPEC_ISOMORPHISM,
         report_dir=test_report_dir
     )
-    hyper_params = parse_config(cfg)
+    task_type, hyper_params = parse_config(cfg)
     if "proof_dump_file_path" in hyper_params:
         hyper_params["proof_dump_file_path"] = os.path.join(log_dir, hyper_params["proof_dump_file_path"])
     problems_to_solve = cfg["problems_to_solve"] if "problems_to_solve" in cfg else "*"
