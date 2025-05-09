@@ -43,9 +43,9 @@ class ImplementationGenerationStrategy(Enum):
 def parse_config(cfg):
     task_type = TaskType(cfg["task_type"])
     if task_type == TaskType.SPEC_ISOMORPHISM:
-        return parse_spec_isomorphism_config(cfg)
+        return task_type, parse_spec_isomorphism_config(cfg)
     elif task_type == TaskType.IMPL_CORRECTNESS:
-        return parse_impl_correctness_config(cfg)
+        return task_type, parse_impl_correctness_config(cfg)
     else:
         raise ValueError(f"Unknown task type: {task_type}")
 

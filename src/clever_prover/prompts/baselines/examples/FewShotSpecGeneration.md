@@ -112,4 +112,30 @@ else
 spec score_changes threshold result
 [END]
 
+`example_user`
+[NL DESCRIPTION]
+def is_square(x: int, y: int) -> bool
+"""
+Given two integers x and y, your task is to find if x is a square of y.
+The function should return true if x is a square of y, otherwise false.
+"""
+
+[SPECIFICATION SIGNATURE]
+def generated_spec
+-- function signature
+(impl: Int → Int → Bool)
+-- inputs
+(x: Int)
+(y: Int) : Prop :=
+
+`example_assistant`
+[THOUGHTS]
+Here, we need to check if x is a square of y.
+We can write a specification which checks if x is equal to y * y.
+[END THOUGHTS]
+
+[GENERATED SPECIFICATION]
+impl x y = if x = y * y then true else false
+[END]
+
 `conv end`
