@@ -869,11 +869,7 @@ Goals to prove:
 [HYPOTHESIS] n m : ℕ
 
 [INFORMAL-THEOREM]
-Given an integer n, your task is to find the nth Fibonacci number.
-The Fibonacci sequence is defined as follows:
-- F(0) = 1
-- F(1) = 1
-- F(n) = F(n-1) + F(n-2) for n > 1
+Prove a `fib_rec_unique` lemma that states the recursive property of Fibonacci numbers fully using `fibonacci_non_computable`.
 
 [FORMAL-THEOREM]
 inductive fibonacci_non_computable : ℕ → ℕ → Prop
@@ -909,7 +905,6 @@ lemma fib_rec_unique (n m : ℕ):
   m = f₁ + f₂
 
 [INFORMAL-PROOF]
-Prove a `fib_rec_unique` lemma that states the recursive property of Fibonacci numbers fully using `fibonacci_non_computable`.
 1. Start by splitting the "iff".
 2. Use `fibonacci_non_computable.step`.
 
@@ -945,11 +940,7 @@ fibonacci_non_computable (n + 2) m
 [HYPOTHESIS] h : ∃ f₁ f₂, fibonacci_non_computable n f₁ ∧ fibonacci_non_computable (n + 1) f₂ ∧ m = f₁ + f₂
 
 [INFORMAL-THEOREM]
-Given an integer n, your task is to find the nth Fibonacci number.
-The Fibonacci sequence is defined as follows:
-- F(0) = 1
-- F(1) = 1
-- F(n) = F(n-1) + F(n-2) for n > 1
+Prove a `fib_rec_unique` lemma that states the recursive property of Fibonacci numbers fully using `fibonacci_non_computable`.
 
 [FORMAL-THEOREM]
 inductive fibonacci_non_computable : ℕ → ℕ → Prop
@@ -985,7 +976,6 @@ lemma fib_rec_unique (n m : ℕ):
   m = f₁ + f₂
 
 [INFORMAL-PROOF]
-Prove a `fib_rec_unique` lemma that states the recursive property of Fibonacci numbers fully using `fibonacci_non_computable`.
 1. Start by splitting the "iff".
 2. Use `fibonacci_non_computable.step`.
 
@@ -1027,11 +1017,7 @@ fibonacci_non_computable (n + 2) (f₁ + f₂)
 [HYPOTHESIS] h_eq : m = f₁ + f₂
 
 [INFORMAL-THEOREM]
-Given an integer n, your task is to find the nth Fibonacci number.
-The Fibonacci sequence is defined as follows:
-- F(0) = 1
-- F(1) = 1
-- F(n) = F(n-1) + F(n-2) for n > 1
+Prove a `fib_rec_unique` lemma that states the recursive property of Fibonacci numbers fully using `fibonacci_non_computable`.
 
 [FORMAL-THEOREM]
 inductive fibonacci_non_computable : ℕ → ℕ → Prop
@@ -1067,7 +1053,6 @@ lemma fib_rec_unique (n m : ℕ):
   m = f₁ + f₂
 
 [INFORMAL-PROOF]
-Prove a `fib_rec_unique` lemma that states the recursive property of Fibonacci numbers fully using `fibonacci_non_computable`.
 1. Start by splitting the "iff".
 2. Use `fibonacci_non_computable.step`.
 
@@ -1108,11 +1093,7 @@ Goals to prove:
 [HYPOTHESIS] n : ℕ
 
 [INFORMAL-THEOREM]
-Given an integer n, your task is to find the nth Fibonacci number.
-The Fibonacci sequence is defined as follows:
-- F(0) = 1
-- F(1) = 1
-- F(n) = F(n-1) + F(n-2) for n > 1
+Prove a `fib_inversion` lemma that states that the `n`th Fibonacci number is unique, according to `fibonacci_non_computable`.
 
 [FORMAL-THEOREM]
 inductive fibonacci_non_computable : ℕ → ℕ → Prop
@@ -1146,7 +1127,6 @@ lemma fib_inversion (n f₁ f₂ : ℕ)
   f₁ = f₂
 
 [INFORMAL-PROOF]
-Prove a `fib_inversion` lemma that states that the `n`th Fibonacci number is unique, according to `fibonacci_non_computable`.
 1. Use strong induction on `n`.
 2. Use the `fib_rec_unique` lemma.
 
@@ -1192,11 +1172,7 @@ n' = 0 ∨ n' = 1
 [HYPOTHESIS] h' : fibonacci_non_computable n' f₂
 
 [INFORMAL-THEOREM]
-Given an integer n, your task is to find the nth Fibonacci number.
-The Fibonacci sequence is defined as follows:
-- F(0) = 1
-- F(1) = 1
-- F(n) = F(n-1) + F(n-2) for n > 1
+Prove a `fib_inversion` lemma that states that the `n`th Fibonacci number is unique, according to `fibonacci_non_computable`.
 
 [FORMAL-THEOREM]
 inductive fibonacci_non_computable : ℕ → ℕ → Prop
@@ -1230,7 +1206,6 @@ lemma fib_inversion (n f₁ f₂ : ℕ)
   f₁ = f₂
 
 [INFORMAL-PROOF]
-Prove a `fib_inversion` lemma that states that the `n`th Fibonacci number is unique, according to `fibonacci_non_computable`.
 1. Use strong induction on `n`.
 2. Use the `fib_rec_unique` lemma.
 
@@ -1279,11 +1254,7 @@ f₁ = f₂
 [HYPOTHESIS] h' : fibonacci_non_computable (n'' + 2) f₂
 
 [INFORMAL-THEOREM]
-Given an integer n, your task is to find the nth Fibonacci number.
-The Fibonacci sequence is defined as follows:
-- F(0) = 1
-- F(1) = 1
-- F(n) = F(n-1) + F(n-2) for n > 1
+Prove a `fib_inversion` lemma that states that the `n`th Fibonacci number is unique, according to `fibonacci_non_computable`.
 
 [FORMAL-THEOREM]
 inductive fibonacci_non_computable : ℕ → ℕ → Prop
@@ -1317,7 +1288,6 @@ lemma fib_inversion (n f₁ f₂ : ℕ)
   f₁ = f₂
 
 [INFORMAL-PROOF]
-Prove a `fib_inversion` lemma that states that the `n`th Fibonacci number is unique, according to `fibonacci_non_computable`.
 1. Use strong induction on `n`.
 2. Use the `fib_rec_unique` lemma.
 

@@ -94,6 +94,7 @@ We should generate a single helper lemma that shows equivalence between a comput
 
 [HELPER LEMMA PLAN]
 Prove a `fib_comp_to_non_comp` lemma that states that given a computable function `f : Nat → Nat` that follows the Fibonacci base cases (`f 0 = 1`, `f 1 = 1`) and recursive case (`∀ n, f (n + 2) = f n + f (n + 1)`), the built-in Lean 4 function `fibonacci_non_computable` called on `n` and `(f n)` outputs `True` (for all `n`).
+===
 1. Use induction and break the proof up into the base cases and the recursive case.
 [HELPER LEMMA]
 lemma fib_comp_to_non_comp (n : ℕ)
@@ -182,6 +183,7 @@ We should generate a helper lemma that states that if the output of `implementat
 
 [HELPER LEMMA PLAN]
 Prove an `implementation_loop_threshold_invariant` lemma that states that for all integers `k`, decreasing the threshold by `k` yields the same output of `implementation.loop` as increasing the score by `k`.
+===
 1. Use induction and break the proof up into cases based on whether the head plus the cumulative score reaches the threshold.
 [HELPER LEMMA]
 lemma implementation_loop_threshold_invariant
@@ -197,6 +199,7 @@ lemma implementation_loop_threshold_invariant
 
 [HELPER LEMMA PLAN]
 Prove an `implementation_loop_simple_increment` lemma that compares the value of `implementation.loop` across one iteration. It will either stay constant or increase by 1, depending on whether the score reaches the threshold; this lemma should prove both cases.
+===
 1. For the second case, use induction and break the proof up into cases based on whether the head plus the next head plus the cumulative score reaches the threshold.
 [HELPER LEMMA]
 lemma implementation_loop_simple_increment
@@ -215,6 +218,7 @@ implementation.loop (head :: score_changes_tail) threshold score coins =
 
 [HELPER LEMMA PLAN]
 Prove an `implementation_loop_coin_monotonic_increasing` lemma that states that the output of `implementation.loop` will always be greater than or equal to the coin count input.
+===
 1. Use induction and break the proof up into cases based on whether the head plus the cumulative score reaches the threshold.
 [HELPER LEMMA]
 lemma implementation_loop_coin_monotonic_increasing
@@ -228,6 +232,7 @@ lemma implementation_loop_coin_monotonic_increasing
 
 [HELPER LEMMA PLAN]
 Prove an `implementation_loop_invariant_stop` lemma that states that if the output of `implementation.loop` is exactly equal to the coin count input, then for all indices `i`, the input score plus the prefix sum of the score changes list up to index `i` must be less than the threshold.
+===
 1. Use induction and break the proof up into cases based on whether the head plus the cumulative score reaches the threshold.
 2. For each case, break the proof up into more cases based on whether the tail has positive length.
 3. Use the `implementation_loop_simple_increment` and `implementation_loop_coin_monotonic_increasing` lemmas in the proof.
@@ -245,6 +250,7 @@ score + (score_changes.take i).sum < threshold :=
 
 [HELPER LEMMA PLAN]
 Prove an `implementation_loop_invariant_continue` lemma that states that if the output of `implementation.loop` is strictly greater than the coin count input, then there exists an index `i'` at which the coin count output by `implementation.loop` increased by 1 and all previous indices `i` did not change the coin count output of `implementation.loop`.
+===
 1. Use induction and break the proof up into cases based on whether the head plus the cumulative score reaches the threshold.
 2. For the second case, break the proof up into more cases based on whether the tail has positive length.
 3. Use the `implementation_loop_simple_increment` lemma in the proof.

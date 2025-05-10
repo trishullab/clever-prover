@@ -168,7 +168,7 @@ The proof has moderate difficulty. We already have the helper lemmas we need—n
 
 [HELPER LEMMA PLAN]
 This lemma establishes that the only valid witness for `fibonacci_non_computable 0 n` is `n = 0`.
-
+===
 1. Introduce `h : fibonacci_non_computable 0 n`.
 2. Perform cases on `h`. There is only the `base0` constructor.
 3. Conclude `n = 0`.
@@ -178,7 +178,7 @@ theorem fib0_unique (n : ℕ) (h : fibonacci_non_computable 0 n) : n = 0 :=
 
 [HELPER LEMMA PLAN]
 This lemma establishes that the only valid witness for `fibonacci_non_computable 1 n` is `n = 1`.
-
+===
 1. Introduce `h : fibonacci_non_computable 1 n`.
 2. Perform cases on `h`. There is only the `base1` constructor.
 3. Conclude `n = 1`.
@@ -188,7 +188,7 @@ theorem fib1_unique (n : ℕ) (h : fibonacci_non_computable 1 n) : n = 1 :=
 
 [HELPER LEMMA PLAN]
 This lemma shows that any two witnesses for the same index `n` in `fibonacci_non_computable` are equal.
-
+===
 1. Introduce `h₁ : fibonacci_non_computable n f₁` and `h₂ : fibonacci_non_computable n f₂`.
 2. Perform induction on the structure of `h₁`.
 3. In each case, invert `h₂` to the same constructor and apply the induction hypothesis.
@@ -199,14 +199,12 @@ theorem fib_inversion (n f₁ f₂ : ℕ) (h₁ : fibonacci_non_computable n f�
 
 [HELPER LEMMA PLAN]
 This lemma constructs a proof of `fibonacci_non_computable n (f n)` for any function `f` satisfying the Fibonacci base cases and recursive step.
-
+===
 1. Perform induction on `n`.
 2. Base cases:
-
    * `n = 0`: apply `fibonacci_non_computable.base0`.
    * `n = 1`: apply `fibonacci_non_computable.base1`.
 3. Inductive step `n = k + 2`:
-
    * Use the induction hypotheses for `k` and `k + 1`.
    * Apply `fibonacci_non_computable.step` with these two proofs.
 [HELPER LEMMA]
@@ -214,7 +212,6 @@ theorem fib_rec_unique_seq (n : ℕ) (f : ℕ → ℕ) (h0 : f 0 = 0) (h1 : f 1 
 [END HELPER LEMMA]
 
 [ISOMORPHISM PLAN]
-
 1. **Forward:** Case-split on `n = 0`, `n = 1`, or `n ≥ 2`, using `fib0_unique`, `fib1_unique`, and `fib_inversion` to show `generated_spec` from `problem_spec`.
 2. **Backward:** Extract `impl 0 = 0`, `impl 1 = 1`, and the step equation from `generated_spec`, then apply `fib_rec_unique_seq` to get `problem_spec`.
 3. **Conclusion:** Combine both directions to conclude the equivalence.
@@ -222,6 +219,5 @@ theorem fib_rec_unique_seq (n : ℕ) (f : ℕ → ℕ) (h0 : f 0 = 0) (h1 : f 1 
 5. **Backward:** Extract `impl 0 = 0`, `impl 1 = 1`, and the step equation from `generated_spec`, then apply `fib_rec_unique_seq` to get `problem_spec`.
 6. **Conclusion:** Combine both directions to conclude the equivalence.
 [END]
-
 
 `conv end`

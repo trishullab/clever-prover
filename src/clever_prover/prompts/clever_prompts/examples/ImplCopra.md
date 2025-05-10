@@ -74,11 +74,7 @@ Goals to prove:
 [HYPOTHESIS] n : ℕ
 
 [INFORMAL-THEOREM]
-Given an integer n, your task is to find the nth Fibonacci number.
-The Fibonacci sequence is defined as follows:
-- F(0) = 1
-- F(1) = 1
-- F(n) = F(n-1) + F(n-2) for n > 1
+Prove a `fib_comp_to_non_comp` lemma that states that given a computable function `f : Nat → Nat` that follows the Fibonacci base cases (`f 0 = 1`, `f 1 = 1`) and recursive case (`∀ n, f (n + 2) = f n + f (n + 1)`), the built-in Lean 4 function `fibonacci_non_computable` called on `n` and `(f n)` outputs `True` (for all `n`).
 
 [FORMAL-THEOREM]
 def problem_spec
@@ -103,7 +99,6 @@ lemma fib_comp_to_non_comp (n : ℕ)
 : fibonacci_non_computable n (f n)
 
 [INFORMAL-PROOF]
-Prove a `fib_comp_to_non_comp` lemma that states that given a computable function `f : Nat → Nat` that follows the Fibonacci base cases (`f 0 = 1`, `f 1 = 1`) and recursive case (`∀ n, f (n + 2) = f n + f (n + 1)`), the built-in Lean 4 function `fibonacci_non_computable` called on `n` and `(f n)` outputs `True` (for all `n`).
 1. Use induction and break the proof up into the base cases and the recursive case.
 
 [LAST STEP]
@@ -156,11 +151,7 @@ fibonacci_non_computable n' (f n')
 [HYPOTHESIS] h_n'_lt_1 : ¬n' < 2
 
 [INFORMAL-THEOREM]
-Given an integer n, your task is to find the nth Fibonacci number.
-The Fibonacci sequence is defined as follows:
-- F(0) = 1
-- F(1) = 1
-- F(n) = F(n-1) + F(n-2) for n > 1
+Prove a `fib_comp_to_non_comp` lemma that states that given a computable function `f : Nat → Nat` that follows the Fibonacci base cases (`f 0 = 1`, `f 1 = 1`) and recursive case (`∀ n, f (n + 2) = f n + f (n + 1)`), the built-in Lean 4 function `fibonacci_non_computable` called on `n` and `(f n)` outputs `True` (for all `n`).
 
 [FORMAL-THEOREM]
 def problem_spec
@@ -185,7 +176,6 @@ lemma fib_comp_to_non_comp (n : ℕ)
 : fibonacci_non_computable n (f n)
 
 [INFORMAL-PROOF]
-Prove a `fib_comp_to_non_comp` lemma that states that given a computable function `f : Nat → Nat` that follows the Fibonacci base cases (`f 0 = 1`, `f 1 = 1`) and recursive case (`∀ n, f (n + 2) = f n + f (n + 1)`), the built-in Lean 4 function `fibonacci_non_computable` called on `n` and `(f n)` outputs `True` (for all `n`).
 1. Use induction and break the proof up into the base cases and the recursive case.
 
 [STEPS]
@@ -230,11 +220,7 @@ fibonacci_non_computable n' (f n')
 [HYPOTHESIS] h_fib_n''_plus_2_non_computable : fibonacci_non_computable (n'' + 2) (f (n'' + 2))
 
 [INFORMAL-THEOREM]
-Given an integer n, your task is to find the nth Fibonacci number.
-The Fibonacci sequence is defined as follows:
-- F(0) = 1
-- F(1) = 1
-- F(n) = F(n-1) + F(n-2) for n > 1
+Prove a `fib_comp_to_non_comp` lemma that states that given a computable function `f : Nat → Nat` that follows the Fibonacci base cases (`f 0 = 1`, `f 1 = 1`) and recursive case (`∀ n, f (n + 2) = f n + f (n + 1)`), the built-in Lean 4 function `fibonacci_non_computable` called on `n` and `(f n)` outputs `True` (for all `n`).
 
 [FORMAL-THEOREM]
 def problem_spec
@@ -259,7 +245,6 @@ lemma fib_comp_to_non_comp (n : ℕ)
 : fibonacci_non_computable n (f n)
 
 [INFORMAL-PROOF]
-Prove a `fib_comp_to_non_comp` lemma that states that given a computable function `f : Nat → Nat` that follows the Fibonacci base cases (`f 0 = 1`, `f 1 = 1`) and recursive case (`∀ n, f (n + 2) = f n + f (n + 1)`), the built-in Lean 4 function `fibonacci_non_computable` called on `n` and `(f n)` outputs `True` (for all `n`).
 1. Use induction and break the proof up into the base cases and the recursive case.
 
 [STEPS]
@@ -472,11 +457,7 @@ implementation.loop score_changes (threshold - k) score coins =
 [HYPOTHESIS] h_rounds_played : score_changes.length > 0
 
 [INFORMAL-THEOREM]
-In a game, a player's score starts at 0 and is updated round by round using values from the list
-score_changes (where positive numbers add to the score and negative numbers subtract).
-After each round, as long as the player's cumulative score is greater than or equal to the given threshold,
-the player wins a coin for that round.
-Your task is to compute and return the total number of coins won by the player by the end of the game.
+Prove an `implementation_loop_threshold_invariant` lemma that states that for all integers `k`, decreasing the threshold by `k` yields the same output of `implementation.loop` as increasing the score by `k`.
 
 [FORMAL-THEOREM]
 def problem_spec
@@ -521,7 +502,6 @@ lemma implementation_loop_threshold_invariant
 = implementation.loop score_changes threshold (score + k) coins
 
 [INFORMAL-PROOF]
-Prove an `implementation_loop_threshold_invariant` lemma that states that for all integers `k`, decreasing the threshold by `k` yields the same output of `implementation.loop` as increasing the score by `k`.
 1. Use induction and break the proof up into cases based on whether the head plus the cumulative score reaches the threshold.
 
 `example_assistant`
@@ -582,11 +562,7 @@ implementation.loop (head :: tail) (threshold - k) score coins =
 [HYPOTHESIS] h_head_ge_threshold : ¬head + score ≥ threshold - k
 
 [INFORMAL-THEOREM]
-In a game, a player's score starts at 0 and is updated round by round using values from the list
-score_changes (where positive numbers add to the score and negative numbers subtract).
-After each round, as long as the player's cumulative score is greater than or equal to the given threshold,
-the player wins a coin for that round.
-Your task is to compute and return the total number of coins won by the player by the end of the game.
+Prove an `implementation_loop_threshold_invariant` lemma that states that for all integers `k`, decreasing the threshold by `k` yields the same output of `implementation.loop` as increasing the score by `k`.
 
 [FORMAL-THEOREM]
 def problem_spec
@@ -631,7 +607,6 @@ lemma implementation_loop_threshold_invariant
 = implementation.loop score_changes threshold (score + k) coins
 
 [INFORMAL-PROOF]
-Prove an `implementation_loop_threshold_invariant` lemma that states that for all integers `k`, decreasing the threshold by `k` yields the same output of `implementation.loop` as increasing the score by `k`.
 1. Use induction and break the proof up into cases based on whether the head plus the cumulative score reaches the threshold.
 
 [STEPS]
@@ -682,11 +657,7 @@ implementation.loop tail (threshold - k) (head + score) (if threshold ≤ head +
 [HYPOTHESIS] h_head_ge_threshold : head + score + k < threshold
 
 [INFORMAL-THEOREM]
-In a game, a player's score starts at 0 and is updated round by round using values from the list
-score_changes (where positive numbers add to the score and negative numbers subtract).
-After each round, as long as the player's cumulative score is greater than or equal to the given threshold,
-the player wins a coin for that round.
-Your task is to compute and return the total number of coins won by the player by the end of the game.
+Prove an `implementation_loop_threshold_invariant` lemma that states that for all integers `k`, decreasing the threshold by `k` yields the same output of `implementation.loop` as increasing the score by `k`.
 
 [FORMAL-THEOREM]
 def problem_spec
@@ -731,7 +702,6 @@ lemma implementation_loop_threshold_invariant
 = implementation.loop score_changes threshold (score + k) coins
 
 [INFORMAL-PROOF]
-Prove an `implementation_loop_threshold_invariant` lemma that states that for all integers `k`, decreasing the threshold by `k` yields the same output of `implementation.loop` as increasing the score by `k`.
 1. Use induction and break the proof up into cases based on whether the head plus the cumulative score reaches the threshold.
 
 [STEPS]
