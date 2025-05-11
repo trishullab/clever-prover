@@ -49,11 +49,18 @@ def get_proof_via_copra(
         informal_repo = None
     else:
         informal_hints_split = informal_hints.split("===")
-        if len(informal_hints_split) == 2:
+        if len(informal_hints_split) == 2: # TODO: use better way to figure out whether this was lemma plan or correctness/isomorphism plan
             informal_problem_temp = informal_hints_split[0].strip()
             informal_hint_temp = informal_hints_split[1].strip()
         else:
             informal_problem_temp = informal_problem
+            informal_problem_start_ind = informal_problem_temp.find("\"\"\"")
+            if informal_problem_start_ind != -1:
+                informal_problem_temp = informal_problem_temp[(informal_problem_start_ind + len("\"\"\"")):]
+                informal_problem_end_ind = informal_problem_temp.find("\"\"\"")
+                if informal_problem_end_ind != -1:
+                    informal_problem_temp = informal_problem_temp[:informal_problem_end_ind]
+            informal_problem_temp = informal_problem_temp.strip()
             informal_hint_temp = informal_hints
         informal_repo = TempInformalProofRepo(
             theorem_name=lemma_name,
