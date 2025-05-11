@@ -7,15 +7,14 @@ log_dir: ".logs/eval_few_shot_impl_proof_plan_copra_proof"
 exp_name: "few_shot_impl_proof_plan_copra_proof"
 impl_generation_strategy: "ImplGenerator"
 # problems_to_solve: "*"
-problems_to_solve: [2, 8, 17, 23, 26, 30, 41, 45]
-# problems_to_solve: [2]
+# problems_to_solve: [41, 72, 8, 17, 23, 26, 30, 45, 72, 82]
+problems_to_solve: [114, 14, 81, 32, 109, 53, 23, 130, 80, 104, 120, 82, 58, 92, 10, 147, 46, 85, 157, 41]
 k: 1
-# timeout_in_ses: 3600
-timeout_in_ses: 1000
+timeout_in_ses: 600
 params:
   proof_dump_file_path: "proofs.txt"
-  num_implementation_samples: 5
-  num_proof_plan_samples: 5
+  num_implementation_samples: 1000
+  num_proof_plan_samples: 1000
   uses_copra_prover: true
   impl_prompt_settings:
     system_prompt_path: "src/clever_prover/prompts/baselines/system/FewShotImplGeneration.md"

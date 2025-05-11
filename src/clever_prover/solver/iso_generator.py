@@ -80,6 +80,7 @@ class IsoGenerator(SpecGenerationTask):
         self.helper_lemmas = None
         self.generated_proof = None
         self.spec_plan = None
+        self.max_copra_queries = 75
     
     @property
     def use_spec_planner(self):
@@ -133,7 +134,11 @@ class IsoGenerator(SpecGenerationTask):
         start_time = time.time()
         elapsed_time = 0
         time_remaining_in_ms = timeout_in_ms
-        plan_generation_failed = False
+        plan_generated = False
+        proof_plan = None
+        proven_lemmas = []
+        lemma_plans = []
+        proofs_found = set()
         while not is_time_elapsed and not proof_found and proof_sample_count < self.num_proof_plan_samples:
             logger.info(f"(Try #{proof_sample_count + 1}) Generating proof for problem {self.problem_id}...")
             problem = self.problem_view.get_view(self.problem_id)
@@ -144,7 +149,7 @@ class IsoGenerator(SpecGenerationTask):
             if self.generated_spec is None:
                 raise ValueError("Isomorphism must be generated before generating the proof.")
             problem.problem_spec_formal_generated += self.generated_spec
-            if self.use_proof_planner:
+            if self.use_proof_planner and not plan_generated:
                 proof_plan = self._generate_proof_plan(problem=problem, logger=logger)
                 lemma_plans : list[LemmaPlan] = proof_plan.lemma_plans
                 proven_lemmas : list[Lemma] = []
@@ -155,29 +160,33 @@ class IsoGenerator(SpecGenerationTask):
                 if len(lemma_plans) > 0:
                     validation_result = self._submit(problem, time_remaining_in_ms)
                     if not validation_result.compilation_ok:
-                        plan_generation_failed = True
+                        plan_generated = False
                         self.logger.info("Lemmas failed to compile.")
                     else:
-                        plan_generation_failed = False
+                        plan_generated = True
                         self.logger.info("Lemmas compiled successfully.")
                 else:
-                    plan_generation_failed = False
+                    plan_generated = True
                     self.logger.info("No helper lemmas generated.")
             else:
-                proof_plan = None
-                lemma_plans = []
-                proven_lemmas = []
-                plan_generation_failed = False
-            if not plan_generation_failed:
-                if len(lemma_plans) > 0:
+                if not plan_generated:
+                    proof_plan = None
+                    lemma_plans = []
+                    proven_lemmas = []
+                    plan_generated = False
+            if plan_generated or not self.use_proof_planner:
+                temp_lemma_plans = [lemma_plan for lemma_plan in lemma_plans if lemma_plan.lemma_name not in proofs_found]
+                if len(temp_lemma_plans) > 0:
                     proven_lemmas, proven_lemmas_str, time_remaining_in_ms = self._generate_proof_for_all_lemmas(
-                        lemma_plans=lemma_plans,
+                        lemma_plans=temp_lemma_plans,
                         problem=problem,
                         time_remaining_in_ms=time_remaining_in_ms,
                         logger=logger)
+                    for proven_lemma in proven_lemmas:
+                        name = self._get_lemma_name(proven_lemma.statement)
+                        proofs_found.add(name)
                 else:
-                    proven_lemmas = []
-                    proven_lemmas_str = ""
+                    proven_lemmas_str = self._get_proven_lemmas_str(proven_lemmas)
                 problem.isomorphism_helper_lemmas.clear()
                 for proven_lemma in proven_lemmas:
                     problem.isomorphism_helper_lemmas.append(proven_lemma)
@@ -196,6 +205,7 @@ class IsoGenerator(SpecGenerationTask):
                     copra_formal_theorem=copra_formal_theorem,
                     logger=logger)
                 problem.isomorphism_proof = proof
+                self.max_copra_queries = self.max_copra_queries * 2
             else:
                 proven_lemmas = []
                 proven_lemmas_str = ""
@@ -344,6 +354,15 @@ class IsoGenerator(SpecGenerationTask):
                 self.logger.info("Time elapsed while generating proof for lemma.")
                 break
         return proven_lemmas, proven_lemmas_str, time_remaining_in_ms
+    
+    def _get_proven_lemmas_str(self, proven_lemmas: list[Lemma]):
+        proven_lemmas_str = ""
+        for idx, lemma in enumerate(proven_lemmas):
+            if idx == 0:
+                proven_lemmas_str = "\n\nThroughout the proof, you can freely use any of the below helper lemmas, which you can assume to be true:"
+                proven_lemmas_str += "\n[HELPER LEMMAS]"
+            proven_lemmas_str += ("\n[HELPER LEMMA]\n" + lemma.statement)
+        return proven_lemmas_str
 
     def _generate_proof(
             self,
@@ -422,6 +441,7 @@ class IsoGenerator(SpecGenerationTask):
             max_history_messages=self.prover_prompt_settings.max_history_messages,
             secret_filepath=self.prover_model_settings.secret_path,
             max_tokens_per_action=self.prover_prompt_settings.max_tokens_per_action,
+            max_queries=self.max_copra_queries,
             logger=self.logger
         )
         return proof_search_result

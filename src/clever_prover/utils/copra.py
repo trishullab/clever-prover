@@ -38,6 +38,7 @@ def get_proof_via_copra(
     max_history_messages: int = 0,
     secret_filepath: str = ".secrets/openai_key.json",
     max_tokens_per_action: int = 1000,
+    max_queries: int = 100,
     logger: logging.Logger = None) -> ProofSearchResult:
     proof_exec_callback = ProofExecutorCallback(
         project_folder=project_path,
@@ -46,7 +47,7 @@ def get_proof_via_copra(
         timeout_in_secs=60,
         keep_local_context=True
     )
-    if informal_problem is None:
+    if informal_problem is None or informal_hints is None:
         informal_repo = None
     else:
         informal_hints_split = informal_hints.split("===")
@@ -100,7 +101,18 @@ def get_proof_via_copra(
         logger=logger
     )
     start_time = time.time()
+    query_count = 0
     def _stop_policy(*args, **kwargs) -> bool:
+        nonlocal query_count
+        if len(args) >= 2:
+            query_count = args[1].get("queries", query_count + 1)
+        else:
+            query_count += 1
+        if query_count > max_queries:
+            logger.info(f"Max queries reached: {query_count}")
+            return True
+        else:
+            logger.info(f"Query count: {query_count}")
         elapsed_time = time.time() - start_time
         elapsed_time_in_ms = elapsed_time * 1000
         if elapsed_time_in_ms > timeout_in_ms:
