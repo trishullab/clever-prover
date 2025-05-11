@@ -35,7 +35,7 @@ if x < 0 then -x else x
 
 theorem correctness
 (x: Int)
-: problem_spec implementation x
+: problem_spec implementation x :=
 
 [INFORMAL-PROOF]
 1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
@@ -96,7 +96,7 @@ lemma fib_comp_to_non_comp (n : ℕ)
 (h_f_0: f 0 = 0)
 (h_f_1: f 1 = 1)
 (h_f_step: ∀ n, f (n + 2) = f n + f (n + 1))
-: fibonacci_non_computable n (f n)
+: fibonacci_non_computable n (f n) :=
 
 [INFORMAL-PROOF]
 1. Use induction and break the proof up into the base cases and the recursive case.
@@ -173,7 +173,7 @@ lemma fib_comp_to_non_comp (n : ℕ)
 (h_f_0: f 0 = 0)
 (h_f_1: f 1 = 1)
 (h_f_step: ∀ n, f (n + 2) = f n + f (n + 1))
-: fibonacci_non_computable n (f n)
+: fibonacci_non_computable n (f n) :=
 
 [INFORMAL-PROOF]
 1. Use induction and break the proof up into the base cases and the recursive case.
@@ -242,7 +242,7 @@ lemma fib_comp_to_non_comp (n : ℕ)
 (h_f_0: f 0 = 0)
 (h_f_1: f 1 = 1)
 (h_f_step: ∀ n, f (n + 2) = f n + f (n + 1))
-: fibonacci_non_computable n (f n)
+: fibonacci_non_computable n (f n) :=
 
 [INFORMAL-PROOF]
 1. Use induction and break the proof up into the base cases and the recursive case.
@@ -315,7 +315,7 @@ match n with
 
 theorem correctness
 (n: Nat)
-: problem_spec implementation n
+: problem_spec implementation n :=
 
 [INFORMAL-PROOF]
 1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
@@ -390,7 +390,7 @@ match n with
 
 theorem correctness
 (n: Nat)
-: problem_spec implementation n
+: problem_spec implementation n :=
 
 [INFORMAL-PROOF]
 1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
@@ -499,7 +499,7 @@ lemma implementation_loop_threshold_invariant
 (k: Int)
 (h_rounds_played: score_changes.length > 0)
 : implementation.loop score_changes (threshold - k) score coins
-= implementation.loop score_changes threshold (score + k) coins
+= implementation.loop score_changes threshold (score + k) coins :=
 
 [INFORMAL-PROOF]
 1. Use induction and break the proof up into cases based on whether the head plus the cumulative score reaches the threshold.
@@ -604,7 +604,7 @@ lemma implementation_loop_threshold_invariant
 (k: Int)
 (h_rounds_played: score_changes.length > 0)
 : implementation.loop score_changes (threshold - k) score coins
-= implementation.loop score_changes threshold (score + k) coins
+= implementation.loop score_changes threshold (score + k) coins :=
 
 [INFORMAL-PROOF]
 1. Use induction and break the proof up into cases based on whether the head plus the cumulative score reaches the threshold.
@@ -699,7 +699,7 @@ lemma implementation_loop_threshold_invariant
 (k: Int)
 (h_rounds_played: score_changes.length > 0)
 : implementation.loop score_changes (threshold - k) score coins
-= implementation.loop score_changes threshold (score + k) coins
+= implementation.loop score_changes threshold (score + k) coins :=
 
 [INFORMAL-PROOF]
 1. Use induction and break the proof up into cases based on whether the head plus the cumulative score reaches the threshold.
@@ -820,7 +820,7 @@ loop score_changes threshold 0 0
 theorem correctness
 (score_changes: List Int)
 (threshold: Int)
-: problem_spec implementation score_changes threshold
+: problem_spec implementation score_changes threshold :=
 
 [INFORMAL-PROOF]
 1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
@@ -936,7 +936,7 @@ else
 theorem correctness
 (x: Int)
 (y: Int)
-: problem_spec implementation x y
+: problem_spec implementation x y :=
 
 [INFORMAL-PROOF]
 1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
@@ -983,7 +983,7 @@ else
 theorem correctness
 (x: Int)
 (y: Int)
-: problem_spec implementation x y
+: problem_spec implementation x y :=
 
 [INFORMAL-PROOF]
 1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
@@ -1035,7 +1035,7 @@ else
 theorem correctness
 (x: Int)
 (y: Int)
-: problem_spec implementation x y
+: problem_spec implementation x y :=
 
 [INFORMAL-PROOF]
 1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
@@ -1089,7 +1089,7 @@ else
 theorem correctness
 (x: Int)
 (y: Int)
-: problem_spec implementation x y
+: problem_spec implementation x y :=
 
 [INFORMAL-PROOF]
 1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
@@ -1144,7 +1144,7 @@ else
 theorem correctness
 (x: Int)
 (y: Int)
-: problem_spec implementation x y
+: problem_spec implementation x y :=
 
 [INFORMAL-PROOF]
 1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
@@ -1200,7 +1200,7 @@ else
 theorem correctness
 (x: Int)
 (y: Int)
-: problem_spec implementation x y
+: problem_spec implementation x y :=
 
 [INFORMAL-PROOF]
 1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
@@ -1261,7 +1261,7 @@ else
 theorem correctness
 (x: Int)
 (y: Int)
-: problem_spec implementation x y
+: problem_spec implementation x y :=
 
 [INFORMAL-PROOF]
 1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
@@ -1320,7 +1320,7 @@ else
 theorem correctness
 (x: Int)
 (y: Int)
-: problem_spec implementation x y
+: problem_spec implementation x y :=
 
 [INFORMAL-PROOF]
 1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.

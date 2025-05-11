@@ -28,6 +28,7 @@ def get_proof_via_copra(
     lemma_name: str,
     informal_problem: str = None,
     informal_hints: str = None,
+    copra_formal_theorem: str = None,
     timeout_in_ms: int = 600000,
     proof_dump_file_path: str = "proof_dump.txt",
     system_prompt: str = None,
@@ -62,6 +63,8 @@ def get_proof_via_copra(
                     informal_problem_temp = informal_problem_temp[:informal_problem_end_ind]
             informal_problem_temp = informal_problem_temp.strip()
             informal_hint_temp = informal_hints
+        if copra_formal_theorem is not None:
+            informal_problem_temp += ("\n\n[FORMAL-THEOREM]\n" + copra_formal_theorem) # TODO: find a better way to do this?
         informal_repo = TempInformalProofRepo(
             theorem_name=lemma_name,
             informal_problem=informal_problem_temp,

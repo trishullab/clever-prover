@@ -31,7 +31,7 @@ impl x y = if x = y * y then true else false
 theorem spec_isomorphism:
 ∀ impl,
 (∀ x y, problem_spec impl x y) ↔
-(∀ x y, generated_spec impl x y)
+(∀ x y, generated_spec impl x y) :=
 
 [INFORMAL-PROOF]
 1. Start by analyzing the generated specification. The main idea is to create a specific instance of the generated specification and show that it satisfies the properties of the problem specification and vice versa.
@@ -103,7 +103,7 @@ impl x = if x < 0 then -x else x
 theorem spec_isomorphism:
 ∀ impl,
 (∀ x y, problem_spec impl x y) ↔
-(∀ x y, generated_spec impl x y)
+(∀ x y, generated_spec impl x y) :=
 
 [INFORMAL-PROOF]
 1. Start by analyzing the generated specification. The original specification doesn't reveal the implementation details, but you can see that the generated specification is a simple if-else statement that checks if `x` is less than 0.
@@ -197,7 +197,7 @@ impl x = if x < 0 then -x else x
 theorem spec_isomorphism:
 ∀ impl,
 (∀ x y, problem_spec impl x y) ↔
-(∀ x y, generated_spec impl x y)
+(∀ x y, generated_spec impl x y) :=
 
 [INFORMAL-PROOF]
 1. Start by analyzing the generated specification. The original specification doesn't reveal the implementation details, but you can see that the generated specification is a simple if-else statement that checks if `x` is less than 0.
@@ -315,7 +315,7 @@ impl x = if x < 0 then -x else x
 theorem spec_isomorphism:
 ∀ impl,
 (∀ x y, problem_spec impl x y) ↔
-(∀ x y, generated_spec impl x y)
+(∀ x y, generated_spec impl x y) :=
 
 [INFORMAL-PROOF]
 1. Start by analyzing the generated specification. The original specification doesn't reveal the implementation details, but you can see that the generated specification is a simple if-else statement that checks if `x` is less than 0.
@@ -421,7 +421,7 @@ impl x y = if x = y * y then true else false
 theorem spec_isomorphism:
 ∀ impl,
 (∀ x y, problem_spec impl x y) ↔
-(∀ x y, generated_spec impl x y)
+(∀ x y, generated_spec impl x y) :=
 
 [INFORMAL-PROOF]
 1. Start by analyzing the generated specification. The main idea is to create a specific instance of the generated specification and show that it satisfies the properties of the problem specification and vice versa.
@@ -490,7 +490,7 @@ impl x y = if x = y * y then true else false
 theorem spec_isomorphism:
 ∀ impl,
 (∀ x y, problem_spec impl x y) ↔
-(∀ x y, generated_spec impl x y)
+(∀ x y, generated_spec impl x y) :=
 
 [INFORMAL-PROOF]
 1. Start by analyzing the generated specification. The main idea is to create a specific instance of the generated specification and show that it satisfies the properties of the problem specification and vice versa.
@@ -564,7 +564,7 @@ impl x y = if x = y * y then true else false
 theorem spec_isomorphism:
 ∀ impl,
 (∀ x y, problem_spec impl x y) ↔
-(∀ x y, generated_spec impl x y)
+(∀ x y, generated_spec impl x y) :=
 
 [INFORMAL-PROOF]
 1. Start by analyzing the generated specification. The main idea is to create a specific instance of the generated specification and show that it satisfies the properties of the problem specification and vice versa.
@@ -632,7 +632,7 @@ impl x y = if x = y * y then true else false
 theorem spec_isomorphism:
 ∀ impl,
 (∀ x y, generated_spec impl x y) ↔
-(∀ x y, problem_spec impl x y)
+(∀ x y, problem_spec impl x y) :=
 
 [INFORMAL-PROOF]
 1. Start by analyzing the generated specification. The main idea is to create a specific instance of the generated specification and show that it satisfies the properties of the problem specification and vice versa.
@@ -689,7 +689,7 @@ impl x y = if x = y * y then true else false
 theorem spec_isomorphism:
 ∀ impl,
 (∀ x y, generated_spec impl x y) ↔
-(∀ x y, problem_spec impl x y)
+(∀ x y, problem_spec impl x y) :=
 
 [INFORMAL-PROOF]
 1. Start by analyzing the generated specification. The main idea is to create a specific instance of the generated specification and show that it satisfies the properties of the problem specification and vice versa.
@@ -752,7 +752,7 @@ impl x y = if x = y * y then true else false
 theorem spec_isomorphism:
 ∀ impl,
 (∀ x y, generated_spec impl x y) ↔
-(∀ x y, problem_spec impl x y)
+(∀ x y, problem_spec impl x y) :=
 
 [INFORMAL-PROOF]
 1. Start by analyzing the generated specification. The main idea is to create a specific instance of the generated specification and show that it satisfies the properties of the problem specification and vice versa.
@@ -812,7 +812,7 @@ impl x y = if x = y * y then true else false
 theorem spec_isomorphism:
 ∀ impl,
 (∀ x y, generated_spec impl x y) ↔
-(∀ x y, problem_spec impl x y)
+(∀ x y, problem_spec impl x y) :=
 
 [INFORMAL-PROOF]
 1. Start by analyzing the generated specification. The main idea is to create a specific instance of the generated specification and show that it satisfies the properties of the problem specification and vice versa.
@@ -902,7 +902,7 @@ lemma fib_rec_unique (n m : ℕ):
   fibonacci_non_computable (n + 2) m ↔
   ∃ f₁ f₂, fibonacci_non_computable n f₁ ∧
   fibonacci_non_computable (n + 1) f₂ ∧
-  m = f₁ + f₂
+  m = f₁ + f₂ :=
 
 [INFORMAL-PROOF]
 1. Start by splitting the "iff".
@@ -973,7 +973,7 @@ lemma fib_rec_unique (n m : ℕ):
   fibonacci_non_computable (n + 2) m ↔
   ∃ f₁ f₂, fibonacci_non_computable n f₁ ∧
   fibonacci_non_computable (n + 1) f₂ ∧
-  m = f₁ + f₂
+  m = f₁ + f₂ :=
 
 [INFORMAL-PROOF]
 1. Start by splitting the "iff".
@@ -1050,7 +1050,7 @@ lemma fib_rec_unique (n m : ℕ):
   fibonacci_non_computable (n + 2) m ↔
   ∃ f₁ f₂, fibonacci_non_computable n f₁ ∧
   fibonacci_non_computable (n + 1) f₂ ∧
-  m = f₁ + f₂
+  m = f₁ + f₂ :=
 
 [INFORMAL-PROOF]
 1. Start by splitting the "iff".
@@ -1124,7 +1124,7 @@ spec result
 
 lemma fib_inversion (n f₁ f₂ : ℕ)
 (h : fibonacci_non_computable n f₁) (h' : fibonacci_non_computable n f₂) :
-  f₁ = f₂
+  f₁ = f₂ :=
 
 [INFORMAL-PROOF]
 1. Use strong induction on `n`.
@@ -1203,7 +1203,7 @@ spec result
 
 lemma fib_inversion (n f₁ f₂ : ℕ)
 (h : fibonacci_non_computable n f₁) (h' : fibonacci_non_computable n f₂) :
-  f₁ = f₂
+  f₁ = f₂ :=
 
 [INFORMAL-PROOF]
 1. Use strong induction on `n`.
@@ -1285,7 +1285,7 @@ spec result
 
 lemma fib_inversion (n f₁ f₂ : ℕ)
 (h : fibonacci_non_computable n f₁) (h' : fibonacci_non_computable n f₂) :
-  f₁ = f₂
+  f₁ = f₂ :=
 
 [INFORMAL-PROOF]
 1. Use strong induction on `n`.
@@ -1400,7 +1400,7 @@ spec result
 theorem spec_isomorphism:
 ∀ impl,
 (∀ x y, problem_spec impl x y) ↔
-(∀ x y, generated impl x y)
+(∀ x y, generated impl x y) :=
 
 [INFORMAL-PROOF]
 1. Start by unfolding both the `problem_spec` and `generated_spec` and splitting the "iff".

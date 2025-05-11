@@ -185,6 +185,7 @@ class IsoGenerator(SpecGenerationTask):
                     full_proof_strategy = proof_plan.isomorphism_proof_strategy + proven_lemmas_str
                 else:
                     full_proof_strategy = ""
+                copra_formal_theorem = problem.problem_spec_formal_ground_truth + "\n\n" + problem.problem_spec_formal_generated + "\n\n" + problem.isomorphism_theorem
                 proof, proof_found, time_remaining_in_ms = self._generate_proof(
                     problem=problem,
                     theorem_description=problem.problem_spec_nl,
@@ -192,6 +193,7 @@ class IsoGenerator(SpecGenerationTask):
                     start_time=start_time,
                     time_remaining_in_ms=time_remaining_in_ms,
                     theorem_name=self.lemma_name,
+                    copra_formal_theorem=copra_formal_theorem,
                     logger=logger)
                 problem.isomorphism_proof = proof
             else:
@@ -319,6 +321,7 @@ class IsoGenerator(SpecGenerationTask):
         is_time_elapsed = False
         for lemma_plan in lemma_plans:
             full_proof_strategy = lemma_plan.lemma_proof_strategy + proven_lemmas_str
+            copra_formal_theorem = problem.problem_spec_formal_ground_truth + "\n\n" + problem.problem_spec_formal_generated + "\n\n" + lemma_plan.lemma
             proof, proof_found, time_remaining_in_ms = self._generate_proof(
                 problem=problem,
                 theorem_description=lemma_plan.lemma,
@@ -326,6 +329,7 @@ class IsoGenerator(SpecGenerationTask):
                 start_time=start_time,
                 time_remaining_in_ms=time_remaining_in_ms,
                 theorem_name=lemma_plan.lemma_name,
+                copra_formal_theorem=copra_formal_theorem,
                 logger=logger
             )
             is_time_elapsed = time_remaining_in_ms <= 0
@@ -349,6 +353,7 @@ class IsoGenerator(SpecGenerationTask):
             start_time: float,
             time_remaining_in_ms: int,
             theorem_name: str,
+            copra_formal_theorem: str,
             logger: logging.Logger = None) -> tuple[str, bool, int]:
         if len(proof_strategy.strip()) == 0:
             proof_strategy = None
@@ -359,6 +364,7 @@ class IsoGenerator(SpecGenerationTask):
                     theorem_name=theorem_name,
                     lemma_description=theorem_description,
                     lemma_proof_strategy=proof_strategy,
+                    copra_formal_theorem=copra_formal_theorem,
                     proof_dump_file_path=self.proof_dump_file_path,
                     timeout_in_ms=time_remaining_in_ms,
                     logger=logger
@@ -389,6 +395,7 @@ class IsoGenerator(SpecGenerationTask):
         theorem_name: str,
         lemma_description: str,
         lemma_proof_strategy: str,
+        copra_formal_theorem: str,
         proof_dump_file_path: str,
         timeout_in_ms: int = 60,
         logger: logging.Logger = None) -> ProofSearchResult:
@@ -405,6 +412,7 @@ class IsoGenerator(SpecGenerationTask):
             lemma_name=theorem_name,
             informal_problem=lemma_description,
             informal_hints=lemma_proof_strategy,
+            copra_formal_theorem=copra_formal_theorem,
             timeout_in_ms=timeout_in_ms,
             proof_dump_file_path=proof_dump_file_path,
             system_prompt=self.prover_prompt_settings.system_prompt_path,
