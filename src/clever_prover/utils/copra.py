@@ -28,6 +28,7 @@ def get_proof_via_copra(
     lemma_name: str,
     informal_problem: str = None,
     informal_hints: str = None,
+    copra_formal_theorem: str = None,
     timeout_in_ms: int = 600000,
     proof_dump_file_path: str = "proof_dump.txt",
     system_prompt: str = None,
@@ -48,10 +49,26 @@ def get_proof_via_copra(
     if informal_problem is None:
         informal_repo = None
     else:
+        informal_hints_split = informal_hints.split("===")
+        if len(informal_hints_split) == 2: # TODO: use better way to figure out whether this was lemma plan or correctness/isomorphism plan
+            informal_problem_temp = informal_hints_split[0].strip()
+            informal_hint_temp = informal_hints_split[1].strip()
+        else:
+            informal_problem_temp = informal_problem
+            informal_problem_start_ind = informal_problem_temp.find("\"\"\"")
+            if informal_problem_start_ind != -1:
+                informal_problem_temp = informal_problem_temp[(informal_problem_start_ind + len("\"\"\"")):]
+                informal_problem_end_ind = informal_problem_temp.find("\"\"\"")
+                if informal_problem_end_ind != -1:
+                    informal_problem_temp = informal_problem_temp[:informal_problem_end_ind]
+            informal_problem_temp = informal_problem_temp.strip()
+            informal_hint_temp = informal_hints
+        if copra_formal_theorem is not None:
+            informal_problem_temp += ("\n\n[FORMAL-THEOREM]\n" + copra_formal_theorem) # TODO: find a better way to do this?
         informal_repo = TempInformalProofRepo(
             theorem_name=lemma_name,
-            informal_problem=informal_problem,
-            informal_hint=informal_hints
+            informal_problem=informal_problem_temp,
+            informal_hint=informal_hint_temp
         )
     policy_prompter = DfsCoqGptPolicyPrompter(
         main_sys_prompt_path=system_prompt,
