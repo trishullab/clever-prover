@@ -102,7 +102,7 @@ theorem correctness
 `example_assistant`
 [THOUGHTS]
 We should start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
-Early on, we will want to break the proof up into cases based on whether the output of `implementation_loop` (with initial values as input) is 0.
+Early on, we will want to break the proof up into cases based on whether the output of `implementation.loop` (with initial values as input) is 0.
 [END]
 
 

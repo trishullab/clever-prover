@@ -165,7 +165,7 @@ implementation.loop score_changes threshold score coins =
 [CORRECTNESS PLAN]
 Prove the `correctness` theorem.
   - Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
-  - Early on, you will want to break the proof up into cases based on whether the output of `implementation_loop` (with initial values as input) is 0.
+  - Early on, you will want to break the proof up into cases based on whether the output of `implementation.loop` (with initial values as input) is 0.
   - Use the `implementation_loop_threshold_invariant`, `implementation_loop_invariant_stop`, and `implementation_loop_invariant_continue` lemmas in the proof.
 [END]
 
