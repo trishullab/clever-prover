@@ -44,52 +44,6 @@ def implementation (x: Int) : Int :=
 
 `example_user`
 [NL DESCRIPTION]
-def find_fibonacci(n: int) -> int
-"""
-Given an integer n, your task is to find the nth Fibonacci number.
-The Fibonacci sequence is defined as follows:
-- F(0) = 1
-- F(1) = 1
-- F(n) = F(n-1) + F(n-2) for n > 1
-"""
-
-[SPECIFICATION]
-def problem_spec
--- function signature
-(impl: Nat → Nat)
--- inputs
-(n: Nat) :=
--- spec
-let spec (result: Nat) :=
-fibonacci_non_computable n result
--- program terminates
-∃ result, impl n = result ∧
--- return value satisfies spec
-spec result
-
-[IMPLEMENTATION SIGNATURE]
-def implementation (n: Nat) : Nat :=
-
-[TEST CASES]
-#test implementation 0 = 1
-#test implementation 1 = 1
-#test implementation 2 = 2
-#test implementation 3 = 3
-#test implementation 4 = 5
-#test implementation 5 = 8
-#test implementation 6 = 13
-#test implementation 7 = 21
-
-`example_assistant`
-[IMPLEMENTATION PLAN]
-1. Start with a `match` statement on `n` to cover both the base cases and the recursive case.
-2. Cover the base cases. If `n` is 0 or `n` is 1 then output 1.
-3. Finish with the recursive case. If `n` matches with `n' + 2` for a value `n'`, recursively call `implementation` on the two previous values `n'` and `n' + 1` and add the results for the output.
-[END]
-
-
-`example_user`
-[NL DESCRIPTION]
 def coins_won(score_changes: List[int], threshold: int) -> int
 """
 In a game, a player's score starts at 0 and is updated round by round using values from the list

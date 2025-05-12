@@ -45,55 +45,6 @@ Many of the intermediate goals can likely be proven using `linarith`.
 
 `example_user`
 [NL DESCRIPTION]
-def find_fibonacci(n: int) -> int
-"""
-Given an integer n, your task is to find the nth Fibonacci number.
-The Fibonacci sequence is defined as follows:
-- F(0) = 1
-- F(1) = 1
-- F(n) = F(n-1) + F(n-2) for n > 1
-"""
-
-[SPECIFICATION]
-def problem_spec
--- function signature
-(impl: Nat → Nat)
--- inputs
-(n: Nat) :=
--- spec
-let spec (result: Nat) :=
-fibonacci_non_computable n result
--- program terminates
-∃ result, impl n = result ∧
--- return value satisfies spec
-spec result
-
-[IMPLEMENTATION]
-def implementation (n: Nat) : Nat :=
-match n with
-| 0 => 0
-| 1 => 1
-| n' + 2 => implementation n' + implementation (n' + 1)
-
-[THEOREM STATEMENT]
-theorem correctness
-(n: Nat)
-: problem_spec implementation n
-:=
-
-`example_assistant`
-[THOUGHTS]
-We can start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
-Use the `have` keyword three times to show that `implementation` follows the three properties of the Fibonacci function:
-  - `implementation 0 = 1`
-  - `implementation 1 = 1`
-  - `∀ n', implementation (n' + 2) = implementation n' + implementation (n' + 1)`
-Then use these three hypotheses to show that `implementation` satisfies `fibonacci_non_computable`, as required by the `spec`.
-[END]
-
-
-`example_user`
-[NL DESCRIPTION]
 def coins_won(score_changes: List[int], threshold: int) -> int
 """
 In a game, a player's score starts at 0 and is updated round by round using values from the list

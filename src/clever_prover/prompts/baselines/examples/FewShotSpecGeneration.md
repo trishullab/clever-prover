@@ -32,41 +32,6 @@ It is also easy to see that program will always terminate for all integers. Howe
 
 `example_user`
 [NL DESCRIPTION]
-def find_fibonacci(n: int) -> int
-"""
-Given an integer n, your task is to find the nth Fibonacci number.
-The Fibonacci sequence is defined as follows:
-- F(0) = 1
-- F(1) = 1
-- F(n) = F(n-1) + F(n-2) for n > 1
-"""
-
-[SPECIFICATION SIGNATURE]
-def generated_spec
--- function signature
-(impl: Nat → Nat)
--- inputs
-(n: Nat) : Prop :=
-
-`example_assistant`
-[THOUGHTS]
-We can start with defining the fibonacci sequence as a helper definition, and 
-then we can use it to write the specification.
-[END THOUGHTS]
-
-[GENERATED SPECIFICATION]
-let spec (result: Nat) :=
-(n ≤ 1 → result = n) ∧
-(1 < n → (result = impl (n - 1) + impl (n - 2)))
--- program terminates
-∃ result, impl n = result ∧
--- return value satisfies spec
-spec result
-[END]
-
-
-`example_user`
-[NL DESCRIPTION]
 def coins_won(score_changes: List[int], threshold: int) -> int
 """
 In a game, a player's score starts at 0 and is updated round by round using values from the list
