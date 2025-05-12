@@ -6,9 +6,9 @@ task_type: IMPL_CORRECTNESS
 log_dir: ".logs/eval_few_shot_impl_proof_plan_copra_proof"
 exp_name: "few_shot_impl_proof_plan_copra_proof"
 impl_generation_strategy: "ImplGenerator"
-# problems_to_solve: "*"
-# problems_to_solve: [41, 72, 8, 17, 23, 26, 30, 45, 72, 82]
-problems_to_solve: [114, 14, 81, 32, 109, 53, 23, 130, 80, 104, 120, 82, 58, 92, 10, 147, 46, 85, 157, 41]
+# problems_to_solve: [0, 3, 4, 8, 9, 52, 55, 57, 72, 73, 88, 92, 95, 100, 102, 106, 121, 126, 136, 138, 139, 150, 151, 152, 155, 159, 163]
+# problems_to_solve: [3, 9, 55, 57, 136]
+problems_to_solve: "*"
 k: 1
 timeout_in_ses: 600
 params:

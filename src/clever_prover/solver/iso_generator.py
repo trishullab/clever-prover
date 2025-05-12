@@ -6,7 +6,7 @@ import copy
 from collections import namedtuple
 from clever_bench.task import ProblemViewTask
 from clever_bench.lean_problem import Lemma, LeanProblemView, format_problem_as_lean_with_line_ranges
-from clever_prover.tasks.spec_generation_task import SpecGenerationTask
+from clever_prover.tasks.spec_generation_task import SpecGenerationTask, GenerationResult
 from clever_prover.prompters.simple_prompter import SimplePrompter
 from clever_prover.utils.configs import PromptSettings, ModelSettings
 from clever_prover.solver.tools.specification_planner_tool import SpecificationPlannerTool
@@ -80,7 +80,7 @@ class IsoGenerator(SpecGenerationTask):
         self.helper_lemmas = None
         self.generated_proof = None
         self.spec_plan = None
-        self.max_copra_queries = 75
+        self.max_copra_queries = 60
     
     @property
     def use_spec_planner(self):
@@ -139,6 +139,8 @@ class IsoGenerator(SpecGenerationTask):
         proven_lemmas = []
         lemma_plans = []
         proofs_found = set()
+        generation_result = GenerationResult.REGENERATE
+        attempt_idx = 0
         while not is_time_elapsed and not proof_found and proof_sample_count < self.num_proof_plan_samples:
             logger.info(f"(Try #{proof_sample_count + 1}) Generating proof for problem {self.problem_id}...")
             problem = self.problem_view.get_view(self.problem_id)
@@ -153,10 +155,7 @@ class IsoGenerator(SpecGenerationTask):
                 proof_plan = self._generate_proof_plan(problem=problem, logger=logger)
                 lemma_plans : list[LemmaPlan] = proof_plan.lemma_plans
                 proven_lemmas : list[Lemma] = []
-                for lemma_plan in lemma_plans:
-                    theorem_statement = lemma_plan.lemma
-                    problem.isomorphism_helper_lemmas.append(
-                        Lemma(statement=theorem_statement, proof="by sorry"))
+                self._add_all_lemmas_with_sorry(problem, lemma_plans)
                 if len(lemma_plans) > 0:
                     validation_result = self._submit(problem, time_remaining_in_ms)
                     if not validation_result.compilation_ok:
@@ -174,6 +173,9 @@ class IsoGenerator(SpecGenerationTask):
                     lemma_plans = []
                     proven_lemmas = []
                     plan_generated = False
+                else:
+                    problem.isomorphism_helper_lemmas.clear()
+                    self._add_all_lemmas_with_sorry(problem, lemma_plans)
             if plan_generated or not self.use_proof_planner:
                 temp_lemma_plans = [lemma_plan for lemma_plan in lemma_plans if lemma_plan.lemma_name not in proofs_found]
                 if len(temp_lemma_plans) > 0:
@@ -194,25 +196,48 @@ class IsoGenerator(SpecGenerationTask):
                     full_proof_strategy = proof_plan.isomorphism_proof_strategy + proven_lemmas_str
                 else:
                     full_proof_strategy = ""
-                copra_formal_theorem = problem.problem_spec_formal_ground_truth + "\n\n" + problem.problem_spec_formal_generated + "\n\n" + problem.isomorphism_theorem
-                proof, proof_found, time_remaining_in_ms = self._generate_proof(
-                    problem=problem,
-                    theorem_description=problem.problem_spec_nl,
-                    proof_strategy=full_proof_strategy,
-                    start_time=start_time,
-                    time_remaining_in_ms=time_remaining_in_ms,
-                    theorem_name=self.lemma_name,
-                    copra_formal_theorem=copra_formal_theorem,
-                    logger=logger)
-                problem.isomorphism_proof = proof
+                if len(proofs_found) == len(lemma_plans):
+                    logger.info("All lemmas proven, generating proof for isomorphism theorem.")
+                    generation_result = GenerationResult.FINAL
+                else:
+                    logger.info("Not all lemmas proven, will go for regeneration.")
+                    generation_result = GenerationResult.REGENERATE
+                if generation_result == GenerationResult.FINAL:
+                    copra_formal_theorem = problem.problem_spec_formal_ground_truth + "\n\n" + problem.problem_spec_formal_generated + "\n\n" + problem.isomorphism_theorem
+                    proof, proof_found, time_remaining_in_ms = self._generate_proof(
+                        problem=problem,
+                        theorem_description=problem.problem_spec_nl,
+                        proof_strategy=full_proof_strategy,
+                        start_time=start_time,
+                        time_remaining_in_ms=time_remaining_in_ms,
+                        theorem_name=self.lemma_name,
+                        copra_formal_theorem=copra_formal_theorem,
+                        logger=logger)
+                    problem.isomorphism_proof = proof
+                else:
+                    proof_found = False
+                if proof_found:
+                    generation_result = GenerationResult.FINAL
+                elif not proof_found and attempt_idx % 2 == 1:
+                    generation_result = GenerationResult.REGENERATE
+                else:
+                    generation_result = GenerationResult.GIVE_UP
                 self.max_copra_queries = self.max_copra_queries * 2
             else:
+                logger.info("Plan generation failed, skipping proof generation.")
                 proven_lemmas = []
                 proven_lemmas_str = ""
+                generation_result = GenerationResult.REGENERATE
             elapsed_time = time.time() - start_time
             time_remaining_in_ms = timeout_in_ms - (elapsed_time * 1000)
             is_time_elapsed = time_remaining_in_ms <= 0
+            attempt_idx += 1
             proof_sample_count += 1
+            if generation_result == GenerationResult.REGENERATE:
+                logger.info("Giving up on proof will regenerate implementation.")
+                break
+            else:
+                logger.info("Will retry the same proof generation.")
         problem.isomorphism_proof = proof
         self.generated_proof_problem_view = problem
         full_lean_code, _ = format_problem_as_lean_with_line_ranges(problem)
@@ -221,7 +246,7 @@ class IsoGenerator(SpecGenerationTask):
         file_path = os.path.join(report_dir, file_name)
         with open(file_path, "w") as f:
             f.write(full_lean_code)
-        return proof
+        return generation_result, proof
 
     def _generate_spec(self, problem: LeanProblemView, logger: logging.Logger = None):
         logger = logger if logger else self.logger
@@ -507,6 +532,12 @@ class IsoGenerator(SpecGenerationTask):
                 problem,
                 timeout_in_ms=time_remaining_in_ms))
         return validation_result
+
+    def _add_all_lemmas_with_sorry(self, problem: LeanProblemView, lemma_plans: list[LemmaPlan]):
+        for lemma_plan in lemma_plans:
+            theorem_statement = lemma_plan.lemma
+            problem.isomorphism_helper_lemmas.append(
+                Lemma(statement=theorem_statement, proof="by sorry"))
 
     def _get_lemma_name(self, lemma: str):
         match = Lean4SyncExecutor.theorem_name_match.match(lemma)

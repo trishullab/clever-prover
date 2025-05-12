@@ -64,6 +64,385 @@ unknown tactic
 by_cases h_0_eq_x: x = 0
 [END]
 
+
+`example_user`
+Goals to prove:
+[GOALS]
+[GOAL] 1
+∀ (f₁ f₂ : ℕ), fibonacci_non_computable n f₁ → fibonacci_non_computable n f₂ → f₁ = f₂
+[HYPOTHESES] 1
+[HYPOTHESIS] n : ℕ
+
+[INFORMAL-THEOREM]
+Prove a `fib_comp_to_non_comp` lemma that states that given a computable function `f : Nat → Nat` that follows the Fibonacci base cases (`f 0 = 1`, `f 1 = 1`) and recursive case (`∀ n, f (n + 2) = f n + f (n + 1)`), the built-in Lean 4 function `fibonacci_non_computable` called on `n` and `(f n)` outputs `True` (for all `n`).
+
+[FORMAL-THEOREM]
+def problem_spec
+(impl: Nat → Nat)
+(n: Nat) :=
+let spec (result: Nat) :=
+fibonacci_non_computable n result
+∃ result, impl n = result ∧
+spec result
+
+def implementation (n: Nat) : Nat :=
+match n with
+| 0 => 0
+| 1 => 1
+| n' + 2 => implementation n' + implementation (n' + 1)
+
+lemma fib_comp_to_non_comp (n : ℕ)
+(f : Nat → Nat)
+(h_f_0: f 0 = 0)
+(h_f_1: f 1 = 1)
+(h_f_step: ∀ n, f (n + 2) = f n + f (n + 1))
+: fibonacci_non_computable n (f n) :=
+
+[INFORMAL-PROOF]
+1. Use induction and break the proof up into the base cases and the recursive case.
+
+[LAST STEP]
+revert f₁ f₂
+[SUCCESS]
+[END]
+
+`example_assistant`
+[RUN TACTIC]
+induction' n using Nat.strong_induction_on with n' ih
+[END]
+
+
+`example_user`
+Goals to prove:
+[GOALS]
+[GOAL] 1
+fibonacci_non_computable n' (f n')
+[HYPOTHESES] 1
+[HYPOTHESIS] f : ℕ → ℕ
+[HYPOTHESIS] h_f_0 : f 0 = 0
+[HYPOTHESIS] h_f_1 : f 1 = 1
+[HYPOTHESIS] h_f_step : ∀ (n : ℕ), f (n + 2) = f n + f (n + 1)
+[HYPOTHESIS] n' : ℕ
+[HYPOTHESIS] ih : ∀ m < n', fibonacci_non_computable m (f m)
+[HYPOTHESIS] h_n'_lt_1 : n' < 2
+[HYPOTHESIS] h_n'_eq_0 : n' = 0
+
+[GOAL] 2
+fibonacci_non_computable n' (f n')
+[HYPOTHESES] 1
+[HYPOTHESIS] f : ℕ → ℕ
+[HYPOTHESIS] h_f_0 : f 0 = 0
+[HYPOTHESIS] h_f_1 : f 1 = 1
+[HYPOTHESIS] h_f_step : ∀ (n : ℕ), f (n + 2) = f n + f (n + 1)
+[HYPOTHESIS] n' : ℕ
+[HYPOTHESIS] ih : ∀ m < n', fibonacci_non_computable m (f m)
+[HYPOTHESIS] h_n'_lt_1 : n' < 2
+[HYPOTHESIS] h✝ : n' = 1
+
+[GOAL] 3
+fibonacci_non_computable n' (f n')
+[HYPOTHESES] 1
+[HYPOTHESIS] f : ℕ → ℕ
+[HYPOTHESIS] h_f_0 : f 0 = 0
+[HYPOTHESIS] h_f_1 : f 1 = 1
+[HYPOTHESIS] h_f_step : ∀ (n : ℕ), f (n + 2) = f n + f (n + 1)
+[HYPOTHESIS] n' : ℕ
+[HYPOTHESIS] ih : ∀ m < n', fibonacci_non_computable m (f m)
+[HYPOTHESIS] h_n'_lt_1 : ¬n' < 2
+
+[INFORMAL-THEOREM]
+Prove a `fib_comp_to_non_comp` lemma that states that given a computable function `f : Nat → Nat` that follows the Fibonacci base cases (`f 0 = 1`, `f 1 = 1`) and recursive case (`∀ n, f (n + 2) = f n + f (n + 1)`), the built-in Lean 4 function `fibonacci_non_computable` called on `n` and `(f n)` outputs `True` (for all `n`).
+
+[FORMAL-THEOREM]
+def problem_spec
+(impl: Nat → Nat)
+(n: Nat) :=
+let spec (result: Nat) :=
+fibonacci_non_computable n result
+∃ result, impl n = result ∧
+spec result
+
+def implementation (n: Nat) : Nat :=
+match n with
+| 0 => 0
+| 1 => 1
+| n' + 2 => implementation n' + implementation (n' + 1)
+
+lemma fib_comp_to_non_comp (n : ℕ)
+(f : Nat → Nat)
+(h_f_0: f 0 = 0)
+(h_f_1: f 1 = 1)
+(h_f_step: ∀ n, f (n + 2) = f n + f (n + 1))
+: fibonacci_non_computable n (f n) :=
+
+[INFORMAL-PROOF]
+1. Use induction and break the proof up into the base cases and the recursive case.
+
+[STEPS]
+[STEP] induction' n using Nat.strong_induction_on with n' ih
+[STEP] by_cases h_n'_lt_1: n' < 2
+[STEP] -- if n' < 2 then
+have h_n'_eq_0: n' = 0 ∨ n' = 1 := by
+[STEP]   interval_cases n'
+[STEP]   all_goals simp
+[STEP] cases h_n'_eq_0
+
+[LAST STEP]
+rename_i h_n'_eq_0
+[SUCCESS]
+[END]
+
+`example_assistant`
+[RUN TACTIC]
+simp [h_n'_eq_0, h_f_0, fibonacci_non_computable.base0]
+[END]
+
+
+`example_user`
+Goals to prove:
+[GOALS]
+[GOAL] 1
+fibonacci_non_computable n' (f n')
+[HYPOTHESES] 1
+[HYPOTHESIS] f : ℕ → ℕ
+[HYPOTHESIS] h_f_0 : f 0 = 0
+[HYPOTHESIS] h_f_1 : f 1 = 1
+[HYPOTHESIS] h_f_step : ∀ (n : ℕ), f (n + 2) = f n + f (n + 1)
+[HYPOTHESIS] n' : ℕ
+[HYPOTHESIS] ih : ∀ m < n', fibonacci_non_computable m (f m)
+[HYPOTHESIS] h_n'_lt_1 : ¬n' < 2
+[HYPOTHESIS] n'' : ℕ := n' - 2
+[HYPOTHESIS] h_n''_eq_n_plus_2 : n' = n'' + 2
+[HYPOTHESIS] h_n''_lt_n' : n'' < n'
+[HYPOTHESIS] h_fib_n'' : f (n'' + 2) = f n'' + f (n'' + 1)
+[HYPOTHESIS] h_fib_n''_non_computable : fibonacci_non_computable n'' (f n'')
+[HYPOTHESIS] h_fib_n''_plus_1_non_computable : fibonacci_non_computable (n'' + 1) (f (n'' + 1))
+[HYPOTHESIS] h_fib_n''_plus_2_non_computable : fibonacci_non_computable (n'' + 2) (f (n'' + 2))
+
+[INFORMAL-THEOREM]
+Prove a `fib_comp_to_non_comp` lemma that states that given a computable function `f : Nat → Nat` that follows the Fibonacci base cases (`f 0 = 1`, `f 1 = 1`) and recursive case (`∀ n, f (n + 2) = f n + f (n + 1)`), the built-in Lean 4 function `fibonacci_non_computable` called on `n` and `(f n)` outputs `True` (for all `n`).
+
+[FORMAL-THEOREM]
+def problem_spec
+(impl: Nat → Nat)
+(n: Nat) :=
+let spec (result: Nat) :=
+fibonacci_non_computable n result
+∃ result, impl n = result ∧
+spec result
+
+def implementation (n: Nat) : Nat :=
+match n with
+| 0 => 0
+| 1 => 1
+| n' + 2 => implementation n' + implementation (n' + 1)
+
+lemma fib_comp_to_non_comp (n : ℕ)
+(f : Nat → Nat)
+(h_f_0: f 0 = 0)
+(h_f_1: f 1 = 1)
+(h_f_step: ∀ n, f (n + 2) = f n + f (n + 1))
+: fibonacci_non_computable n (f n) :=
+
+[INFORMAL-PROOF]
+1. Use induction and break the proof up into the base cases and the recursive case.
+
+[STEPS]
+[STEP] induction' n using Nat.strong_induction_on with n' ih
+[STEP] by_cases h_n'_lt_1: n' < 2
+[STEP] -- if n' < 2 then
+have h_n'_eq_0: n' = 0 ∨ n' = 1 := by
+[STEP]   interval_cases n'
+[STEP]   all_goals simp
+[STEP] cases h_n'_eq_0
+[STEP] rename_i h_n'_eq_0
+[STEP] simp [h_n'_eq_0, h_f_0, fibonacci_non_computable.base0]
+[STEP] rename_i h_n'_eq_1
+[STEP] simp [h_n'_eq_1, h_f_1, fibonacci_non_computable.base1]
+[STEP] set n'' := n' - 2
+[STEP] have h_n''_eq_n_plus_2: n' = n'' + 2 := by
+[STEP]   rw [Nat.sub_add_cancel]
+[STEP]   linarith
+[STEP] have h_n''_lt_n': n'' < n' := by
+[STEP]   linarith
+[STEP] have h_fib_n'':= h_f_step n''
+[STEP] have h_fib_n''_non_computable := ih n'' h_n''_lt_n'
+[STEP] have h_fib_n''_plus_1_non_computable := ih (n'' + 1) (by linarith)
+[STEP] have h_fib_n''_plus_2_non_computable :=
+  fibonacci_non_computable.step _ _ _ h_fib_n''_non_computable h_fib_n''_plus_1_non_computable
+
+[LAST STEP]
+rw [←h_fib_n''] at h_fib_n''_plus_2_non_computable
+[SUCCESS]
+[END]
+
+`example_assistant`
+[RUN TACTIC]
+rw [←h_n''_eq_n_plus_2] at h_fib_n''_plus_2_non_computable
+[END]
+
+
+`example_user`
+Goals to prove:
+[GOALS]
+[GOAL] 1
+fibonacci_non_computable n (implementation n)
+[HYPOTHESES] 1
+[HYPOTHESIS] n : ℕ
+[HYPOTHESIS] result : ℕ := implementation n
+
+[INFORMAL-THEOREM]
+Given an integer n, your task is to find the nth Fibonacci number.
+The Fibonacci sequence is defined as follows:
+- F(0) = 1
+- F(1) = 1
+- F(n) = F(n-1) + F(n-2) for n > 1
+
+[FORMAL-THEOREM]
+def problem_spec
+(impl: Nat → Nat)
+(n: Nat) :=
+let spec (result: Nat) :=
+fibonacci_non_computable n result
+∃ result, impl n = result ∧
+spec result
+
+def implementation (n: Nat) : Nat :=
+match n with
+| 0 => 0
+| 1 => 1
+| n' + 2 => implementation n' + implementation (n' + 1)
+
+theorem correctness
+(n: Nat)
+: problem_spec implementation n :=
+
+[INFORMAL-PROOF]
+1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
+2. Use the `have` keyword three times to show that `implementation` follows the three properties of the Fibonacci function:
+  - `implementation 0 = 1`
+  - `implementation 1 = 1`
+  - `∀ n', implementation (n' + 2) = implementation n' + implementation (n' + 1)`
+3. Then use these three hypotheses and the `fib_comp_to_non_comp` lemma to show that `implementation` satisfies `fibonacci_non_computable`, as required by the `spec`.
+
+Throughout the proof, you can freely use any of the below helper lemmas, which you can assume to be true:
+[HELPER LEMMAS]
+[HELPER LEMMA]
+lemma fib_comp_to_non_comp (n : ℕ)
+(f : Nat → Nat)
+(h_f_0: f 0 = 1)
+(h_f_1: f 1 = 1)
+(h_f_step: ∀ n, f (n + 2) = f n + f (n + 1))
+: fibonacci_non_computable n (f n) :=
+
+[STEPS]
+[STEP] unfold problem_spec
+[STEP] let result := implementation n
+[STEP] use result
+[STEP] simp [result]
+
+[LAST STEP]
+simp [implementation]
+
+[ERROR MESSAGE]
+simp made no progress
+[END]
+
+`example_assistant`
+[RUN TACTIC]
+have h_impl_n : ∀ n', implementation (n' + 2) = implementation n' + implementation (n' + 1) := by
+[END]
+
+
+`example_user`
+Goals to prove:
+[GOALS]
+[GOAL] 1
+fibonacci_non_computable n (implementation n)
+[HYPOTHESES] 1
+[HYPOTHESIS] n : ℕ
+[HYPOTHESIS] result : ℕ := implementation n
+[HYPOTHESIS] h_impl_n : ∀ (n' : ℕ), implementation (n' + 2) = implementation n' + implementation (n' + 1)
+[HYPOTHESIS] h_impl_0 : implementation 0 = 0
+[HYPOTHESIS] h_impl_1 : implementation 1 = 1
+
+[INFORMAL-THEOREM]
+Given an integer n, your task is to find the nth Fibonacci number.
+The Fibonacci sequence is defined as follows:
+- F(0) = 1
+- F(1) = 1
+- F(n) = F(n-1) + F(n-2) for n > 1
+
+[FORMAL-THEOREM]
+def problem_spec
+(impl: Nat → Nat)
+(n: Nat) :=
+let spec (result: Nat) :=
+fibonacci_non_computable n result
+∃ result, impl n = result ∧
+spec result
+
+def implementation (n: Nat) : Nat :=
+match n with
+| 0 => 0
+| 1 => 1
+| n' + 2 => implementation n' + implementation (n' + 1)
+
+theorem correctness
+(n: Nat)
+: problem_spec implementation n :=
+
+[INFORMAL-PROOF]
+1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
+2. Use the `have` keyword three times to show that `implementation` follows the three properties of the Fibonacci function:
+  - `implementation 0 = 1`
+  - `implementation 1 = 1`
+  - `∀ n', implementation (n' + 2) = implementation n' + implementation (n' + 1)`
+3. Then use these three hypotheses and the `fib_comp_to_non_comp` lemma to show that `implementation` satisfies `fibonacci_non_computable`, as required by the `spec`.
+
+Throughout the proof, you can freely use any of the below helper lemmas, which you can assume to be true:
+[HELPER LEMMAS]
+[HELPER LEMMA]
+lemma fib_comp_to_non_comp (n : ℕ)
+(f : Nat → Nat)
+(h_f_0: f 0 = 1)
+(h_f_1: f 1 = 1)
+(h_f_step: ∀ n, f (n + 2) = f n + f (n + 1))
+: fibonacci_non_computable n (f n) :=
+
+[STEPS]
+[STEP] unfold problem_spec
+[STEP] let result := implementation n
+[STEP] use result
+[STEP] simp [result]
+[STEP] have h_impl_n : ∀ n', implementation (n' + 2) = implementation n' + implementation (n' + 1) := by
+[STEP]   intro n'
+[STEP]   rw [implementation]
+[STEP] have h_impl_0 : implementation 0 = 0 := by
+[STEP]   rw [implementation]
+[STEP] have h_impl_1 : implementation 1 = 1 := by
+[STEP]   rw [implementation]
+
+[LAST STEP]
+apply fib_comp_to_non_comp n implementation (by rw [h_impl_0,←Nat.zero_add (1 : ℕ)]) h_impl_1 h_impl_n
+
+[ERROR MESSAGE]
+tactic 'rewrite' failed, did not find instance of the pattern in the target expression
+ 1
+n : ℕ
+result : ℕ := implementation n
+h_impl_n : ∀ (n' : ℕ), implementation (n' + 2) = implementation n' + implementation (n' + 1)
+h_impl_0 : implementation 0 = 0
+h_impl_1 : implementation 1 = 1
+⊢ 0 = 0
+[END]
+
+`example_assistant`
+[RUN TACTIC]
+apply fib_comp_to_non_comp
+[END]
+
+
 `example_user`
 Goals to prove:
 [GOALS]

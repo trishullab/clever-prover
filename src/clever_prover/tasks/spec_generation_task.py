@@ -4,6 +4,16 @@ import time
 import os
 from clever_bench.task import ProblemViewTask
 from abc import ABC, abstractmethod
+from enum import Enum
+
+class GenerationResult(Enum):
+    """
+    Enum for reset generation types.
+    """
+    REGENERATE = 0
+    FINAL = 1
+    GIVE_UP = 2
+
 
 class SpecGenerationTask(ABC):
     """
@@ -39,7 +49,7 @@ class SpecGenerationTask(ABC):
         pass
 
     @abstractmethod
-    def generate_spec_isomorphism_proof(self, timeout_in_ms: float = 60, logger: logging.Logger = None) -> str:
+    def generate_spec_isomorphism_proof(self, timeout_in_ms: float = 60, logger: logging.Logger = None) -> tuple[GenerationResult, str]:
         """
         Validate the generated specification.
         """

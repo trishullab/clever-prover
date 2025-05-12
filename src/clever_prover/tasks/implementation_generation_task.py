@@ -4,6 +4,7 @@ import time
 import os
 from clever_bench.task import ProblemViewTask
 from abc import ABC, abstractmethod
+from clever_prover.tasks.spec_generation_task import GenerationResult
 
 class ImplementationGenerationTask(ABC):
     """
@@ -39,7 +40,7 @@ class ImplementationGenerationTask(ABC):
         pass
 
     @abstractmethod
-    def generate_implementation_correctness_proof(self, timeout_in_ms: float = 60, logger: logging.Logger = None) -> str:
+    def generate_implementation_correctness_proof(self, timeout_in_ms: float = 60, logger: logging.Logger = None) -> tuple[GenerationResult, str]:
         """
         Validate the generated implementation.
         """

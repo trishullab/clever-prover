@@ -851,4 +851,644 @@ ring
 intro h_prob_spec
 [END]
 
+
+`example_user`
+Goals to prove:
+[GOALS]
+[GOAL] 1
+∃ f₁ f₂, fibonacci_non_computable n f₁ ∧ fibonacci_non_computable (n + 1) f₂ ∧ f₁✝ + f₂✝ = f₁ + f₂
+[HYPOTHESES] 1
+[HYPOTHESIS] n f₁✝ f₂✝ : ℕ
+[HYPOTHESIS] a✝¹ : fibonacci_non_computable n f₁✝
+[HYPOTHESIS] a✝ : fibonacci_non_computable (n + 1) f₂✝
+
+[GOAL] 2
+(∃ f₁ f₂, fibonacci_non_computable n f₁ ∧ fibonacci_non_computable (n + 1) f₂ ∧ m = f₁ + f₂) →
+  fibonacci_non_computable (n + 2) m
+[HYPOTHESES] 1
+[HYPOTHESIS] n m : ℕ
+
+[INFORMAL-THEOREM]
+Prove a `fib_rec_unique` lemma that states the recursive property of Fibonacci numbers fully using `fibonacci_non_computable`.
+
+[FORMAL-THEOREM]
+inductive fibonacci_non_computable : ℕ → ℕ → Prop
+| base0 : fibonacci_non_computable 0 0
+| base1 : fibonacci_non_computable 1 1
+| step  : ∀ n f₁ f₂, fibonacci_non_computable n f₁ →
+fibonacci_non_computable (n + 1) f₂ →
+fibonacci_non_computable (n + 2) (f₁ + f₂)
+
+def problem_spec
+(impl: Nat → Nat)
+(n: Nat) :=
+let spec (result: Nat) :=
+fibonacci_non_computable n result
+∃ result, impl n = result ∧
+spec result
+
+def generated_spec
+(impl: Nat → Nat)
+(n: Nat) : Prop :=
+let spec (result: Nat) :=
+match n with
+| 0 => result = 0
+| 1 => result = 1
+| n' + 2 => result = impl n' + impl (n' + 1)
+∃ result, impl n = result ∧
+spec result
+
+lemma fib_rec_unique (n m : ℕ):
+  fibonacci_non_computable (n + 2) m ↔
+  ∃ f₁ f₂, fibonacci_non_computable n f₁ ∧
+  fibonacci_non_computable (n + 1) f₂ ∧
+  m = f₁ + f₂ :=
+
+[INFORMAL-PROOF]
+1. Start by splitting the "iff".
+2. Use `fibonacci_non_computable.step`.
+
+Throughout the proof, you can freely use any of the below helper lemmas, which you can assume to be true:
+[HELPER LEMMAS]
+[HELPER LEMMA]
+lemma fib0_unique (n : ℕ) (h : fibonacci_non_computable 0 n) : n = 0 :=
+[HELPER LEMMA]
+lemma fib1_unique (n : ℕ) (h : fibonacci_non_computable 1 n) : n = 1 :=
+
+[STEPS]
+[STEP] apply Iff.intro
+[STEP] intro h
+
+[LAST STEP]
+cases h
+[SUCCESS]
+[END]
+
+`example_assistant`
+[RUN TACTIC]
+rename_i f₁ f₂ h₁ h₂
+[END]
+
+
+`example_user`
+Goals to prove:
+[GOALS]
+[GOAL] 1
+fibonacci_non_computable (n + 2) m
+[HYPOTHESES] 1
+[HYPOTHESIS] n m : ℕ
+[HYPOTHESIS] h : ∃ f₁ f₂, fibonacci_non_computable n f₁ ∧ fibonacci_non_computable (n + 1) f₂ ∧ m = f₁ + f₂
+
+[INFORMAL-THEOREM]
+Prove a `fib_rec_unique` lemma that states the recursive property of Fibonacci numbers fully using `fibonacci_non_computable`.
+
+[FORMAL-THEOREM]
+inductive fibonacci_non_computable : ℕ → ℕ → Prop
+| base0 : fibonacci_non_computable 0 0
+| base1 : fibonacci_non_computable 1 1
+| step  : ∀ n f₁ f₂, fibonacci_non_computable n f₁ →
+fibonacci_non_computable (n + 1) f₂ →
+fibonacci_non_computable (n + 2) (f₁ + f₂)
+
+def problem_spec
+(impl: Nat → Nat)
+(n: Nat) :=
+let spec (result: Nat) :=
+fibonacci_non_computable n result
+∃ result, impl n = result ∧
+spec result
+
+def generated_spec
+(impl: Nat → Nat)
+(n: Nat) : Prop :=
+let spec (result: Nat) :=
+match n with
+| 0 => result = 0
+| 1 => result = 1
+| n' + 2 => result = impl n' + impl (n' + 1)
+∃ result, impl n = result ∧
+spec result
+
+lemma fib_rec_unique (n m : ℕ):
+  fibonacci_non_computable (n + 2) m ↔
+  ∃ f₁ f₂, fibonacci_non_computable n f₁ ∧
+  fibonacci_non_computable (n + 1) f₂ ∧
+  m = f₁ + f₂ :=
+
+[INFORMAL-PROOF]
+1. Start by splitting the "iff".
+2. Use `fibonacci_non_computable.step`.
+
+Throughout the proof, you can freely use any of the below helper lemmas, which you can assume to be true:
+[HELPER LEMMAS]
+[HELPER LEMMA]
+lemma fib0_unique (n : ℕ) (h : fibonacci_non_computable 0 n) : n = 0 :=
+[HELPER LEMMA]
+lemma fib1_unique (n : ℕ) (h : fibonacci_non_computable 1 n) : n = 1 :=
+
+[STEPS]
+[STEP] apply Iff.intro
+[STEP] intro h
+[STEP] cases h
+[STEP] rename_i f₁ f₂ h₁ h₂
+[STEP] use f₁
+[STEP] use f₂
+
+[LAST STEP]
+intro h
+[SUCCESS]
+[END]
+
+`example_assistant`
+[RUN TACTIC]
+obtain ⟨f₁, f₂, h₁, h₂, h_eq⟩ := h
+[END]
+
+
+`example_user`
+Goals to prove:
+[GOALS]
+[GOAL] 1
+fibonacci_non_computable (n + 2) (f₁ + f₂)
+[HYPOTHESES] 1
+[HYPOTHESIS] n m f₁ f₂ : ℕ
+[HYPOTHESIS] h₁ : fibonacci_non_computable n f₁
+[HYPOTHESIS] h₂ : fibonacci_non_computable (n + 1) f₂
+[HYPOTHESIS] h_eq : m = f₁ + f₂
+
+[INFORMAL-THEOREM]
+Prove a `fib_rec_unique` lemma that states the recursive property of Fibonacci numbers fully using `fibonacci_non_computable`.
+
+[FORMAL-THEOREM]
+inductive fibonacci_non_computable : ℕ → ℕ → Prop
+| base0 : fibonacci_non_computable 0 0
+| base1 : fibonacci_non_computable 1 1
+| step  : ∀ n f₁ f₂, fibonacci_non_computable n f₁ →
+fibonacci_non_computable (n + 1) f₂ →
+fibonacci_non_computable (n + 2) (f₁ + f₂)
+
+def problem_spec
+(impl: Nat → Nat)
+(n: Nat) :=
+let spec (result: Nat) :=
+fibonacci_non_computable n result
+∃ result, impl n = result ∧
+spec result
+
+def generated_spec
+(impl: Nat → Nat)
+(n: Nat) : Prop :=
+let spec (result: Nat) :=
+match n with
+| 0 => result = 0
+| 1 => result = 1
+| n' + 2 => result = impl n' + impl (n' + 1)
+∃ result, impl n = result ∧
+spec result
+
+lemma fib_rec_unique (n m : ℕ):
+  fibonacci_non_computable (n + 2) m ↔
+  ∃ f₁ f₂, fibonacci_non_computable n f₁ ∧
+  fibonacci_non_computable (n + 1) f₂ ∧
+  m = f₁ + f₂ :=
+
+[INFORMAL-PROOF]
+1. Start by splitting the "iff".
+2. Use `fibonacci_non_computable.step`.
+
+Throughout the proof, you can freely use any of the below helper lemmas, which you can assume to be true:
+[HELPER LEMMAS]
+[HELPER LEMMA]
+lemma fib0_unique (n : ℕ) (h : fibonacci_non_computable 0 n) : n = 0 :=
+[HELPER LEMMA]
+lemma fib1_unique (n : ℕ) (h : fibonacci_non_computable 1 n) : n = 1 :=
+
+[STEPS]
+[STEP] apply Iff.intro
+[STEP] intro h
+[STEP] cases h
+[STEP] rename_i f₁ f₂ h₁ h₂
+[STEP] use f₁
+[STEP] use f₂
+[STEP] intro h
+[STEP] obtain ⟨f₁, f₂, h₁, h₂, h_eq⟩ := h
+
+[LAST STEP]
+rw [h_eq]
+[SUCCESS]
+[END]
+
+`example_assistant`
+[RUN TACTIC]
+exact fibonacci_non_computable.step _ _ _ h₁ h₂
+[END]
+
+
+`example_user`
+Goals to prove:
+[GOALS]
+[GOAL] 1
+∀ (f₁ f₂ : ℕ), fibonacci_non_computable n f₁ → fibonacci_non_computable n f₂ → f₁ = f₂
+[HYPOTHESES] 1
+[HYPOTHESIS] n : ℕ
+
+[INFORMAL-THEOREM]
+Prove a `fib_inversion` lemma that states that the `n`th Fibonacci number is unique, according to `fibonacci_non_computable`.
+
+[FORMAL-THEOREM]
+inductive fibonacci_non_computable : ℕ → ℕ → Prop
+| base0 : fibonacci_non_computable 0 0
+| base1 : fibonacci_non_computable 1 1
+| step  : ∀ n f₁ f₂, fibonacci_non_computable n f₁ →
+fibonacci_non_computable (n + 1) f₂ →
+fibonacci_non_computable (n + 2) (f₁ + f₂)
+
+def problem_spec
+(impl: Nat → Nat)
+(n: Nat) :=
+let spec (result: Nat) :=
+fibonacci_non_computable n result
+∃ result, impl n = result ∧
+spec result
+
+def generated_spec
+(impl: Nat → Nat)
+(n: Nat) : Prop :=
+let spec (result: Nat) :=
+match n with
+| 0 => result = 0
+| 1 => result = 1
+| n' + 2 => result = impl n' + impl (n' + 1)
+∃ result, impl n = result ∧
+spec result
+
+lemma fib_inversion (n f₁ f₂ : ℕ)
+(h : fibonacci_non_computable n f₁) (h' : fibonacci_non_computable n f₂) :
+  f₁ = f₂ :=
+
+[INFORMAL-PROOF]
+1. Use strong induction on `n`.
+2. Use the `fib_rec_unique` lemma.
+
+Throughout the proof, you can freely use any of the below helper lemmas, which you can assume to be true:
+[HELPER LEMMAS]
+[HELPER LEMMA]
+lemma fib0_unique (n : ℕ) (h : fibonacci_non_computable 0 n) : n = 0 :=
+[HELPER LEMMA]
+lemma fib1_unique (n : ℕ) (h : fibonacci_non_computable 1 n) : n = 1 :=
+[HELPER LEMMA]
+lemma fib_rec_unique (n m : ℕ):
+  fibonacci_non_computable (n + 2) m ↔
+  ∃ f₁ f₂, fibonacci_non_computable n f₁ ∧
+  fibonacci_non_computable (n + 1) f₂ ∧
+  m = f₁ + f₂ :=
+
+[LAST STEP]
+revert f₁ f₂
+[SUCCESS]
+[END]
+
+`example_assistant`
+[RUN TACTIC]
+induction' n using Nat.strong_induction_on with n' ih
+[END]
+
+
+`example_user`
+Goals to prove:
+[GOALS]
+[DESCRIPTION]
+IMPORTANT NOTE: Working on the sub-goal with have tactic:
+have h_n'_eq_0: n' = 0 ∨ n' = 1 := by.
+
+[GOAL] 1
+n' = 0 ∨ n' = 1
+[HYPOTHESES] 1
+[HYPOTHESIS] n' : ℕ
+[HYPOTHESIS] ih : ∀ m < n', ∀ (f₁ f₂ : ℕ), fibonacci_non_computable m f₁ → fibonacci_non_computable m f₂ → f₁ = f₂
+[HYPOTHESIS] f₁ f₂ : ℕ
+[HYPOTHESIS] h_n'_lt_1 : n' < 2
+[HYPOTHESIS] h : fibonacci_non_computable n' f₁
+[HYPOTHESIS] h' : fibonacci_non_computable n' f₂
+
+[INFORMAL-THEOREM]
+Prove a `fib_inversion` lemma that states that the `n`th Fibonacci number is unique, according to `fibonacci_non_computable`.
+
+[FORMAL-THEOREM]
+inductive fibonacci_non_computable : ℕ → ℕ → Prop
+| base0 : fibonacci_non_computable 0 0
+| base1 : fibonacci_non_computable 1 1
+| step  : ∀ n f₁ f₂, fibonacci_non_computable n f₁ →
+fibonacci_non_computable (n + 1) f₂ →
+fibonacci_non_computable (n + 2) (f₁ + f₂)
+
+def problem_spec
+(impl: Nat → Nat)
+(n: Nat) :=
+let spec (result: Nat) :=
+fibonacci_non_computable n result
+∃ result, impl n = result ∧
+spec result
+
+def generated_spec
+(impl: Nat → Nat)
+(n: Nat) : Prop :=
+let spec (result: Nat) :=
+match n with
+| 0 => result = 0
+| 1 => result = 1
+| n' + 2 => result = impl n' + impl (n' + 1)
+∃ result, impl n = result ∧
+spec result
+
+lemma fib_inversion (n f₁ f₂ : ℕ)
+(h : fibonacci_non_computable n f₁) (h' : fibonacci_non_computable n f₂) :
+  f₁ = f₂ :=
+
+[INFORMAL-PROOF]
+1. Use strong induction on `n`.
+2. Use the `fib_rec_unique` lemma.
+
+Throughout the proof, you can freely use any of the below helper lemmas, which you can assume to be true:
+[HELPER LEMMAS]
+[HELPER LEMMA]
+lemma fib0_unique (n : ℕ) (h : fibonacci_non_computable 0 n) : n = 0 :=
+[HELPER LEMMA]
+lemma fib1_unique (n : ℕ) (h : fibonacci_non_computable 1 n) : n = 1 :=
+[HELPER LEMMA]
+lemma fib_rec_unique (n m : ℕ):
+  fibonacci_non_computable (n + 2) m ↔
+  ∃ f₁ f₂, fibonacci_non_computable n f₁ ∧
+  fibonacci_non_computable (n + 1) f₂ ∧
+  m = f₁ + f₂ :=
+
+[STEPS]
+[STEP] revert f₁ f₂
+[STEP] induction' n using Nat.strong_induction_on with n' ih
+[STEP] intro f₁ f₂
+[STEP] by_cases h_n'_lt_1: n' < 2
+[STEP] intro h h'
+
+[LAST STEP]
+-- if n' < 1 then
+have h_n'_eq_0: n' = 0 ∨ n' = 1 := by
+[SUCCESS]
+[END]
+
+`example_assistant`
+[RUN TACTIC]
+interval_cases n'
+[END]
+
+
+`example_user`
+Goals to prove:
+[GOALS]
+[GOAL] 1
+f₁ = f₂
+[HYPOTHESES] 1
+[HYPOTHESIS] n' f₁ f₂ : ℕ
+[HYPOTHESIS] n'' : ℕ := n' - 2
+[HYPOTHESIS] ih : ∀ m < n'' + 2, ∀ (f₁ f₂ : ℕ), fibonacci_non_computable m f₁ → fibonacci_non_computable m f₂ → f₁ = f₂
+[HYPOTHESIS] h : fibonacci_non_computable (n'' + 2) f₁
+[HYPOTHESIS] h' : fibonacci_non_computable (n'' + 2) f₂
+
+[INFORMAL-THEOREM]
+Prove a `fib_inversion` lemma that states that the `n`th Fibonacci number is unique, according to `fibonacci_non_computable`.
+
+[FORMAL-THEOREM]
+inductive fibonacci_non_computable : ℕ → ℕ → Prop
+| base0 : fibonacci_non_computable 0 0
+| base1 : fibonacci_non_computable 1 1
+| step  : ∀ n f₁ f₂, fibonacci_non_computable n f₁ →
+fibonacci_non_computable (n + 1) f₂ →
+fibonacci_non_computable (n + 2) (f₁ + f₂)
+
+def problem_spec
+(impl: Nat → Nat)
+(n: Nat) :=
+let spec (result: Nat) :=
+fibonacci_non_computable n result
+∃ result, impl n = result ∧
+spec result
+
+def generated_spec
+(impl: Nat → Nat)
+(n: Nat) : Prop :=
+let spec (result: Nat) :=
+match n with
+| 0 => result = 0
+| 1 => result = 1
+| n' + 2 => result = impl n' + impl (n' + 1)
+∃ result, impl n = result ∧
+spec result
+
+lemma fib_inversion (n f₁ f₂ : ℕ)
+(h : fibonacci_non_computable n f₁) (h' : fibonacci_non_computable n f₂) :
+  f₁ = f₂ :=
+
+[INFORMAL-PROOF]
+1. Use strong induction on `n`.
+2. Use the `fib_rec_unique` lemma.
+
+Throughout the proof, you can freely use any of the below helper lemmas, which you can assume to be true:
+[HELPER LEMMAS]
+[HELPER LEMMA]
+lemma fib0_unique (n : ℕ) (h : fibonacci_non_computable 0 n) : n = 0 :=
+[HELPER LEMMA]
+lemma fib1_unique (n : ℕ) (h : fibonacci_non_computable 1 n) : n = 1 :=
+[HELPER LEMMA]
+lemma fib_rec_unique (n m : ℕ):
+  fibonacci_non_computable (n + 2) m ↔
+  ∃ f₁ f₂, fibonacci_non_computable n f₁ ∧
+  fibonacci_non_computable (n + 1) f₂ ∧
+  m = f₁ + f₂ :=
+
+[STEPS]
+[STEP] revert f₁ f₂
+[STEP] induction' n using Nat.strong_induction_on with n' ih
+[STEP] intro f₁ f₂
+[STEP] by_cases h_n'_lt_1: n' < 2
+[STEP] intro h h'
+[STEP] -- if n' < 1 then
+have h_n'_eq_0: n' = 0 ∨ n' = 1 := by
+[STEP]   interval_cases n'
+[STEP]   all_goals simp
+[STEP] cases h_n'_eq_0
+[STEP] rename_i h_n'_eq_0
+[STEP] simp [h_n'_eq_0] at *
+[STEP] cases h
+[STEP] cases h'
+[STEP] rfl
+[STEP] rename_i h_n'_eq_1
+[STEP] simp [h_n'_eq_1] at *
+[STEP] clear h_n'_eq_1
+[STEP] cases h
+[STEP] cases h'
+[STEP] rfl
+[STEP] set n'' := n' - 2
+[STEP] have h_n''_eq_n_plus_2: n' = n'' + 2 := by
+[STEP]   rw [Nat.sub_add_cancel]
+[STEP]   linarith
+[STEP] simp [h_n''_eq_n_plus_2] at *
+[STEP] clear h_n''_eq_n_plus_2 h_n'_lt_1
+
+[LAST STEP]
+intro h h'
+[SUCCESS]
+[END]
+
+`example_assistant`
+[RUN TACTIC]
+rw [fib_rec_unique] at h
+[END]
+
+
+`example_user`
+Goals to prove:
+[GOALS]
+[GOAL] 1
+fibonacci_non_computable n (impl n)
+[HYPOTHESES] 1
+[HYPOTHESIS] impl : ℕ → ℕ
+[HYPOTHESIS] h_generated_spec : ∀ (n : ℕ),
+[HYPOTHESIS]   let spec := fun result =>
+[HYPOTHESIS]     match n with
+[HYPOTHESIS]     | 0 => result = 0
+[HYPOTHESIS]     | 1 => result = 1
+[HYPOTHESIS]     | n'.succ.succ => result = impl n' + impl (n' + 1);
+[HYPOTHESIS]   ∃ result, impl n = result ∧ spec result
+[HYPOTHESIS] n : ℕ
+[HYPOTHESIS] h_impl_n' : ∀ (n : ℕ), impl (n + 2) = impl n + impl (n + 1)
+[HYPOTHESIS] h_impl_0 : impl 0 = 0
+[HYPOTHESIS] h_impl_1 : impl 1 = 1
+
+[INFORMAL-THEOREM]
+Given an integer n, your task is to find the nth Fibonacci number.
+The Fibonacci sequence is defined as follows:
+- F(0) = 1
+- F(1) = 1
+- F(n) = F(n-1) + F(n-2) for n > 1
+
+[FORMAL-THEOREM]
+inductive fibonacci_non_computable : ℕ → ℕ → Prop
+| base0 : fibonacci_non_computable 0 0
+| base1 : fibonacci_non_computable 1 1
+| step  : ∀ n f₁ f₂, fibonacci_non_computable n f₁ →
+fibonacci_non_computable (n + 1) f₂ →
+fibonacci_non_computable (n + 2) (f₁ + f₂)
+
+def problem_spec
+(impl: Nat → Nat)
+(n: Nat) :=
+let spec (result: Nat) :=
+fibonacci_non_computable n result
+∃ result, impl n = result ∧
+spec result
+
+def generated_spec
+(impl: Nat → Nat)
+(n: Nat) : Prop :=
+let spec (result: Nat) :=
+match n with
+| 0 => result = 0
+| 1 => result = 1
+| n' + 2 => result = impl n' + impl (n' + 1)
+∃ result, impl n = result ∧
+spec result
+
+theorem spec_isomorphism:
+∀ impl,
+(∀ x y, problem_spec impl x y) ↔
+(∀ x y, generated impl x y) :=
+
+[INFORMAL-PROOF]
+1. Start by unfolding both the `problem_spec` and `generated_spec` and splitting the "iff".
+2. Break the proof up into the base cases and the recursive case using `by_cases` and then `have`.
+3. Use the lemmas `fib0_unique`, `fib1_unique`, `fib_inversion`, and `fib_rec_unique_seq`.
+
+Throughout the proof, you can freely use any of the below helper lemmas, which you can assume to be true:
+[HELPER LEMMAS]
+[HELPER LEMMA]
+lemma fib0_unique (n : ℕ) (h : fibonacci_non_computable 0 n) : n = 0 :=
+[HELPER LEMMA]
+lemma fib1_unique (n : ℕ) (h : fibonacci_non_computable 1 n) : n = 1 :=
+[HELPER LEMMA]
+lemma fib_rec_unique (n m : ℕ):
+  fibonacci_non_computable (n + 2) m ↔
+  ∃ f₁ f₂, fibonacci_non_computable n f₁ ∧
+  fibonacci_non_computable (n + 1) f₂ ∧
+  m = f₁ + f₂ :=
+[HELPER LEMMA]
+lemma fib_inversion (n f₁ f₂ : ℕ)
+(h : fibonacci_non_computable n f₁) (h' : fibonacci_non_computable n f₂) :
+  f₁ = f₂ :=
+[HELPER LEMMA]
+lemma fib_rec_unique_seq (n : ℕ)
+(f : Nat → Nat)
+(h_f_0: f 0 = 0)
+(h_f_1: f 1 = 1)
+(h_f_step: ∀ n, f (n + 2) = f n + f (n + 1))
+: fibonacci_non_computable n (f n) :=
+
+[STEPS]
+[STEP] unfold problem_spec
+[STEP] unfold generated_spec
+[STEP] intro impl
+[STEP] apply Iff.intro
+[STEP] intro h_prob_spec
+[STEP] intro n
+[STEP] have h_impl_n_eq_0 := h_prob_spec n
+[STEP] simp at h_impl_n_eq_0
+[STEP] simp
+[STEP] by_cases h_n_lt_1: n < 2
+[STEP] -- if n = 0 then
+  have h_n_eq_0_or_1: n = 0 ∨ n = 1 := by
+[STEP] interval_cases n
+[STEP] all_goals simp
+[STEP] cases h_n_eq_0_or_1
+[STEP] rename_i h_n_eq_0
+[STEP] simp [h_n_eq_0] at *
+[STEP] apply fib0_unique
+[STEP] assumption
+[STEP] rename_i h_n_eq_1
+[STEP] simp [h_n_eq_1] at *
+[STEP] apply fib1_unique
+[STEP] assumption
+[STEP] set n' := n - 2
+[STEP] have h_n'_eq_n_plus_2: n = n' + 2 := by
+[STEP] rw [Nat.sub_add_cancel]
+[STEP] linarith
+[STEP] simp [h_n'_eq_n_plus_2] at *
+[STEP] clear h_n'_eq_n_plus_2 h_n_lt_1
+[STEP] have h_fib_n' := h_prob_spec n'
+[STEP] have h_fib_n'_1 := h_prob_spec (n' + 1)
+[STEP] simp at h_fib_n'
+[STEP] simp at h_fib_n'_1
+[STEP] have h_fib_combination := fibonacci_non_computable.step _ _ _ h_fib_n' h_fib_n'_1
+[STEP] have h_fib_inv := fib_inversion (n' + 2) _ _ h_fib_combination h_impl_n_eq_0
+[STEP] linarith
+[STEP] intro h_generated_spec
+[STEP] simp
+[STEP] intro n
+[STEP] have h_impl_n': ∀ n, impl (n + 2) = impl n + impl (n + 1) := by
+[STEP] intro n
+[STEP] have h_impl_temp := h_generated_spec (n + 2)
+[STEP] simp at h_impl_temp
+[STEP] assumption
+[STEP] have h_impl_0 := h_generated_spec 0
+[STEP] have h_impl_1 := h_generated_spec 1
+[STEP] simp at h_impl_0
+
+[LAST STEP]
+simp at h_impl_1
+[SUCCESS]
+[END]
+
+`example_assistant`
+[RUN TACTIC]
+-- the goal looks very similar to the helper lemma fib_rec_unique_seq, so let's use it with the right arguments
+simp [(fib_rec_unique_seq n impl h_impl_0 h_impl_1 h_impl_n')]
+[END]
+
 `conv end`
