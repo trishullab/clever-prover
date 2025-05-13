@@ -12,27 +12,6 @@ Goals to prove:
 Given two integers x and y, your task is to find if x is a square of y.
 The function should return true if x is a square of y, otherwise false.
 
-[FORMAL-THEOREM]
-def problem_spec
-(impl: Int → Int → Bool)
-(x: Int)
-(y: Int) :=
-let spec (result: Bool) :=
-result = true ↔ x = y^2;
-∃ result, impl x y = result ∧
-spec result
-
-def generated_spec
-(impl: Int → Int → Bool)
-(x: Int)
-(y: Int) : Prop :=
-impl x y = if x = y * y then true else false
-
-theorem spec_isomorphism:
-∀ impl,
-(∀ x y, problem_spec impl x y) ↔
-(∀ x y, generated_spec impl x y) :=
-
 [INFORMAL-PROOF]
 1. Start by analyzing the generated specification. The main idea is to create a specific instance of the generated specification and show that it satisfies the properties of the problem specification and vice versa.
 2. Use `by_cases` to handle the case when x = y * y and when x ≠ y * y.
@@ -81,29 +60,6 @@ impl x = if x < 0 then -x else x
 [INFORMAL-THEOREM]
 Given an integer x, your task is to find the magnitude of x.
 The magnitude of an integer is defined as the absolute value of the integer.
-
-[FORMAL-THEOREM]
-def problem_spec
-(impl: Int → Int)
-(x: Int) :=
-let spec (result: Int) :=
-(result ≥ 0) ∧
-(impl (-x) = result) ∧
-(result = 0 ↔ x = 0) ∧
-(0 ≤ x → impl (-x) + result = 2 * x) ∧
-(x ≤ 0 → impl (-x) + result = -2 * x)
-∃ result, impl x = result ∧
-spec result
-
-def generated_spec
-(impl: Int → Int)
-(x: Int) : Prop :=
-impl x = if x < 0 then -x else x
-
-theorem spec_isomorphism:
-∀ impl,
-(∀ x y, problem_spec impl x y) ↔
-(∀ x y, generated_spec impl x y) :=
 
 [INFORMAL-PROOF]
 1. Start by analyzing the generated specification. The original specification doesn't reveal the implementation details, but you can see that the generated specification is a simple if-else statement that checks if `x` is less than 0.
@@ -175,29 +131,6 @@ impl (-x) = impl x ∧
 [INFORMAL-THEOREM]
 Given an integer x, your task is to find the magnitude of x.
 The magnitude of an integer is defined as the absolute value of the integer.
-
-[FORMAL-THEOREM]
-def problem_spec
-(impl: Int → Int)
-(x: Int) :=
-let spec (result: Int) :=
-(result ≥ 0) ∧
-(impl (-x) = result) ∧
-(result = 0 ↔ x = 0) ∧
-(0 ≤ x → impl (-x) + result = 2 * x) ∧
-(x ≤ 0 → impl (-x) + result = -2 * x)
-∃ result, impl x = result ∧
-spec result
-
-def generated_spec
-(impl: Int → Int)
-(x: Int) : Prop :=
-impl x = if x < 0 then -x else x
-
-theorem spec_isomorphism:
-∀ impl,
-(∀ x y, problem_spec impl x y) ↔
-(∀ x y, generated_spec impl x y) :=
 
 [INFORMAL-PROOF]
 1. Start by analyzing the generated specification. The original specification doesn't reveal the implementation details, but you can see that the generated specification is a simple if-else statement that checks if `x` is less than 0.
@@ -294,29 +227,6 @@ impl (-x) = impl x ∧
 Given an integer x, your task is to find the magnitude of x.
 The magnitude of an integer is defined as the absolute value of the integer.
 
-[FORMAL-THEOREM]
-def problem_spec
-(impl: Int → Int)
-(x: Int) :=
-let spec (result: Int) :=
-(result ≥ 0) ∧
-(impl (-x) = result) ∧
-(result = 0 ↔ x = 0) ∧
-(0 ≤ x → impl (-x) + result = 2 * x) ∧
-(x ≤ 0 → impl (-x) + result = -2 * x)
-∃ result, impl x = result ∧
-spec result
-
-def generated_spec
-(impl: Int → Int)
-(x: Int) : Prop :=
-impl x = if x < 0 then -x else x
-
-theorem spec_isomorphism:
-∀ impl,
-(∀ x y, problem_spec impl x y) ↔
-(∀ x y, generated_spec impl x y) :=
-
 [INFORMAL-PROOF]
 1. Start by analyzing the generated specification. The original specification doesn't reveal the implementation details, but you can see that the generated specification is a simple if-else statement that checks if `x` is less than 0.
 2. Use this information to write a proof that shows that the two specifications are equivalent.
@@ -388,55 +298,6 @@ generated_spec.loop score_changes (threshold - k) score coins =
 [INFORMAL-THEOREM]
 Prove a `generated_spec_loop_threshold_invariant` lemma that states that for all integers `k`, decreasing the threshold by `k` yields the same output of `generated_spec.loop` as increasing the score by `k`.
 
-[FORMAL-THEOREM]
-def problem_spec
-(impl: List Int → Int → Nat)
-(score_changes: List Int)
-(threshold: Int) :=
-let spec (score_changes' : List Int) (threshold' : Int) (result: Nat) :=
-score_changes'.length > 0 →
-if result = 0 then
-  ∀ i, 1 ≤ i ∧ i ≤ score_changes'.length →
-  (score_changes'.take i).sum < threshold'
-else
-  (∃ i, 1 ≤ i ∧ i ≤ score_changes'.length →
-  (score_changes'.take i).sum ≥ threshold' →
-  ( let score_changes'' := score_changes'.drop i;
-    let threshold'' := threshold' - (score_changes'.take i).sum;
-    let result' := impl score_changes'' threshold'';
-    result = 1 + result') →
-  ∀ i', 1 ≤ i' ∧ i' < i → (score_changes'.take i').sum < threshold
-  );
-∃ result, impl score_changes threshold = result ∧
-spec score_changes threshold result
-
-def generated_spec
--- function signature
-(impl: List Int → Int → Nat)
--- inputs
-(score_changes: List Int)
-(threshold: Int) : Prop :=
---end_def generated_spec
---start_def generated_spec_body
-let rec loop (score_changes: List Int) (threshold: Int) (score: Int) (coins: Nat) : Nat :=
-  match score_changes with
-  | [] => coins
-  | head :: tail =>
-    let score' := head + score
-    let coins' := if score' ≥ threshold then coins + 1 else coins
-    loop tail threshold score' coins'
-impl score_changes threshold = loop score_changes threshold 0 0
-
-lemma generated_spec_loop_threshold_invariant
-(score_changes: List Int)
-(threshold: Int)
-(score: Int)
-(coins: Nat)
-(k: Int)
-(h_rounds_played: score_changes.length > 0)
-: generated_spec.loop score_changes (threshold - k) score coins
-= generated_spec.loop score_changes threshold (score + k) coins :=
-
 [INFORMAL-PROOF]
 1. Use induction and break the proof up into cases based on whether the head plus the cumulative score reaches the threshold.
 
@@ -500,55 +361,6 @@ generated_spec.loop (head :: tail) (threshold - k) score coins =
 [INFORMAL-THEOREM]
 Prove a `generated_spec_loop_threshold_invariant` lemma that states that for all integers `k`, decreasing the threshold by `k` yields the same output of `generated_spec.loop` as increasing the score by `k`.
 
-[FORMAL-THEOREM]
-def problem_spec
-(impl: List Int → Int → Nat)
-(score_changes: List Int)
-(threshold: Int) :=
-let spec (score_changes' : List Int) (threshold' : Int) (result: Nat) :=
-score_changes'.length > 0 →
-if result = 0 then
-  ∀ i, 1 ≤ i ∧ i ≤ score_changes'.length →
-  (score_changes'.take i).sum < threshold'
-else
-  (∃ i, 1 ≤ i ∧ i ≤ score_changes'.length →
-  (score_changes'.take i).sum ≥ threshold' →
-  ( let score_changes'' := score_changes'.drop i;
-    let threshold'' := threshold' - (score_changes'.take i).sum;
-    let result' := impl score_changes'' threshold'';
-    result = 1 + result') →
-  ∀ i', 1 ≤ i' ∧ i' < i → (score_changes'.take i').sum < threshold
-  );
-∃ result, impl score_changes threshold = result ∧
-spec score_changes threshold result
-
-def generated_spec
--- function signature
-(impl: List Int → Int → Nat)
--- inputs
-(score_changes: List Int)
-(threshold: Int) : Prop :=
---end_def generated_spec
---start_def generated_spec_body
-let rec loop (score_changes: List Int) (threshold: Int) (score: Int) (coins: Nat) : Nat :=
-  match score_changes with
-  | [] => coins
-  | head :: tail =>
-    let score' := head + score
-    let coins' := if score' ≥ threshold then coins + 1 else coins
-    loop tail threshold score' coins'
-impl score_changes threshold = loop score_changes threshold 0 0
-
-lemma generated_spec_loop_threshold_invariant
-(score_changes: List Int)
-(threshold: Int)
-(score: Int)
-(coins: Nat)
-(k: Int)
-(h_rounds_played: score_changes.length > 0)
-: generated_spec.loop score_changes (threshold - k) score coins
-= generated_spec.loop score_changes threshold (score + k) coins :=
-
 [INFORMAL-PROOF]
 1. Use induction and break the proof up into cases based on whether the head plus the cumulative score reaches the threshold.
 
@@ -601,55 +413,6 @@ generated_spec.loop tail (threshold - k) (head + score) (if threshold ≤ head +
 
 [INFORMAL-THEOREM]
 Prove a `generated_spec_loop_threshold_invariant` lemma that states that for all integers `k`, decreasing the threshold by `k` yields the same output of `generated_spec.loop` as increasing the score by `k`.
-
-[FORMAL-THEOREM]
-def problem_spec
-(impl: List Int → Int → Nat)
-(score_changes: List Int)
-(threshold: Int) :=
-let spec (score_changes' : List Int) (threshold' : Int) (result: Nat) :=
-score_changes'.length > 0 →
-if result = 0 then
-  ∀ i, 1 ≤ i ∧ i ≤ score_changes'.length →
-  (score_changes'.take i).sum < threshold'
-else
-  (∃ i, 1 ≤ i ∧ i ≤ score_changes'.length →
-  (score_changes'.take i).sum ≥ threshold' →
-  ( let score_changes'' := score_changes'.drop i;
-    let threshold'' := threshold' - (score_changes'.take i).sum;
-    let result' := impl score_changes'' threshold'';
-    result = 1 + result') →
-  ∀ i', 1 ≤ i' ∧ i' < i → (score_changes'.take i').sum < threshold
-  );
-∃ result, impl score_changes threshold = result ∧
-spec score_changes threshold result
-
-def generated_spec
--- function signature
-(impl: List Int → Int → Nat)
--- inputs
-(score_changes: List Int)
-(threshold: Int) : Prop :=
---end_def generated_spec
---start_def generated_spec_body
-let rec loop (score_changes: List Int) (threshold: Int) (score: Int) (coins: Nat) : Nat :=
-  match score_changes with
-  | [] => coins
-  | head :: tail =>
-    let score' := head + score
-    let coins' := if score' ≥ threshold then coins + 1 else coins
-    loop tail threshold score' coins'
-impl score_changes threshold = loop score_changes threshold 0 0
-
-lemma generated_spec_loop_threshold_invariant
-(score_changes: List Int)
-(threshold: Int)
-(score: Int)
-(coins: Nat)
-(k: Int)
-(h_rounds_played: score_changes.length > 0)
-: generated_spec.loop score_changes (threshold - k) score coins
-= generated_spec.loop score_changes threshold (score + k) coins :=
 
 [INFORMAL-PROOF]
 1. Use induction and break the proof up into cases based on whether the head plus the cumulative score reaches the threshold.
@@ -767,59 +530,6 @@ Goals to prove:
 [INFORMAL-THEOREM]
 Prove a `generated_spec_loop_invariant_continue` lemma that states that if the output of `generated_spec.loop` is strictly greater than the coin count input, then there exists an index `i'` at which the coin count output by `generated_spec.loop` increased by 1 and all previous indices `i` did not change the coin count output of `generated_spec.loop`.
 
-[FORMAL-THEOREM]
-def problem_spec
-(impl: List Int → Int → Nat)
-(score_changes: List Int)
-(threshold: Int) :=
-let spec (score_changes' : List Int) (threshold' : Int) (result: Nat) :=
-score_changes'.length > 0 →
-if result = 0 then
-  ∀ i, 1 ≤ i ∧ i ≤ score_changes'.length →
-  (score_changes'.take i).sum < threshold'
-else
-  (∃ i, 1 ≤ i ∧ i ≤ score_changes'.length →
-  (score_changes'.take i).sum ≥ threshold' →
-  ( let score_changes'' := score_changes'.drop i;
-    let threshold'' := threshold' - (score_changes'.take i).sum;
-    let result' := impl score_changes'' threshold'';
-    result = 1 + result') →
-  ∀ i', 1 ≤ i' ∧ i' < i → (score_changes'.take i').sum < threshold
-  );
-∃ result, impl score_changes threshold = result ∧
-spec score_changes threshold result
-
-def generated_spec
--- function signature
-(impl: List Int → Int → Nat)
--- inputs
-(score_changes: List Int)
-(threshold: Int) : Prop :=
---end_def generated_spec
---start_def generated_spec_body
-let rec loop (score_changes: List Int) (threshold: Int) (score: Int) (coins: Nat) : Nat :=
-  match score_changes with
-  | [] => coins
-  | head :: tail =>
-    let score' := head + score
-    let coins' := if score' ≥ threshold then coins + 1 else coins
-    loop tail threshold score' coins'
-impl score_changes threshold = loop score_changes threshold 0 0
-
-lemma generated_spec_loop_invariant_continue
-(score_changes: List Int)
-(threshold: Int)
-(score: Int)
-(coins: Nat)
-(h_rounds_played: score_changes.length > 0)
-(h_within_threshold: coins < generated_spec.loop score_changes threshold score coins)
-: ∃ i', 1 ≤ i' ∧ i' ≤ score_changes.length →
-(score + (score_changes.take i').sum ≥ threshold) →
-generated_spec.loop score_changes threshold score coins =
-1 + generated_spec.loop (score_changes.drop i') threshold
-(score + (score_changes.take i').sum) coins →
-∀ i, 1 ≤ i ∧ i < i' → score + (score_changes.take i).sum < threshold :=
-
 [INFORMAL-PROOF]
 1. Use induction and break the proof up into cases based on whether the head plus the cumulative score reaches the threshold.
 2. For the second case, break the proof up into more cases based on whether the tail has positive length.
@@ -920,59 +630,6 @@ Goals to prove:
 
 [INFORMAL-THEOREM]
 Prove a `generated_spec_loop_invariant_continue` lemma that states that if the output of `generated_spec.loop` is strictly greater than the coin count input, then there exists an index `i'` at which the coin count output by `generated_spec.loop` increased by 1 and all previous indices `i` did not change the coin count output of `generated_spec.loop`.
-
-[FORMAL-THEOREM]
-def problem_spec
-(impl: List Int → Int → Nat)
-(score_changes: List Int)
-(threshold: Int) :=
-let spec (score_changes' : List Int) (threshold' : Int) (result: Nat) :=
-score_changes'.length > 0 →
-if result = 0 then
-  ∀ i, 1 ≤ i ∧ i ≤ score_changes'.length →
-  (score_changes'.take i).sum < threshold'
-else
-  (∃ i, 1 ≤ i ∧ i ≤ score_changes'.length →
-  (score_changes'.take i).sum ≥ threshold' →
-  ( let score_changes'' := score_changes'.drop i;
-    let threshold'' := threshold' - (score_changes'.take i).sum;
-    let result' := impl score_changes'' threshold'';
-    result = 1 + result') →
-  ∀ i', 1 ≤ i' ∧ i' < i → (score_changes'.take i').sum < threshold
-  );
-∃ result, impl score_changes threshold = result ∧
-spec score_changes threshold result
-
-def generated_spec
--- function signature
-(impl: List Int → Int → Nat)
--- inputs
-(score_changes: List Int)
-(threshold: Int) : Prop :=
---end_def generated_spec
---start_def generated_spec_body
-let rec loop (score_changes: List Int) (threshold: Int) (score: Int) (coins: Nat) : Nat :=
-  match score_changes with
-  | [] => coins
-  | head :: tail =>
-    let score' := head + score
-    let coins' := if score' ≥ threshold then coins + 1 else coins
-    loop tail threshold score' coins'
-impl score_changes threshold = loop score_changes threshold 0 0
-
-lemma generated_spec_loop_invariant_continue
-(score_changes: List Int)
-(threshold: Int)
-(score: Int)
-(coins: Nat)
-(h_rounds_played: score_changes.length > 0)
-(h_within_threshold: coins < generated_spec.loop score_changes threshold score coins)
-: ∃ i', 1 ≤ i' ∧ i' ≤ score_changes.length →
-(score + (score_changes.take i').sum ≥ threshold) →
-generated_spec.loop score_changes threshold score coins =
-1 + generated_spec.loop (score_changes.drop i') threshold
-(score + (score_changes.take i').sum) coins →
-∀ i, 1 ≤ i ∧ i < i' → score + (score_changes.take i).sum < threshold :=
 
 [INFORMAL-PROOF]
 1. Use induction and break the proof up into cases based on whether the head plus the cumulative score reaches the threshold.
@@ -1201,59 +858,6 @@ score + (head + (List.take i' tail).sum) < threshold
 [INFORMAL-THEOREM]
 Prove a `generated_spec_loop_invariant_continue` lemma that states that if the output of `generated_spec.loop` is strictly greater than the coin count input, then there exists an index `i'` at which the coin count output by `generated_spec.loop` increased by 1 and all previous indices `i` did not change the coin count output of `generated_spec.loop`.
 
-[FORMAL-THEOREM]
-def problem_spec
-(impl: List Int → Int → Nat)
-(score_changes: List Int)
-(threshold: Int) :=
-let spec (score_changes' : List Int) (threshold' : Int) (result: Nat) :=
-score_changes'.length > 0 →
-if result = 0 then
-  ∀ i, 1 ≤ i ∧ i ≤ score_changes'.length →
-  (score_changes'.take i).sum < threshold'
-else
-  (∃ i, 1 ≤ i ∧ i ≤ score_changes'.length →
-  (score_changes'.take i).sum ≥ threshold' →
-  ( let score_changes'' := score_changes'.drop i;
-    let threshold'' := threshold' - (score_changes'.take i).sum;
-    let result' := impl score_changes'' threshold'';
-    result = 1 + result') →
-  ∀ i', 1 ≤ i' ∧ i' < i → (score_changes'.take i').sum < threshold
-  );
-∃ result, impl score_changes threshold = result ∧
-spec score_changes threshold result
-
-def generated_spec
--- function signature
-(impl: List Int → Int → Nat)
--- inputs
-(score_changes: List Int)
-(threshold: Int) : Prop :=
---end_def generated_spec
---start_def generated_spec_body
-let rec loop (score_changes: List Int) (threshold: Int) (score: Int) (coins: Nat) : Nat :=
-  match score_changes with
-  | [] => coins
-  | head :: tail =>
-    let score' := head + score
-    let coins' := if score' ≥ threshold then coins + 1 else coins
-    loop tail threshold score' coins'
-impl score_changes threshold = loop score_changes threshold 0 0
-
-lemma generated_spec_loop_invariant_continue
-(score_changes: List Int)
-(threshold: Int)
-(score: Int)
-(coins: Nat)
-(h_rounds_played: score_changes.length > 0)
-(h_within_threshold: coins < generated_spec.loop score_changes threshold score coins)
-: ∃ i', 1 ≤ i' ∧ i' ≤ score_changes.length →
-(score + (score_changes.take i').sum ≥ threshold) →
-generated_spec.loop score_changes threshold score coins =
-1 + generated_spec.loop (score_changes.drop i') threshold
-(score + (score_changes.take i').sum) coins →
-∀ i, 1 ≤ i ∧ i < i' → score + (score_changes.take i).sum < threshold :=
-
 [INFORMAL-PROOF]
 1. Use induction and break the proof up into cases based on whether the head plus the cumulative score reaches the threshold.
 2. For the second case, break the proof up into more cases based on whether the tail has positive length.
@@ -1410,27 +1014,6 @@ impl x y = decide (x = y * y)
 Given two integers x and y, your task is to find if x is a square of y.
 The function should return true if x is a square of y, otherwise false.
 
-[FORMAL-THEOREM]
-def problem_spec
-(impl: Int → Int → Bool)
-(x: Int)
-(y: Int) :=
-let spec (result: Bool) :=
-result = true ↔ x = y^2;
-∃ result, impl x y = result ∧
-spec result
-
-def generated_spec
-(impl: Int → Int → Bool)
-(x: Int)
-(y: Int) : Prop :=
-impl x y = if x = y * y then true else false
-
-theorem spec_isomorphism:
-∀ impl,
-(∀ x y, problem_spec impl x y) ↔
-(∀ x y, generated_spec impl x y) :=
-
 [INFORMAL-PROOF]
 1. Start by analyzing the generated specification. The main idea is to create a specific instance of the generated specification and show that it satisfies the properties of the problem specification and vice versa.
 2. Use `by_cases` to handle the case when x = y * y and when x ≠ y * y.
@@ -1478,27 +1061,6 @@ impl x y = false
 [INFORMAL-THEOREM]
 Given two integers x and y, your task is to find if x is a square of y.
 The function should return true if x is a square of y, otherwise false.
-
-[FORMAL-THEOREM]
-def problem_spec
-(impl: Int → Int → Bool)
-(x: Int)
-(y: Int) :=
-let spec (result: Bool) :=
-result = true ↔ x = y^2;
-∃ result, impl x y = result ∧
-spec result
-
-def generated_spec
-(impl: Int → Int → Bool)
-(x: Int)
-(y: Int) : Prop :=
-impl x y = if x = y * y then true else false
-
-theorem spec_isomorphism:
-∀ impl,
-(∀ x y, problem_spec impl x y) ↔
-(∀ x y, generated_spec impl x y) :=
 
 [INFORMAL-PROOF]
 1. Start by analyzing the generated specification. The main idea is to create a specific instance of the generated specification and show that it satisfies the properties of the problem specification and vice versa.
@@ -1553,27 +1115,6 @@ y ^ 2 = y * y
 Given two integers x and y, your task is to find if x is a square of y.
 The function should return true if x is a square of y, otherwise false.
 
-[FORMAL-THEOREM]
-def problem_spec
-(impl: Int → Int → Bool)
-(x: Int)
-(y: Int) :=
-let spec (result: Bool) :=
-result = true ↔ x = y^2;
-∃ result, impl x y = result ∧
-spec result
-
-def generated_spec
-(impl: Int → Int → Bool)
-(x: Int)
-(y: Int) : Prop :=
-impl x y = if x = y * y then true else false
-
-theorem spec_isomorphism:
-∀ impl,
-(∀ x y, problem_spec impl x y) ↔
-(∀ x y, generated_spec impl x y) :=
-
 [INFORMAL-PROOF]
 1. Start by analyzing the generated specification. The main idea is to create a specific instance of the generated specification and show that it satisfies the properties of the problem specification and vice versa.
 2. Use `by_cases` to handle the case when x = y * y and when x ≠ y * y.
@@ -1621,27 +1162,6 @@ generated_spec impl x y
 Given two integers x and y, your task is to find if x is a square of y.
 The function should return true if x is a square of y, otherwise false.
 
-[FORMAL-THEOREM]
-def problem_spec
-(impl: Int → Int → Bool)
-(x: Int)
-(y: Int) :=
-let spec (result: Bool) :=
-result = true ↔ x = y^2;
-∃ result, impl x y = result ∧
-spec result
-
-def generated_spec
-(impl: Int → Int → Bool)
-(x: Int)
-(y: Int) : Prop :=
-impl x y = if x = y * y then true else false
-
-theorem spec_isomorphism:
-∀ impl,
-(∀ x y, generated_spec impl x y) ↔
-(∀ x y, problem_spec impl x y) :=
-
 [INFORMAL-PROOF]
 1. Start by analyzing the generated specification. The main idea is to create a specific instance of the generated specification and show that it satisfies the properties of the problem specification and vice versa.
 2. Use `by_cases` to handle the case when x = y * y and when x ≠ y * y.
@@ -1677,27 +1197,6 @@ Goals to prove:
 [INFORMAL-THEOREM]
 Given two integers x and y, your task is to find if x is a square of y.
 The function should return true if x is a square of y, otherwise false.
-
-[FORMAL-THEOREM]
-def problem_spec
-(impl: Int → Int → Bool)
-(x: Int)
-(y: Int) :=
-let spec (result: Bool) :=
-result = true ↔ x = y^2;
-∃ result, impl x y = result ∧
-spec result
-
-def generated_spec
-(impl: Int → Int → Bool)
-(x: Int)
-(y: Int) : Prop :=
-impl x y = if x = y * y then true else false
-
-theorem spec_isomorphism:
-∀ impl,
-(∀ x y, generated_spec impl x y) ↔
-(∀ x y, problem_spec impl x y) :=
 
 [INFORMAL-PROOF]
 1. Start by analyzing the generated specification. The main idea is to create a specific instance of the generated specification and show that it satisfies the properties of the problem specification and vice versa.
@@ -1741,27 +1240,6 @@ impl x y = true ↔ x = y ^ 2
 Given two integers x and y, your task is to find if x is a square of y.
 The function should return true if x is a square of y, otherwise false.
 
-[FORMAL-THEOREM]
-def problem_spec
-(impl: Int → Int → Bool)
-(x: Int)
-(y: Int) :=
-let spec (result: Bool) :=
-result = true ↔ x = y^2;
-∃ result, impl x y = result ∧
-spec result
-
-def generated_spec
-(impl: Int → Int → Bool)
-(x: Int)
-(y: Int) : Prop :=
-impl x y = if x = y * y then true else false
-
-theorem spec_isomorphism:
-∀ impl,
-(∀ x y, generated_spec impl x y) ↔
-(∀ x y, problem_spec impl x y) :=
-
 [INFORMAL-PROOF]
 1. Start by analyzing the generated specification. The main idea is to create a specific instance of the generated specification and show that it satisfies the properties of the problem specification and vice versa.
 2. It is important to note that we should not use specific implementation details in the proof because the specification has to be proven for all implementations. So assuming a specific implementation is not a good idea.
@@ -1800,27 +1278,6 @@ Goals to prove:
 [INFORMAL-THEOREM]
 Given two integers x and y, your task is to find if x is a square of y.
 The function should return true if x is a square of y, otherwise false.
-
-[FORMAL-THEOREM]
-def problem_spec
-(impl: Int → Int → Bool)
-(x: Int)
-(y: Int) :=
-let spec (result: Bool) :=
-result = true ↔ x = y^2;
-∃ result, impl x y = result ∧
-spec result
-
-def generated_spec
-(impl: Int → Int → Bool)
-(x: Int)
-(y: Int) : Prop :=
-impl x y = if x = y * y then true else false
-
-theorem spec_isomorphism:
-∀ impl,
-(∀ x y, generated_spec impl x y) ↔
-(∀ x y, problem_spec impl x y) :=
 
 [INFORMAL-PROOF]
 1. Start by analyzing the generated specification. The main idea is to create a specific instance of the generated specification and show that it satisfies the properties of the problem specification and vice versa.
