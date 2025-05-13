@@ -200,7 +200,8 @@ class ImplGenerator(ImplementationGenerationTask):
                     logger.info("Not all lemmas proven.")
                     generation_result = GenerationResult.REGENERATE
                 if generation_result == GenerationResult.FINAL:
-                    copra_formal_theorem = problem.problem_spec_formal_ground_truth + "\n\n" + problem.implementation_signature + "\n" + problem.implementation + "\n\n" + problem.correctness_theorem
+                    # copra_formal_theorem = problem.problem_spec_formal_ground_truth + "\n\n" + problem.implementation_signature + "\n" + problem.implementation + "\n\n" + problem.correctness_theorem
+                    copra_formal_theorem = None
                     proof, proof_found, time_remaining_in_ms = self._generate_proof(
                         problem=problem,
                         theorem_description=problem.problem_spec_nl,
@@ -357,7 +358,8 @@ class ImplGenerator(ImplementationGenerationTask):
         is_time_elapsed = False
         for lemma_plan in lemma_plans:
             full_proof_strategy = lemma_plan.lemma_proof_strategy + proven_lemmas_str
-            copra_formal_theorem = problem.problem_spec_formal_ground_truth + "\n\n" + problem.implementation_signature + "\n" + problem.implementation + "\n\n" + lemma_plan.lemma
+            # copra_formal_theorem = problem.problem_spec_formal_ground_truth + "\n\n" + problem.implementation_signature + "\n" + problem.implementation + "\n\n" + lemma_plan.lemma
+            copra_formal_theorem = None
             proof, proof_found, time_remaining_in_ms = self._generate_proof(
                 problem=problem,
                 theorem_description=lemma_plan.lemma,

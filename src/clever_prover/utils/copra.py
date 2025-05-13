@@ -64,8 +64,8 @@ def get_proof_via_copra(
                     informal_problem_temp = informal_problem_temp[:informal_problem_end_ind]
             informal_problem_temp = informal_problem_temp.strip()
             informal_hint_temp = informal_hints
-        if copra_formal_theorem is not None:
-            informal_problem_temp += ("\n\n[FORMAL-THEOREM]\n" + copra_formal_theorem) # TODO: find a better way to do this?
+        # if copra_formal_theorem is not None: # TODO: fully remove copra_formal_theorem
+        #     informal_problem_temp += ("\n\n[FORMAL-THEOREM]\n" + copra_formal_theorem) # find a better way to do this?
         informal_repo = TempInformalProofRepo(
             theorem_name=lemma_name,
             informal_problem=informal_problem_temp,

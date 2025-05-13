@@ -203,7 +203,8 @@ class IsoGenerator(SpecGenerationTask):
                     logger.info("Not all lemmas proven, will go for regeneration.")
                     generation_result = GenerationResult.REGENERATE
                 if generation_result == GenerationResult.FINAL:
-                    copra_formal_theorem = problem.problem_spec_formal_ground_truth + "\n\n" + problem.problem_spec_formal_generated + "\n\n" + problem.isomorphism_theorem
+                    # copra_formal_theorem = problem.problem_spec_formal_ground_truth + "\n\n" + problem.problem_spec_formal_generated + "\n\n" + problem.isomorphism_theorem
+                    copra_formal_theorem = None
                     proof, proof_found, time_remaining_in_ms = self._generate_proof(
                         problem=problem,
                         theorem_description=problem.problem_spec_nl,
@@ -356,7 +357,8 @@ class IsoGenerator(SpecGenerationTask):
         is_time_elapsed = False
         for lemma_plan in lemma_plans:
             full_proof_strategy = lemma_plan.lemma_proof_strategy + proven_lemmas_str
-            copra_formal_theorem = problem.problem_spec_formal_ground_truth + "\n\n" + problem.problem_spec_formal_generated + "\n\n" + lemma_plan.lemma
+            # copra_formal_theorem = problem.problem_spec_formal_ground_truth + "\n\n" + problem.problem_spec_formal_generated + "\n\n" + lemma_plan.lemma
+            copra_formal_theorem = None
             proof, proof_found, time_remaining_in_ms = self._generate_proof(
                 problem=problem,
                 theorem_description=lemma_plan.lemma,
