@@ -92,83 +92,6 @@ contradiction
 
 `example_user`
 [NL DESCRIPTION]
-def find_fibonacci(n: int) -> int
-"""
-Given an integer n, your task is to find the nth Fibonacci number.
-The Fibonacci sequence is defined as follows:
-- F(0) = 1
-- F(1) = 1
-- F(n) = F(n-1) + F(n-2) for n > 1
-"""
-
-[SPECIFICATION]
-def problem_spec
--- function signature
-(impl: Nat → Nat)
--- inputs
-(n: Nat) :=
--- spec
-let spec (result: Nat) :=
-fibonacci_non_computable n result
--- program terminates
-∃ result, impl n = result ∧
--- return value satisfies spec
-spec result
-
-[IMPLEMENTATION]
-def implementation (n: Nat) : Nat :=
-match n with
-| 0 => 0
-| 1 => 1
-| n' + 2 => implementation n' + implementation (n' + 1)
-
-[THEOREM STATEMENT]
-theorem correctness
-(n: Nat)
-: problem_spec implementation n
-:=
-
-[PROOF PLAN]
-1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
-2. Use the `have` keyword three times to show that `implementation` follows the three properties of the Fibonacci function:
-  - `implementation 0 = 1`
-  - `implementation 1 = 1`
-  - `∀ n', implementation (n' + 2) = implementation n' + implementation (n' + 1)`
-3. Then use these three hypotheses and the `fib_comp_to_non_comp` lemma to show that `implementation` satisfies `fibonacci_non_computable`, as required by the `spec`.
-
-Throughout the proof, you can freely use any of the below helper lemmas, which you can assume to be true:
-[HELPER LEMMA]
-lemma fib_comp_to_non_comp (n : ℕ)
-(f : Nat → Nat)
-(h_f_0: f 0 = 1)
-(h_f_1: f 1 = 1)
-(h_f_step: ∀ n, f (n + 2) = f n + f (n + 1))
-: fibonacci_non_computable n (f n) :=
-
-
-
-`example_assistant`
-[PROOF]
-by
-unfold problem_spec
-let result := implementation n
-use result
-simp [result]
-have h_impl_n : ∀ n', implementation (n' + 2) = implementation n' + implementation (n' + 1) :=
-by
-  intro n'
-  rw [implementation]
-have h_impl_0 : implementation 0 = 0 := by
-  rw [implementation]
-have h_impl_1 : implementation 1 = 1 := by
-  rw [implementation]
-apply fib_comp_to_non_comp
-all_goals assumption
-[END]
-
-
-`example_user`
-[NL DESCRIPTION]
 def coins_won(score_changes: List[int], threshold: int) -> int
 """
 In a game, a player's score starts at 0 and is updated round by round using values from the list
@@ -225,7 +148,7 @@ theorem correctness
 
 [PROOF PLAN]
 1. Start by unfolding the `problem_spec` and assigning the implementation's output to a temporary variable `result`.
-2. Early on, you will want to break the proof up into cases based on whether the output of `implementation_loop` (with initial values as input) is 0.
+2. Early on, you will want to break the proof up into cases based on whether the output of `implementation.loop` (with initial values as input) is 0.
 3. Use the `implementation_loop_threshold_invariant`, `implementation_loop_invariant_stop`, and `implementation_loop_invariant_continue` lemmas in the proof.
 
 Throughout the proof, you can freely use any of the below helper lemmas, which you can assume to be true:
