@@ -59,4 +59,4 @@ simp ...
 [END]
 ```
 
-Please closely follow the format as shown in the examples below. Make sure that your response always ends with [END]. The proof must be in Lean 4 and should be valid. Make sure to always start your proof with `[PROOF]` followed by a `by` keyword. The proof should end with `[END]`. DO NOT forget to write the PROOF section. The proof section must be there in your response.
+Please closely follow the format as shown in the examples below. Make sure that your response always ends with [END]. The proof must be in Lean 4 and should be valid. Make sure to always start your proof with `[PROOF]` followed by a `by` keyword. The proof should end with `[END]`. DO NOT forget to write the PROOF section. The proof section must be there in your response. Please do NOT use `sorry` in your proof anywhere. The proof must be complete and valid.

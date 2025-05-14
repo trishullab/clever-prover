@@ -51,7 +51,8 @@ class IsoGenerator(SpecGenerationTask):
         lemma_name="spec_isomorphism",
         num_spec_samples=5,
         num_proof_plan_samples=5,
-        logger: logging.Logger = None):
+        logger: logging.Logger = None,
+        regeneration_off: bool = True):
         """
         Initialize the IsoGenerator with project path, file path, and lemma name.
         """
@@ -80,7 +81,8 @@ class IsoGenerator(SpecGenerationTask):
         self.helper_lemmas = None
         self.generated_proof = None
         self.spec_plan = None
-        self.max_copra_queries = 60
+        self.max_copra_queries = 200
+        self.regeneration_off = regeneration_off
     
     @property
     def use_spec_planner(self):
@@ -234,11 +236,11 @@ class IsoGenerator(SpecGenerationTask):
             is_time_elapsed = time_remaining_in_ms <= 0
             attempt_idx += 1
             proof_sample_count += 1
-            if generation_result == GenerationResult.REGENERATE:
+            if generation_result == GenerationResult.REGENERATE and not self.regeneration_off:
                 logger.info("Giving up on proof will regenerate implementation.")
                 break
             else:
-                logger.info("Will retry the same proof generation.")
+                logger.info(f"Will retry the same proof generation. Regeneration off = {self.regeneration_off}")
         problem.isomorphism_proof = proof
         self.generated_proof_problem_view = problem
         full_lean_code, _ = format_problem_as_lean_with_line_ranges(problem)

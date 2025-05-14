@@ -8,7 +8,7 @@ from copra.agent.rate_limiter import RateLimiter
 from copra.gpts.gpt_access import GptAccess
 from copra.gpts.llama_access import LlamaAccess, ServiceDownError
 from copra.prompt_generator.dfs_agent_grammar import DfsAgentGrammar
-from copra.tools.misc import is_open_ai_model
+from copra.tools.misc import model_supports_openai_api
 
 class SimplePrompter:
     def __init__(self, 
@@ -31,7 +31,7 @@ class SimplePrompter:
         conv_messages = self.agent_grammar.get_openai_conv_messages(example_conv_prompt_path, "system")
         main_message = self.agent_grammar.get_openai_main_message(main_sys_prompt_path, "system")
         self.system_messages = [main_message] + conv_messages
-        if not is_open_ai_model(model_name):
+        if not model_supports_openai_api(model_name):
             self._gpt_access = LlamaAccess(model_name)
         else:
             self._gpt_access = GptAccess(secret_filepath=secret_filepath, model_name=model_name)

@@ -3,13 +3,13 @@ defaults:
   - override hydra/job_logging: 'disabled'
 
 task_type: IMPL_CORRECTNESS
-log_dir: ".logs/eval_few_shot_impl_proof_plan_copra_proof"
-exp_name: "few_shot_impl_proof_plan_copra_proof"
+log_dir: ".logs/eval_few_shot_impl_proof_plan_copra_proof_o4_mini"
+exp_name: "few_shot_impl_proof_plan_copra_proof_o4_mini"
 impl_generation_strategy: "ImplGenerator"
-# problems_to_solve: [2, 3, 8, 9, 17, 41, 45, 53, 57, 72, 85, 144, 159]
 problems_to_solve: "*"
+# problems_to_solve: [2, 3, 8, 9, 17, 41, 45, 53, 57, 72, 85, 144, 159]
 k: 1
-timeout_in_ses: 600
+timeout_in_ses: 1000
 params:
   proof_dump_file_path: "proofs.txt"
   num_implementation_samples: 1000
@@ -42,8 +42,10 @@ params:
     max_history_messages: 0
     end_tokens: ["[END]"]
   proof_planner_model_settings:
-    model_name: "gpt-4o"
+    model_name: "o4-mini"
     secret_path: ".secrets/openai_key.json"
+    reasoning_effort: low
+    reasoning_token_count: 7500
     temperature: 0.75
   impl_planner_model_settings: null
   impl_planner_prompt_settings: null

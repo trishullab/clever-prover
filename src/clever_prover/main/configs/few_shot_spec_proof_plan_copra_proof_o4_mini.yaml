@@ -2,32 +2,32 @@
 defaults:
   - override hydra/job_logging: 'disabled'
 
-task_type: IMPL_CORRECTNESS
-log_dir: ".logs/eval_few_shot_impl_proof_plan_copra_proof"
-exp_name: "few_shot_impl_proof_plan_copra_proof"
-impl_generation_strategy: "ImplGenerator"
-# problems_to_solve: [2, 3, 8, 9, 17, 41, 45, 53, 57, 72, 85, 144, 159]
+task_type: SPEC_ISOMORPHISM
+log_dir: ".logs/eval_few_shot_spec_proof_plan_copra_proof_o4_mini"
+exp_name: "few_shot_spec_proof_plan_copra_proof_o4_mini"
+spec_generation_strategy: "IsoGenerator"
+# problems_to_solve: [2, 8, 17, 23, 26, 30, 41, 45, 65]
 problems_to_solve: "*"
 k: 1
-timeout_in_ses: 600
+timeout_in_ses: 1000
 params:
   proof_dump_file_path: "proofs.txt"
-  num_implementation_samples: 1000
+  num_spec_samples: 1000
   num_proof_plan_samples: 1000
   uses_copra_prover: true
-  impl_prompt_settings:
-    system_prompt_path: "src/clever_prover/prompts/baselines/system/FewShotImplGeneration.md"
-    example_prompt_path: "src/clever_prover/prompts/baselines/examples/FewShotImplGeneration.md"
+  spec_prompt_settings:
+    system_prompt_path: "src/clever_prover/prompts/baselines/system/FewShotSpecGeneration.md"
+    example_prompt_path: "src/clever_prover/prompts/baselines/examples/FewShotSpecGeneration.md"
     max_tokens_per_action: 10000
     max_history_messages: 0
     end_tokens: ["[END]"]
-  impl_model_settings:
+  spec_model_settings:
     model_name: "gpt-4o"
     secret_path: ".secrets/openai_key.json"
     temperature: 0.75
   prover_prompt_settings:
     system_prompt_path: "src/clever_prover/prompts/clever_prompts/system/Copra.md"
-    example_prompt_path: "src/clever_prover/prompts/clever_prompts/examples/ImplCopra.md"
+    example_prompt_path: "src/clever_prover/prompts/clever_prompts/examples/SpecCopra.md"
     max_tokens_per_action: 400
     max_history_messages: 0
     end_tokens: ["[END]"]
@@ -36,24 +36,24 @@ params:
     secret_path: ".secrets/openai_key.json"
     temperature: 0.75
   proof_planner_prompt_settings:
-    system_prompt_path: "src/clever_prover/prompts/clever_prompts/system/ImplProofPlanner.md"
-    example_prompt_path: "src/clever_prover/prompts/clever_prompts/examples/ImplProofPlanner.md"
+    system_prompt_path: "src/clever_prover/prompts/clever_prompts/system/SpecProofPlanner.md"
+    example_prompt_path: "src/clever_prover/prompts/clever_prompts/examples/SpecProofPlanner.md"
     max_tokens_per_action: 10000
     max_history_messages: 0
     end_tokens: ["[END]"]
   proof_planner_model_settings:
-    model_name: "gpt-4o"
+    model_name: "o4-mini"
     secret_path: ".secrets/openai_key.json"
     temperature: 0.75
-  impl_planner_model_settings: null
-  impl_planner_prompt_settings: null
-  # impl_planner_prompt_settings:
+  spec_planner_prompt_settings: null
+  spec_planner_model_settings: null
+  # spec_planner_prompt_settings:
   #   system_prompt_path: "src/clever_prover/prompts/clever_prompts/system/ImplementationPlanner.md"
   #   example_prompt_path: "src/clever_prover/prompts/clever_prompts/examples/ImplementationPlanner.md"
   #   max_tokens_per_action: 10000
   #   max_history_messages: 0
   #   end_tokens: ["[END]"]
-  # impl_planner_model_settings:
+  # spec_planner_model_settings:
   #   model_name: "gpt-4o"
   #   secret_path: ".secrets/openai_key.json"
   #   temperature: 0.75

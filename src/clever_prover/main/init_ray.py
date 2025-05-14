@@ -24,9 +24,10 @@ def main():
     pid = os.getpid()
     print("Initializing Ray")
     print("PID: ", pid)
+    ray_session_path = ".log/ray/session_latest" if os.environ.get("RAY_SESSION_PATH") is None else os.environ.get("RAY_SESSION_PATH")
     with FileLock(".log/locks/ray.lock"):
-        if os.path.exists(".log/ray/session_latest"):
-            with open(".log/ray/session_latest", "r") as f:
+        if os.path.exists(ray_session_path):
+            with open(ray_session_path, "r") as f:
                 ray_session = f.read()
                 ray_session = json.loads(ray_session)
             ray_address = ray_session["address"]
@@ -46,7 +47,7 @@ def main():
             ray_session = dict(ray_session)
             ray_session["main_pid"] = pid
             print("Ray session: ", ray_session)
-            with open(".log/ray/session_latest", "w") as f:
+            with open(ray_session_path, "w") as f:
                 f.write(json.dumps(ray_session))
             ray_was_started = True
             print("Ray was started")
