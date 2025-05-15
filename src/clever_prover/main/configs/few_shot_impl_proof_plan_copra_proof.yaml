@@ -9,7 +9,7 @@ impl_generation_strategy: "ImplGenerator"
 # problems_to_solve: [2, 3, 8, 9, 17, 41, 45, 53, 57, 72, 85, 144, 159]
 problems_to_solve: "*"
 k: 1
-timeout_in_ses: 600
+timeout_in_secs: 600
 params:
   proof_dump_file_path: "proofs.txt"
   num_implementation_samples: 1000

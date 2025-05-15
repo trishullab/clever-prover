@@ -9,9 +9,10 @@ impl_generation_strategy: "ImplGenerator"
 # problems_to_solve: [41, 2, 8, 17, 23, 26, 30, 45, 72, 82]
 # problems_to_solve: [0, 3, 4, 8, 9, 52, 55, 57, 72, 73, 88, 92, 95, 100, 102, 106, 121, 126, 136, 138, 139, 150, 151, 152, 155, 159, 163] # [12, 29, 31, 32, 34, 44, 65, 76, 81, 99] # [23] #, 114, 26, 72, 8, 53, 85, 41] # [114, 14, 81, 32, 109, 53, 23, 130, 80, 104, 120, 82, 58, 92, 10, 147, 46, 85, 157, 41]
 # problems_to_solve: [3, 9, 55, 57, 136]
-problems_to_solve: "*"
+# problems_to_solve: "*"
+problems_to_solve: [2, 8, 17, 41, 45, 53, 57, 72, 85, 144, 159]
 k: 1
-timeout_in_ses: 600
+timeout_in_secs: 600
 params:
   proof_dump_file_path: "proofs.txt"
   num_implementation_samples: 1000
@@ -29,14 +30,14 @@ params:
     temperature: 0.75
   prover_prompt_settings:
     system_prompt_path: "src/clever_prover/prompts/clever_prompts/system/Copra.md"
-    example_prompt_path: "src/clever_prover/prompts/clever_prompts/examples/ImplCopra.md"
+    example_prompt_path: "src/clever_prover/prompts/clever_prompts/examples/ImplCopraSimple.md"
     max_tokens_per_action: 400
     max_history_messages: 0
     end_tokens: ["[END]"]
   prover_model_settings:
     model_name: "gpt-4o"
     secret_path: ".secrets/openai_key.json"
-    temperature: 0.9
+    temperature: 0.75
   proof_planner_prompt_settings: null
   proof_planner_model_settings: null
   impl_planner_model_settings: null

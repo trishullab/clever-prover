@@ -8,7 +8,7 @@ exp_name: "few_shot_spec_few_shot_proof_o4_mini"
 spec_generation_strategy: "IsoGenerator"
 problems_to_solve: "*"
 k: 1
-timeout_in_ses: 600
+timeout_in_secs: 600
 params:
   proof_dump_file_path: "proofs.txt"
   num_spec_samples: 1000

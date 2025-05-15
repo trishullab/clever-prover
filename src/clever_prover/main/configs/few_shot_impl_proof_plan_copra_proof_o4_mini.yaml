@@ -9,7 +9,7 @@ impl_generation_strategy: "ImplGenerator"
 problems_to_solve: "*"
 # problems_to_solve: [2, 3, 8, 9, 17, 41, 45, 53, 57, 72, 85, 144, 159]
 k: 1
-timeout_in_ses: 1000
+timeout_in_secs: 1000
 params:
   proof_dump_file_path: "proofs.txt"
   num_implementation_samples: 1000
@@ -22,7 +22,7 @@ params:
     max_history_messages: 0
     end_tokens: ["[END]"]
   impl_model_settings:
-    model_name: "gpt-4o"
+    model_name: "o4-mini"
     secret_path: ".secrets/openai_key.json"
     temperature: 0.75
   prover_prompt_settings:
@@ -32,7 +32,7 @@ params:
     max_history_messages: 0
     end_tokens: ["[END]"]
   prover_model_settings:
-    model_name: "gpt-4o"
+    model_name: "o4-mini"
     secret_path: ".secrets/openai_key.json"
     temperature: 0.75
   proof_planner_prompt_settings:

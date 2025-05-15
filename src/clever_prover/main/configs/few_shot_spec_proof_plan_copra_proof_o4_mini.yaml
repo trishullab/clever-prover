@@ -9,7 +9,7 @@ spec_generation_strategy: "IsoGenerator"
 # problems_to_solve: [2, 8, 17, 23, 26, 30, 41, 45, 65]
 problems_to_solve: "*"
 k: 1
-timeout_in_ses: 1000
+timeout_in_secs: 1000
 params:
   proof_dump_file_path: "proofs.txt"
   num_spec_samples: 1000
