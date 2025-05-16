@@ -55,6 +55,16 @@ def eval_spec_generation(
         compiles=False,
         is_proven=False
     )
+    skip_proof = False
+    skip_checkpoint = False
+    validation_result = ValidationResult(
+        problem_id=idx,
+        isomorphism_ok=False,
+        correctness_ok=False,
+        compilation_ok=False,
+        error_message="",
+        lean_code=""
+    )
     while generation_result == GenerationResult.REGENERATE and timeout_in_secs > 0:
         spec_generation_task = spec_generation_strategy(
             problem_id=idx,
@@ -62,20 +72,30 @@ def eval_spec_generation(
             logger=logger,
             **hyper_params)
         start_time = time.time()
-        _ = spec_generation_task.generate_specification(timeout_in_ms=timeout_in_secs * 1000, logger=logger)
-        end_time = time.time()
+        try:
+            _ = spec_generation_task.generate_specification(timeout_in_ms=timeout_in_secs * 1000, logger=logger)
+            skip_proof = False
+        except Exception as e:
+            logger.error(f"Spec generation failed with exception: {e}")
+            logger.error("Spec generation failed. Skipping proof generation.")
+            generation_result = GenerationResult.REGENERATE
+            skip_proof = True
+        finally:
+            end_time = time.time()
+            generation_time = end_time - start_time
+            timeout_in_secs = max(0, timeout_in_secs - generation_time)
+        if skip_proof:
+            continue
         validation_result = asyncio.run(
             problem_view.submit_async(
                 problem=spec_generation_task.generated_spec_problem_view,
                 timeout_in_ms=compilation_timeout
             ))
-        generation_time = end_time - start_time
         execution_info.compiles = validation_result.compilation_ok or compiled
         execution_info.is_proven = False
         execution_info.generation_time += generation_time
         execution_info.total_time += generation_time
         logger.info(f"Generation Result:\n{execution_info}")
-        timeout_in_secs = max(0, timeout_in_secs - generation_time)
         if validation_result.compilation_ok:
             logger.info(f"Problem {idx} was compiled successfully.")
             compiled = True
@@ -92,9 +112,20 @@ def eval_spec_generation(
             save_checkpoint(idx, execution_info, checkpoint_wrapper, logger)
             return validation_result
         start_time = time.time()
-        generation_result, _ = spec_generation_task.generate_spec_isomorphism_proof(timeout_in_ms=timeout_in_secs * 1000, logger=logger)
-        end_time = time.time()
-        proof_time = end_time - start_time
+        try:
+            generation_result, _ = spec_generation_task.generate_spec_isomorphism_proof(timeout_in_ms=timeout_in_secs * 1000, logger=logger)
+            skip_checkpoint = False
+        except Exception as e:
+            logger.error(f"Proof generation failed with exception: {e}")
+            logger.error("Proof generation failed. Skipping proof submission.")
+            generation_result = GenerationResult.REGENERATE
+            skip_checkpoint = True
+        finally:
+            end_time = time.time()
+            proof_time = end_time - start_time
+            timeout_in_secs = max(0, timeout_in_secs - proof_time)
+        if skip_checkpoint:
+            continue
         # Submit the proof to the problem view
         validation_result = asyncio.run(
             problem_view.submit_async(
@@ -113,7 +144,6 @@ def eval_spec_generation(
         else:
             logger.info(f"Problem {idx} was solved successfully.")
             break
-        timeout_in_secs = max(0, timeout_in_secs - proof_time)
         logger.info(f"Time remaining {timeout_in_secs} seconds, regenerating spec {generation_result}")
     save_checkpoint(idx, execution_info, checkpoint_wrapper, logger)
     return validation_result
@@ -154,6 +184,16 @@ def eval_impl_generation(
         compiles=False,
         is_proven=False
     )
+    skip_proof = False
+    skip_checkpoint = False
+    validation_result = ValidationResult(
+        problem_id=idx,
+        isomorphism_ok=False,
+        correctness_ok=False,
+        compilation_ok=False,
+        error_message="",
+        lean_code=""
+    )
     while generation_result == GenerationResult.REGENERATE and timeout_in_secs > 0:
         impl_generation_task = impl_generation_strategy(
             problem_id=idx,
@@ -161,9 +201,20 @@ def eval_impl_generation(
             logger=logger,
             **hyper_params)
         start_time = time.time()
-        _ = impl_generation_task.generate_implementation(timeout_in_ms=timeout_in_secs * 1000, logger=logger)
-        end_time = time.time()
-        generation_time = end_time - start_time
+        try:
+            _ = impl_generation_task.generate_implementation(timeout_in_ms=timeout_in_secs * 1000, logger=logger)
+            skip_proof = False
+        except Exception as e:
+            logger.error(f"Impl generation failed with exception: {e}")
+            logger.error("Impl generation failed. Skipping proof generation.")
+            generation_result = GenerationResult.REGENERATE
+            skip_proof = True
+        finally:
+            end_time = time.time()
+            generation_time = end_time - start_time
+            timeout_in_secs = max(0, timeout_in_secs - generation_time)
+        if skip_proof:
+            continue
         validation_result = asyncio.run(
             problem_view.submit_async(
                 problem=impl_generation_task.generated_impl_problem_view,
@@ -183,7 +234,6 @@ def eval_impl_generation(
             logger.error(f"Implementation Compilation Error: {validation_result.error_message[-300:]}")
             save_checkpoint(idx, execution_info, checkpoint_wrapper, logger)
             return validation_result
-        timeout_in_secs = max(0, timeout_in_secs - generation_time)
         logger.info(f"For problem {idx}, proof generation will be attempted.")
         logger.info(f"Time remaining for proof generation: {timeout_in_secs} seconds")
         if timeout_in_secs <= 0:
@@ -192,11 +242,22 @@ def eval_impl_generation(
             return validation_result
         # No point in even attempting the proof if the implementation generation failed
         start_time = time.time()
-        generation_result, _  = impl_generation_task.generate_implementation_correctness_proof(
-            timeout_in_ms=timeout_in_secs * 1000, 
-            logger=logger)
-        end_time = time.time()
-        proof_time = end_time - start_time
+        try:
+            generation_result, _  = impl_generation_task.generate_implementation_correctness_proof(
+                timeout_in_ms=timeout_in_secs * 1000, 
+                logger=logger)
+            skip_checkpoint = False
+        except Exception as e:
+            logger.error(f"Proof generation failed with exception: {e}")
+            logger.error("Proof generation failed. Skipping proof submission.")
+            generation_result = GenerationResult.REGENERATE
+            skip_checkpoint = True
+        finally:            
+            end_time = time.time()
+            proof_time = end_time - start_time
+            timeout_in_secs = max(0, timeout_in_secs - proof_time)
+        if skip_checkpoint:
+            continue
         # Submit the proof to the problem view
         validation_result = asyncio.run(
             problem_view.submit_async(
@@ -215,7 +276,6 @@ def eval_impl_generation(
         else:
             logger.info(f"Problem {idx} was solved successfully.")
             break
-        timeout_in_secs = max(0, timeout_in_secs - proof_time)
         logger.info(f"Time remaining {timeout_in_secs} seconds, regenerating impl {generation_result}")
     save_checkpoint(idx, execution_info, checkpoint_wrapper, logger)
     return validation_result
