@@ -11,8 +11,7 @@ packages = ["src/clever_prover"]
 name = "clever_prover"
 version = "0.0.0"
 authors = [
-  { name="Amitayush Thakur", email="amitayush@utexas.edu" },
-  { name="George Tsoukalas", email="george.tsoukalas@utexas.edu" }
+  { name="Anonymous", email="Anonymous@gmail.com" }
 ]
 description = "Proving correctness of generated code using LLMs in Lean 4"
 readme = "README.md"
