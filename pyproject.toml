@@ -49,8 +49,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/trishullab/clever_prover"
-Issues = "https://github.com/trishullab/clever_prover/issues"
+Homepage = "https://github.com/<anonymous>lab/clever_prover"
+Issues = "https://github.com/<anonymous>lab/clever_prover/issues"
 
 [tool.hatch.envs.default.env-vars]
 PIP_EXTRA_INDEX_URL = "https://download.pytorch.org/whl/cu121"
